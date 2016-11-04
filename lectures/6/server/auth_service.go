@@ -31,7 +31,7 @@ func RefreshTokenService(requestUser *User) []byte {
 	if err != nil {
 		panic(err)
 	}
-	response, err := json.Marshal(TokenAuthentication{token})
+	response, err := json.Marshal(TokenAuthentication{token, "true"})
 	if err != nil {
 		panic(err)
 	}

@@ -9,7 +9,9 @@ import (
 	"io/ioutil"
 	"io"
 	"strconv"
-	"time"
+	"hash/fnv"
+	"strings"
+	"encoding/binary"
 )
 
 func Index(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -32,14 +34,19 @@ func PortfolioShow(w http.ResponseWriter, r *http.Request, next http.HandlerFunc
 	id, err := strconv.Atoi(portfolioId)
 	if err == nil {
 		p := RepoFindPortfolio(id)
-		TimeFormat := "2006-01-02T15:04:05-07:00"
-		if t, err := time.Parse(TimeFormat, r.Header.Get("If-Modified-Since")); err == nil && p.LastModified < (t.Add(1 * time.Second).Unix()) {
-			h := w.Header()
-			delete(h, "Content-Type")
-			delete(h, "Content-Length")
-			w.WriteHeader(http.StatusNotModified)
-			return
+		h := fnv.New32a()
+		b := make([]byte, 8)
+		binary.LittleEndian.PutUint64(b, uint64(p.LastModified))
+		h.Write(b)
+		hash := fmt.Sprint(h.Sum32())
+		if match := r.Header.Get("If-None-Match"); match != "" {
+			if strings.Contains(match, hash) {
+				w.WriteHeader(http.StatusNotModified)
+				return
+			}
 		}
+		w.Header().Set("Etag", hash)
+		w.Header().Set("Cache-Control", "max-age=2592000") // 30 days
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(p); err != nil {
