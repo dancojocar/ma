@@ -2,8 +2,10 @@ package com.example.ma.sm.service;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -49,7 +51,9 @@ public class StockManager {
   public void addPortfolio(String portfolioName) {
     Portfolio p = new Portfolio(portfolioName);
     addPortfolio(p);
-    pushContentToServer(p);
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(app);
+    if (prefs.getBoolean("network_preference",false))
+      pushContentToServer(p);
   }
 
   private void pushContentToServer(final Portfolio p) {

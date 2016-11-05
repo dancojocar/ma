@@ -3,8 +3,8 @@
     <header
         android:fragment="com.example.ma.sm.preferences.UserSettingsActivity$Prefs1Fragment"
         android:icon="@drawable/ic_settings_applications"
-        android:summary="An example of some preferences."
-        android:title="Prefs 1" />
+        android:summary="Network preferences."
+        android:title="Network" />
 
     <header
         android:fragment="com.example.ma.sm.preferences.UserSettingsActivity$Prefs2Fragment"
