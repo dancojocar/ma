@@ -1,0 +1,16 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- My custom preference type.  This just replaces the actual widget
+         portion of the preference, if the whole preference wanted to be
+         replaced we would use the layout attribute instead of the widgetLayout
+         attribute. -->
+    <com.example.ma.sm.preferences.MyPreferences
+        android:defaultValue="100"
+        android:key="my_preference"
+        android:summary="@string/summary_my_preference"
+        android:title="@string/title_my_preference" />
+    <CheckBoxPreference
+        android:key="advanced_checkbox_preference"
+        android:summaryOff="@string/summary_off_advanced_toggle_preference"
+        android:summaryOn="@string/summary_on_advanced_toggle_preference"
+        android:title="@string/title_advanced_toggle_preference" />
+</PreferenceScreen>
