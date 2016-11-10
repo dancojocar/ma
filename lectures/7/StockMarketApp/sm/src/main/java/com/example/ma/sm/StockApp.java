@@ -7,6 +7,7 @@ import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
 import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.service.StockManager;
+import com.squareup.leakcanary.LeakCanary;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -26,6 +27,12 @@ public class StockApp extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
+    if (LeakCanary.isInAnalyzerProcess(this)) {
+      // This process is dedicated to LeakCanary for heap analysis.
+      // You should not init your app in this process.
+      return;
+    }
+    LeakCanary.install(this);
     injector = DaggerInjector.builder()
         .appModule(new AppModule(this)).build();
     injector.inject(this);
