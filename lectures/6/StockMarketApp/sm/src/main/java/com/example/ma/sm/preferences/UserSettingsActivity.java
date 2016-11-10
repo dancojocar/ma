@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.example.ma.sm.R;
+import com.example.ma.sm.util.Constants;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class UserSettingsActivity extends PreferenceActivity {
         @Override
         public void onClick(View v) {
           SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(UserSettingsActivity.this);
-          Log.v(TAG, "wifi setting: " + prefs.getBoolean("wifi", true));
+          Log.v(TAG, "wifi setting: " + prefs.getBoolean(Constants.WIFI, true));
         }
       });
       setListFooter(button);

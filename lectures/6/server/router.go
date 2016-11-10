@@ -26,7 +26,7 @@ func NewRouter() *mux.Router {
 	}
 	for _, route := range routes {
 		var handler http.Handler
-		handler =  negroni.New(route.HandlerFunc)
+		handler = negroni.New(route.HandlerFunc)
 
 		handler = Logger(handler, route.Name)
 
@@ -37,6 +37,13 @@ func NewRouter() *mux.Router {
 			Handler(handler)
 
 	}
+
+	hub := newHub()
+	go hub.run()
+
+	router.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(hub, w, r)
+	})
 
 	return router
 }

@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">StockMarket</string>
 
-    <string name="serverConnectionUrl">http://192.168.54.134:8080</string>
+    <string name="serverConnectionUrl">http://192.168.43.137:8080</string>
+    <string name="wsConnectionUrl">ws://192.168.43.137:8080/echo</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
