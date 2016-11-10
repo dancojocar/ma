@@ -12,7 +12,7 @@ public class DBContract {
     public static final String TABLE = "portfolio";
     public static final String COLUMN_NAME = "name";
     public static final String COLUMN_LAST_MODIFIED = "lastModified";
-    public static final String COLUMN_USER_ID= "userId";
+    public static final String COLUMN_USER_ID = "userId";
   }
 
   /* Inner class that defines the table contents */

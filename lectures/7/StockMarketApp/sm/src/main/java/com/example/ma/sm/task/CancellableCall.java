@@ -2,12 +2,11 @@ package com.example.ma.sm.task;
 
 
 import android.content.DialogInterface;
-import android.util.Log;
 
 import okhttp3.Call;
+import timber.log.Timber;
 
 public class CancellableCall implements DialogInterface.OnCancelListener {
-  public static final String TAG = CancellableCall.class.getSimpleName();
 
   private Call call;
 
@@ -17,7 +16,7 @@ public class CancellableCall implements DialogInterface.OnCancelListener {
 
   public void cancel() {
     if (call != null && !call.isCanceled()) {
-      Log.v(TAG, "Cancel call");
+      Timber.v("Cancel call");
       call.cancel();
     }
   }

@@ -1,15 +1,17 @@
 package com.example.ma.sm;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.service.StockManager;
 
 import javax.inject.Inject;
 
+import timber.log.Timber;
+
+import static timber.log.Timber.DebugTree;
+
 public class StockApp extends Application {
-  private static final String TAG = StockApp.class.getSimpleName();
   @Inject
   StockManager manager;
   @Inject
@@ -23,7 +25,10 @@ public class StockApp extends Application {
         .appModule(new AppModule(this)).build();
     injector.inject(this);
     manager.setServerListener(client);
-    Log.v(TAG, "onCreate");
+    if (BuildConfig.DEBUG) {
+      Timber.plant(new DebugTree());
+    }
+    Timber.v("onCreate");
   }
 
 
@@ -32,11 +37,11 @@ public class StockApp extends Application {
     super.onTerminate();
     if (manager != null)
       manager.cancelCall();
-    Log.v(TAG, "onTerminate done");
+    Timber.v("onTerminate done");
   }
 
   public StockManager getManager() {
-    Log.v(TAG, "getManager done");
+    Timber.v("getManager done");
     return manager;
   }
 

@@ -3,7 +3,6 @@ package com.example.ma.sm.net;
 import android.content.Context;
 import android.util.JsonReader;
 import android.util.JsonWriter;
-import android.util.Log;
 
 import com.example.ma.sm.R;
 import com.example.ma.sm.StockApp;
@@ -33,10 +32,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import timber.log.Timber;
 
 public class StockRestConnection implements ClientConnection, ServerNotifier {
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-  private static final String TAG = StockRestConnection.class.getSimpleName();
   private OkHttpClient client;
   private String url;
   private String authUrl;
@@ -51,7 +50,7 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
 
   public CancellableCall getPortfolios(User user, final OnSuccessListener<List<Portfolio>> onSuccessListener,
                                        final OnErrorListener onErrorListener) {
-    Log.v(TAG, "getPortfolios");
+    Timber.v("getPortfolios");
     Request.Builder builder = new Request.Builder();
     builder.url(url);
     builder.header("Authorization", String.format("Bearer %s", user.getToken()));
@@ -59,17 +58,17 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
     Call call = null;
     try {
       call = client.newCall(request);
-      Log.v(TAG, "queue request");
+      Timber.v("queue request");
       call.enqueue(new Callback() {
         @Override
         public void onFailure(Call call, IOException e) {
-          Log.e(TAG, "received an error: ", e);
+          Timber.e(e, "received an error while retrieving the portfolios");
           onErrorListener.onError(e);
         }
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-          Log.v(TAG, "received a response");
+          Timber.v("received a response");
           if (response.code() == 200) {
             JsonReader reader = new JsonReader(new InputStreamReader(response.body().byteStream(), "UTF-8"));
             onSuccessListener.onSuccess(new ResourceListReader<>(new PortfolioReader(new SymbolReader())).read(reader));
@@ -78,7 +77,7 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
         }
       });
     } catch (Exception e) {
-      Log.e(TAG, "Error while connecting to the remote", e);
+      Timber.e(e, "Error while connecting to the remote");
       onErrorListener.onError(e);
     }
     return new CancellableCall(call);
@@ -86,7 +85,7 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
 
   public CancellableCall login(User user, final OnSuccessListener<String> onSuccessListener,
                                final OnErrorListener onErrorListener) {
-    Log.v(TAG, "login");
+    Timber.v("login");
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     JsonWriter writer;
     try {
@@ -105,17 +104,17 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
     Call call = null;
     try {
       call = client.newCall(request);
-      Log.v(TAG, "queue request");
+      Timber.v("queue request");
       call.enqueue(new Callback() {
         @Override
         public void onFailure(Call call, IOException e) {
-          Log.e(TAG, "received an error: ", e);
+          Timber.e(e, "received an error while authenticating");
           onErrorListener.onError(e);
         }
 
         @Override
         public void onResponse(Call call, Response response) throws IOException {
-          Log.v(TAG, "received a response");
+          Timber.v("received a response");
           if (response.code() == 200) {
             JsonReader reader = new JsonReader(new InputStreamReader(response.body().byteStream(), "UTF-8"));
             onSuccessListener.onSuccess(new TokenReader().read(reader));
@@ -124,7 +123,7 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
         }
       });
     } catch (Exception e) {
-      Log.e(TAG, "Error while truing to login", e);
+      Timber.e(e, "Error while trying to login");
       onErrorListener.onError(e);
     }
     return new CancellableCall(call);
@@ -133,7 +132,7 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
 
   @Override
   public void push(Portfolio p, final OnErrorListener onErrorListener) {
-    Log.v(TAG, "pushPortfolio");
+    Timber.v("pushPortfolio");
     try {
       StringWriter sw = new StringWriter();
       JsonWriter writer = new JsonWriter(sw);
@@ -145,7 +144,7 @@ public class StockRestConnection implements ClientConnection, ServerNotifier {
           .post(body)
           .build();
       Response response = client.newCall(request).execute();
-      Log.v(TAG, "response: " + response);
+      Timber.v("response: %s", response);
     } catch (IOException e) {
       onErrorListener.onError(new IOException("Not able to push to remote service", e));
     }

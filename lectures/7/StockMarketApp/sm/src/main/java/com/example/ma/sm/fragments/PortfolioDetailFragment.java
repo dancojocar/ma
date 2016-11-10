@@ -7,7 +7,6 @@ import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -16,11 +15,12 @@ import com.example.ma.sm.database.DBContract;
 import com.example.ma.sm.provider.SymbolContentProvider;
 import com.example.ma.sm.util.SwipeDismissListViewTouchListener;
 
+import timber.log.Timber;
+
 import static com.example.ma.sm.database.DBContract.SymbolTable;
 
 
 public class PortfolioDetailFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
-  private static final String TAG = PortfolioDetailFragment.class.getSimpleName();
 
   private long portfolioId;
   private SimpleCursorAdapter adapter;
@@ -28,7 +28,7 @@ public class PortfolioDetailFragment extends ListFragment implements LoaderManag
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    Log.v(TAG, "onActivityCreated");
+    Timber.v("onActivityCreated");
 
     portfolioId = getArguments().getLong("portfolioId");
 
@@ -58,7 +58,7 @@ public class PortfolioDetailFragment extends ListFragment implements LoaderManag
                 for (int position : reverseSortedPositions) {
                   cursor.moveToPosition(position);
                   String symbolID = cursor.getString(cursor.getColumnIndex(SymbolTable._ID));
-                  Log.v(TAG, "deleting symbolId: " + symbolID);
+                  Timber.v("deleting symbolId: %s", symbolID);
                 }
                 adapter.notifyDataSetChanged();
               }

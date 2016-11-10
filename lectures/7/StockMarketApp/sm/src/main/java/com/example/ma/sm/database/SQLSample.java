@@ -5,12 +5,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.example.ma.sm.database.DBContract.PortfolioTable;
 
+import timber.log.Timber;
+
 public class SQLSample {
-  private static final String TAG = SQLSample.class.getSimpleName();
 
   public void demo(Context context) {
     PortfolioDatabase manager = new PortfolioDatabase(context);
@@ -55,7 +55,7 @@ public class SQLSample {
 
     int count = db.update(PortfolioTable.TABLE, uv, updateSelection, updateArgs);
 
-    Log.i(TAG, "updated: " + count + " entries");
+    Timber.d("updated: %d entries", count);
     return db;
   }
 
@@ -91,7 +91,7 @@ public class SQLSample {
         do {
           long pId = c.getLong(c.getColumnIndex(PortfolioTable._ID));
           String pName = c.getString(c.getColumnIndex(PortfolioTable.COLUMN_NAME));
-          Log.i(TAG, "id: " + pId + " name: " + pName);
+          Timber.d("id: %d name: %s", pId, pName);
         } while (c.moveToNext());
       }
     }
@@ -105,7 +105,7 @@ public class SQLSample {
     //insert the entry
     long rowId = db.insert(PortfolioTable.TABLE, null, cv);
 
-    Log.i(TAG, "created row: " + rowId);
+    Timber.v("created row: %d", rowId);
 
   }
 }

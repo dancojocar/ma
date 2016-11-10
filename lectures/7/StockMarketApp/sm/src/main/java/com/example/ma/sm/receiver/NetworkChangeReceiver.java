@@ -7,13 +7,13 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.example.ma.sm.util.Constants;
 
+import timber.log.Timber;
+
 public class NetworkChangeReceiver extends BroadcastReceiver {
-  private static final String TAG = NetworkChangeReceiver.class.getSimpleName();
 
   @Override
   public void onReceive(Context context, Intent intent) {
@@ -36,6 +36,6 @@ public class NetworkChangeReceiver extends BroadcastReceiver {
         editor.commit();
       }
     }
-    Log.v(TAG, "isConnected: " + isConnected + " isWiFi: " + isWiFi + " isMobile: " + isMobile);
+    Timber.v("isConnected: %b isWiFi: %b isMobile: %b", isConnected, isWiFi, isMobile);
   }
 }

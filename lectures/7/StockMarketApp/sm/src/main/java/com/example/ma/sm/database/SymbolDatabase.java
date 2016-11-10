@@ -3,14 +3,14 @@ package com.example.ma.sm.database;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
+
+import timber.log.Timber;
 
 import static com.example.ma.sm.database.DBContract.SymbolTable;
 
 public class SymbolDatabase extends SQLiteOpenHelper {
   public static final int DATABASE_VERSION = 1;
   public static final String DATABASE_NAME = "Symbol.db";
-  private static final String TAG = SymbolDatabase.class.getSimpleName();
   private static final String TEXT_TYPE = " TEXT";
   private static final String INTEGER_TYPE = " INTEGER";
   private static final String REAL_TYPE = " REAL";
@@ -39,7 +39,7 @@ public class SymbolDatabase extends SQLiteOpenHelper {
   @Override
   public void onCreate(SQLiteDatabase db) {
     db.execSQL(SQL_CREATE_ENTRIES);
-    Log.v(TAG, "onCreate");
+    Timber.v("onCreate");
   }
 
   @Override
@@ -47,12 +47,12 @@ public class SymbolDatabase extends SQLiteOpenHelper {
                         int newVersion) {
     db.execSQL(SQL_DELETE_ENTRIES);
     onCreate(db);
-    Log.v(TAG, "onUpgrade");
+    Timber.v("onUpgrade");
   }
 
   @Override
   public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
     onUpgrade(db, oldVersion, newVersion);
-    Log.v(TAG, "onDowngrade");
+    Timber.v("onDowngrade");
   }
 }
