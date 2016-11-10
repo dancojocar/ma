@@ -81,4 +81,8 @@
                 android:title="Clear OAuth Cache"/>
         </menu>
     </item>
+    <item
+        android:id="@+id/nav_crash"
+        android:icon="@drawable/ic_menu_delete"
+        android:title="Throw exception"/>
 </menu>
