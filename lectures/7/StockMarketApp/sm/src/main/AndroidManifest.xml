@@ -29,6 +29,11 @@
         <activity android:name=".preferences.UserSettingsActivity"/>
         <activity android:name=".oauth.GoogleSheetAPI"/>
 
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="07f1083ce0f24f513a95bcbb3b749f8c2753935d"
+            />
+
         <provider
             android:name=".provider.PortfolioContentProvider"
             android:authorities="portfolio"
@@ -61,7 +66,7 @@
         <service
             android:name=".service.TokenRefreshListenerService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
 

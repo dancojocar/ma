@@ -153,6 +153,8 @@ public class StockMarketActivity extends AppCompatActivity
       boolean wifi = prefs.getBoolean(Constants.WIFI, true);
       if (wifi)
         disconnectFromWS();
+    } else if (id == R.id.nav_crash){
+      throw new RuntimeException("crash");
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
