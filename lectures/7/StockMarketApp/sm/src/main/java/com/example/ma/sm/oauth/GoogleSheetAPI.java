@@ -35,27 +35,23 @@ import pub.devrel.easypermissions.EasyPermissions;
 /**
  * Enable the api using:
  * https://console.developers.google.com/start/api?id=sheets.googleapis.com
- *
+ * <p>
  * Following: https://developers.google.com/sheets/quickstart/android
- *
+ * <p>
  * keytool -exportcert -keystore ~/.android/debug.keystore -list -v
- *
- *
  */
 public class GoogleSheetAPI extends Activity
     implements EasyPermissions.PermissionCallbacks {
-  GoogleAccountCredential credentials;
-  private TextView textOutput;
-  private Button apiButton;
-  ProgressDialog progress;
-
+  public static final String PREF_ACCOUNT_NAME = "accountName";
   static final int REQUEST_ACCOUNT_PICKER = 1000;
   static final int REQUEST_AUTHORIZATION = 1001;
   static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
   static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
-
-  public static final String PREF_ACCOUNT_NAME = "accountName";
   private static final String[] SCOPES = {SheetsScopes.SPREADSHEETS_READONLY};
+  GoogleAccountCredential credentials;
+  ProgressDialog progress;
+  private TextView textOutput;
+  private Button apiButton;
 
   /**
    * Create the main activity.

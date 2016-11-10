@@ -11,18 +11,17 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 
-import com.example.ma.sm.database.PortfolioDatabase;
 import com.example.ma.sm.database.UserDatabase;
 
 import java.util.HashMap;
 import java.util.Objects;
 
+import timber.log.Timber;
+
 import static com.example.ma.sm.database.DBContract.UserTable;
 
 public class UserContentProvider extends ContentProvider {
-  private static final String TAG = UserContentProvider.class.getSimpleName();
   private static final String PROVIDER_NAME = "user";
   private static final String URL = "content://" + PROVIDER_NAME + "/users";
   public static final Uri CONTENT_URI = Uri.parse(URL);
@@ -49,14 +48,14 @@ public class UserContentProvider extends ContentProvider {
      * creation if it doesn't already exist.
      */
     db = dbHelper.getWritableDatabase();
-    Log.v(TAG, "onCreate");
+    Timber.v("onCreate");
     return db != null;
   }
 
   @Nullable
   @Override
   public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
-    Log.v(TAG, "query");
+    Timber.v("query");
     SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
     qb.setTables(UserTable.TABLE);
 
@@ -90,7 +89,7 @@ public class UserContentProvider extends ContentProvider {
   @Nullable
   @Override
   public String getType(Uri uri) {
-    Log.v(TAG, "getType");
+    Timber.v("getType");
     switch (uriMatcher.match(uri)) {
       /**
        * Get all users records
@@ -110,7 +109,7 @@ public class UserContentProvider extends ContentProvider {
   @Nullable
   @Override
   public Uri insert(Uri uri, ContentValues contentValues) {
-    Log.v(TAG, "insert");
+    Timber.v("insert");
     Uri _uri = null;
     /**
      * Add a new portfolio record
@@ -128,7 +127,7 @@ public class UserContentProvider extends ContentProvider {
 
   @Override
   public int delete(Uri uri, String selection, String[] selectionArgs) {
-    Log.v(TAG, "delete");
+    Timber.v("delete");
     int count;
     switch (uriMatcher.match(uri)) {
       case USERS:
@@ -149,7 +148,7 @@ public class UserContentProvider extends ContentProvider {
   @Override
   public int update(Uri uri, ContentValues contentValues, String selection, String[]
       selectionArgs) {
-    Log.v(TAG, "update");
+    Timber.v("update");
     int count;
     switch (uriMatcher.match(uri)) {
       case USERS:

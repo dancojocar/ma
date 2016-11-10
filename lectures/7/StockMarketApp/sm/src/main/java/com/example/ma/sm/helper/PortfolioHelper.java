@@ -10,8 +10,6 @@ import java.util.Date;
 import static com.example.ma.sm.database.DBContract.PortfolioTable;
 
 public class PortfolioHelper {
-  private static final String TAG = PortfolioHelper.class.getSimpleName();
-
 
   public static Portfolio fromCursor(Cursor cursor) {
     Portfolio p = null;

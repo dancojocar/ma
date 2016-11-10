@@ -1,7 +1,6 @@
 package com.example.ma.sm.json.reader;
 
 import android.util.JsonReader;
-import android.util.Log;
 
 import com.example.ma.sm.json.Fields;
 import com.example.ma.sm.model.Symbol;
@@ -9,8 +8,9 @@ import com.example.ma.sm.model.Symbol;
 import java.io.IOException;
 import java.util.Date;
 
+import timber.log.Timber;
+
 public class SymbolReader implements ResourceReader<Symbol> {
-  private static final String TAG = PortfolioReader.class.getSimpleName();
 
   @Override
   public Symbol read(JsonReader reader) throws IOException {
@@ -30,7 +30,7 @@ public class SymbolReader implements ResourceReader<Symbol> {
         symbol.setAcquisitionPrice(reader.nextDouble());
       } else {
         reader.skipValue();
-        Log.w(TAG, String.format("Property '%s' ignored", name));
+        Timber.w("Property '%s' ignored", name);
       }
     }
     reader.endObject();

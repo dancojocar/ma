@@ -23,13 +23,12 @@ import java.util.List;
  * Placing the API calls in their own task ensures the UI stays responsive.
  */
 public class GoogleSheetsRequestTask extends AsyncTask<Void, Void, List<String>> {
+  static final int REQUEST_AUTHORIZATION = 1001;
   private GoogleSheetAPI googleSheetAPI;
   private com.google.api.services.sheets.v4.Sheets service = null;
   private Exception lastError = null;
   private TextView textOutput;
   private ProgressDialog progress;
-
-  static final int REQUEST_AUTHORIZATION = 1001;
 
   public GoogleSheetsRequestTask(GoogleSheetAPI googleSheetAPI, GoogleAccountCredential credential,
                                  TextView tv, ProgressDialog progress) {

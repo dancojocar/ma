@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.FragmentManager;
@@ -17,7 +18,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,12 +35,12 @@ import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
 import com.example.ma.sm.util.Constants;
 import com.example.ma.sm.util.ErrorHandler;
 
+import timber.log.Timber;
+
 public class StockMarketActivity extends AppCompatActivity
     implements NavigationView.OnNavigationItemSelectedListener,
     PortfolioFragment.OnListFragmentInteractionListener,
     OnErrorUpdateListener {
-
-  private static final String TAG = StockMarketActivity.class.getSimpleName();
 
   private StockApp app;
   private Handler handler;
@@ -72,7 +72,7 @@ public class StockMarketActivity extends AppCompatActivity
     navigationView.setNavigationItemSelectedListener(this);
 
     handler = new ErrorHandler(Looper.getMainLooper(), this);
-    Log.v(TAG, "onCreate done");
+    Timber.v("onCreate done");
   }
 
 
@@ -84,14 +84,14 @@ public class StockMarketActivity extends AppCompatActivity
     } else {
       super.onBackPressed();
     }
-    Log.v(TAG, "onBackPressed done");
+    Timber.v("onBackPressed done");
   }
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     // Inflate the menu; this adds items to the action bar if it is present.
     getMenuInflater().inflate(R.menu.stock_market, menu);
-    Log.v(TAG, "onCreateOptionsMenu done");
+    Timber.v("onCreateOptionsMenu done");
     return true;
   }
 
@@ -108,13 +108,13 @@ public class StockMarketActivity extends AppCompatActivity
       return true;
     }
 
-    Log.v(TAG, "onOptionsItemSelected done");
+    Timber.v("onOptionsItemSelected done");
     return super.onOptionsItemSelected(item);
   }
 
   @SuppressWarnings("StatementWithEmptyBody")
   @Override
-  public boolean onNavigationItemSelected(MenuItem item) {
+  public boolean onNavigationItemSelected(@NonNull MenuItem item) {
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
     // Handle navigation view item clicks here.
@@ -136,7 +136,7 @@ public class StockMarketActivity extends AppCompatActivity
     } else if (id == R.id.nav_settings) {
       showPreferences();
     } else if (id == R.id.nav_wifi) {
-      Log.v(TAG, "wifi setting: " + prefs.getBoolean(Constants.WIFI, true));
+      Timber.v("wifi setting: %b", prefs.getBoolean(Constants.WIFI, true));
     } else if (id == R.id.nav_sql) {
       new SQLSample().demo(this);
     } else if (id == R.id.nav_google) {
@@ -157,7 +157,7 @@ public class StockMarketActivity extends AppCompatActivity
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
     drawer.closeDrawer(GravityCompat.START);
-    Log.v(TAG, "onNavigationItemSelected done");
+    Timber.v("onNavigationItemSelected done");
     return true;
   }
 
@@ -198,49 +198,49 @@ public class StockMarketActivity extends AppCompatActivity
   @Override
   protected void onRestart() {
     super.onRestart();
-    Log.v(TAG, "onRestart done");
+    Timber.v("onRestart done");
   }
 
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    Log.v(TAG, "onSaveInstanceState done");
+    Timber.v("onSaveInstanceState done");
   }
 
   @Override
   protected void onRestoreInstanceState(Bundle savedInstanceState) {
     super.onRestoreInstanceState(savedInstanceState);
-    Log.v(TAG, "onRestoreInstanceState done");
+    Timber.v("onRestoreInstanceState done");
   }
 
   @Override
   protected void onStart() {
     super.onStart();
-    Log.v(TAG, "onStart done");
+    Timber.v("onStart done");
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    Log.v(TAG, "onResume done");
+    Timber.v("onResume done");
   }
 
   @Override
   protected void onPause() {
     super.onPause();
-    Log.v(TAG, "onPause done");
+    Timber.v("onPause done");
   }
 
   @Override
   protected void onStop() {
     super.onStop();
-    Log.v(TAG, "onStop done");
+    Timber.v("onStop done");
   }
 
   @Override
   protected void onDestroy() {
     super.onDestroy();
-    Log.v(TAG, "onDestroy done");
+    Timber.v("onDestroy done");
   }
 
   @Override

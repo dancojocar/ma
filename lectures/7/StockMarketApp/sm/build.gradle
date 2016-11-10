@@ -49,6 +49,8 @@ dependencies {
     compile('com.google.apis:google-api-services-sheets:v4-rev34-1.22.0') {
         exclude group: 'org.apache.httpcomponents'
     }
+
+    compile 'com.jakewharton.timber:timber:4.3.1'
     testCompile 'junit:junit:4.12'
     apt 'com.google.dagger:dagger-compiler:2.7'
     provided 'javax.annotation:jsr250-api:1.0'

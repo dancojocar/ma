@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,17 +18,17 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.ma.sm.net.StockRestConnection;
 import com.example.ma.sm.provider.SymbolContentProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Date;
 
+import timber.log.Timber;
+
 import static com.example.ma.sm.database.DBContract.SymbolTable;
 
 public class SymbolDetailsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-  private static final String TAG = StockRestConnection.class.getSimpleName();
 
   private long symbolId;
   private TextView id;
@@ -99,7 +98,7 @@ public class SymbolDetailsFragment extends Fragment implements LoaderManager.Loa
           outputStream.close();
           Toast.makeText(getActivity(), "Saved", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-          Log.e(TAG, "error saving the file: " + filename, e);
+          Timber.v(e, "error saving the file: %s", filename);
         }
       }
     });
@@ -119,7 +118,7 @@ public class SymbolDetailsFragment extends Fragment implements LoaderManager.Loa
           outputStream.close();
           Toast.makeText(getActivity(), "Saved", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-          Log.e(TAG, "error saving the file: " + filename, e);
+          Timber.e(e, "error saving the file: %s", filename);
         }
       }
     });

@@ -1,7 +1,6 @@
 package com.example.ma.sm.net;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.example.ma.sm.R;
 import com.example.ma.sm.service.StockManager;
@@ -19,11 +18,11 @@ import okhttp3.ResponseBody;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
+import timber.log.Timber;
 
 import static okhttp3.WebSocket.TEXT;
 
 public final class WebSocketClient implements WebSocketListener {
-  private static final String TAG = WebSocketClient.class.getSimpleName();
   private final ExecutorService writeExecutor = Executors.newSingleThreadExecutor();
   private WebSocket ws;
   private StockManager manager;
@@ -55,7 +54,7 @@ public final class WebSocketClient implements WebSocketListener {
         try {
           webSocket.message(RequestBody.create(TEXT, "Hello from app"));
         } catch (IOException e) {
-          Log.e(TAG, "error while opening the connection", e);
+          Timber.e(e, "error while opening the connection");
         }
       }
     });
@@ -66,14 +65,14 @@ public final class WebSocketClient implements WebSocketListener {
       try {
         ws.close(1000, reason);
       } catch (IOException e) {
-        Log.e(TAG, "Unable to close the ws connection", e);
+        Timber.e(e, "Unable to close the ws connection");
       }
     }
   }
 
   @Override
   public void onFailure(Throwable e, Response response) {
-    Log.e(TAG, "error while opening the connection", e);
+    Timber.e(e, "error while opening the connection");
     writeExecutor.shutdown();
   }
 
@@ -82,27 +81,27 @@ public final class WebSocketClient implements WebSocketListener {
     if (message.contentType() == TEXT) {
       String text = message.string();
       if ("append".equalsIgnoreCase(text)) {
-        Log.v(TAG, "request data append ");
+        Timber.v("request data append ");
         manager.fetchData();
-      }else if ("clear".equalsIgnoreCase(text)||"clean".equalsIgnoreCase(text)){
-        Log.v(TAG, "request cleanup local data ");
+      } else if ("clear".equalsIgnoreCase(text) || "clean".equalsIgnoreCase(text)) {
+        Timber.v("request cleanup local data ");
         manager.delete();
       }
-      Log.v(TAG, "MESSAGE: " + text);
+      Timber.v("MESSAGE: %s", text);
     } else {
-      Log.v(TAG, "MESSAGE: " + message.source().readByteString().hex());
+      Timber.v("MESSAGE: %s", message.source().readByteString().hex());
     }
     message.close();
   }
 
   @Override
   public void onPong(ByteString payload) {
-    Log.v(TAG, "PONG: " + payload.utf8());
+    Timber.v("PONG: %s", payload.utf8());
   }
 
   @Override
   public void onClose(int code, String reason) {
-    Log.v(TAG, "CLOSE: " + code + " " + reason);
+    Timber.v("CLOSE: %d reason: %s", code, reason);
     writeExecutor.shutdown();
   }
 }

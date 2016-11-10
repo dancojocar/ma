@@ -1,7 +1,6 @@
 package com.example.ma.sm.json.reader;
 
 import android.util.JsonReader;
-import android.util.Log;
 
 import com.example.ma.sm.json.Fields;
 import com.example.ma.sm.model.Portfolio;
@@ -12,8 +11,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import timber.log.Timber;
+
 public class PortfolioReader implements ResourceReader<Portfolio> {
-  private static final String TAG = PortfolioReader.class.getSimpleName();
   private ResourceReader<Symbol> resourceReader;
 
   public PortfolioReader(ResourceReader<Symbol> resourceReader) {
@@ -36,7 +36,7 @@ public class PortfolioReader implements ResourceReader<Portfolio> {
         portfolio.setSymbols(readSymbols(reader));
       } else {
         reader.skipValue();
-        Log.w(TAG, String.format("Property '%s' ignored", name));
+        Timber.w("Property '%s' ignored", name);
       }
     }
     reader.endObject();

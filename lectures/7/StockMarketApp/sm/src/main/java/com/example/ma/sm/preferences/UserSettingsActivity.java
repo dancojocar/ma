@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -14,9 +13,9 @@ import com.example.ma.sm.util.Constants;
 
 import java.util.List;
 
-public class UserSettingsActivity extends PreferenceActivity {
+import timber.log.Timber;
 
-  private static final String TAG = UserSettingsActivity.class.getSimpleName();
+public class UserSettingsActivity extends PreferenceActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +29,7 @@ public class UserSettingsActivity extends PreferenceActivity {
         @Override
         public void onClick(View v) {
           SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(UserSettingsActivity.this);
-          Log.v(TAG, "wifi setting: " + prefs.getBoolean(Constants.WIFI, true));
+          Timber.v("wifi setting: %s", prefs.getBoolean(Constants.WIFI, true));
         }
       });
       setListFooter(button);
@@ -79,7 +78,7 @@ public class UserSettingsActivity extends PreferenceActivity {
       super.onCreate(savedInstanceState);
 
       // Can retrieve arguments from preference XML.
-      Log.i(TAG, "Arguments: " + getArguments());
+      Timber.i("Arguments: %s", getArguments());
 
       // Load the preferences from an XML resource
       addPreferencesFromResource(R.xml.fragmented_preferences_inner);
@@ -95,7 +94,7 @@ public class UserSettingsActivity extends PreferenceActivity {
       super.onCreate(savedInstanceState);
 
       // Can retrieve arguments from headers XML.
-      Log.i(TAG, "Arguments: " + getArguments());
+      Timber.i("Arguments: %s", getArguments());
 
       // Load the preferences from an XML resource
       addPreferencesFromResource(R.xml.preference_dependencies);

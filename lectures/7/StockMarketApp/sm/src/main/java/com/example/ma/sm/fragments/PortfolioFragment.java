@@ -11,7 +11,6 @@ import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +23,8 @@ import com.example.ma.sm.model.Portfolio;
 import com.example.ma.sm.provider.PortfolioContentProvider;
 import com.example.ma.sm.task.listeners.OnCancellableListener;
 
+import timber.log.Timber;
+
 import static com.example.ma.sm.database.DBContract.PortfolioTable;
 
 /**
@@ -33,7 +34,6 @@ import static com.example.ma.sm.database.DBContract.PortfolioTable;
 public class PortfolioFragment extends Fragment implements OnCancellableListener, LoaderManager.LoaderCallbacks<Cursor> {
 
   public static final String ARG_COLUMN_COUNT = "column-count";
-  private static final String TAG = PortfolioFragment.class.getSimpleName();
   private StockApp app;
   private int mColumnCount = 1;
   private OnListFragmentInteractionListener listener;
@@ -54,7 +54,7 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
     Bundle args = new Bundle();
     args.putInt(ARG_COLUMN_COUNT, columnCount);
     fragment.setArguments(args);
-    Log.v(TAG, "newInstance");
+    Timber.v("newInstance");
     return fragment;
   }
 
@@ -64,7 +64,7 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
     if (getArguments() != null) {
       mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
     }
-    Log.v(TAG, "onCreate");
+    Timber.v("onCreate");
   }
 
   @Override
@@ -92,14 +92,14 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
     if (view != null)
       progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
 
-    Log.v(TAG, "onCreateView");
+    Timber.v("onCreateView");
     return view;
   }
 
   @Override
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
-    Log.v(TAG, "onViewCreated");
+    Timber.v("onViewCreated");
   }
 
   @Override
@@ -112,20 +112,20 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
           + " must implement OnListFragmentInteractionListener");
     }
     app = (StockApp) context.getApplicationContext();
-    Log.v(TAG, "onAttach");
+    Timber.v("onAttach");
   }
 
   @Override
   public void onActivityCreated(@Nullable Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
-    Log.v(TAG, "onActivityCreated");
+    Timber.v("onActivityCreated");
   }
 
   @Override
   public void onStart() {
     super.onStart();
     loadData();
-    Log.v(TAG, "onStart");
+    Timber.v("onStart");
   }
 
   private void loadData() {
@@ -135,44 +135,44 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
   @Override
   public void onResume() {
     super.onResume();
-    Log.v(TAG, "onResume");
+    Timber.v("onResume");
   }
 
   @Override
   public void onPause() {
     super.onPause();
-    Log.v(TAG, "onPause");
+    Timber.v("onPause");
   }
 
   @Override
   public void onStop() {
     super.onStop();
-    Log.v(TAG, "onStop");
+    Timber.v("onStop");
   }
 
   @Override
   public void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    Log.v(TAG, "onSaveInstanceState");
+    Timber.v("onSaveInstanceState");
   }
 
   @Override
   public void onDetach() {
     super.onDetach();
     listener = null;
-    Log.v(TAG, "onDetach");
+    Timber.v("onDetach");
   }
 
   @Override
   public void onDestroyView() {
     super.onDestroyView();
-    Log.v(TAG, "onDestroyView");
+    Timber.v("onDestroyView");
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    Log.v(TAG, "onDestroy");
+    Timber.v("onDestroy");
   }
 
   @Override

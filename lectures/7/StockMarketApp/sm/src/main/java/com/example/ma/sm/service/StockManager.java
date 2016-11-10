@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.example.ma.sm.StockApp;
 import com.example.ma.sm.database.DBContract;
@@ -32,15 +31,16 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import timber.log.Timber;
+
 public class StockManager {
-  private static final String TAG = StockManager.class.getSimpleName();
+  private final StockApp app;
   @Inject
   ClientConnection client;
   private ServerNotifier serverNotifier;
   private OnErrorUpdateListener onErrorListener;
   private CancellableCall cc;
   private ContentResolver resolver;
-  private final StockApp app;
   private User user;
   private WebSocketClient ws;
 
@@ -100,7 +100,7 @@ public class StockManager {
 
         @Override
         public void onSuccess(final List<Portfolio> portfolios) {
-          Log.v(TAG, "getPortfolios: onSuccess");
+          Timber.v("getPortfolios: onSuccess");
           loadPortfolios(portfolios);
           cc = null;
         }
@@ -108,7 +108,7 @@ public class StockManager {
 
         @Override
         public void onError(Exception e) {
-          Log.e(TAG, "getPortfolios: onError: " + e.getMessage());
+          Timber.e(e, "getPortfolios: onError ");
           // cancel progress bar
           if (cc != null)
             cc.cancel();
@@ -148,7 +148,7 @@ public class StockManager {
 
         @Override
         public void onSuccess(final String token) {
-          Log.v(TAG, "login: onSuccess");
+          Timber.v("login: onSuccess");
           user.setToken(token);
           resolver.insert(UserContentProvider.CONTENT_URI, UserHelper.fromUser(user));
           cc = null;
@@ -157,7 +157,7 @@ public class StockManager {
 
         @Override
         public void onError(Exception e) {
-          Log.e(TAG, "login: onError: " + e.getMessage());
+          Timber.e(e, "login: onError");
           // cancel progress bar
           if (cc != null)
             cc.cancel();
@@ -179,11 +179,11 @@ public class StockManager {
     Uri result = resolver.insert(PortfolioContentProvider.CONTENT_URI, PortfolioHelper.fromPortfolio(p));
     if (result != null) {
       long pid = Long.parseLong(result.getLastPathSegment());
-      Log.v(TAG, "added portfolio with id: " + pid);
+      Timber.v("added portfolio with id: %d", pid);
       for (Symbol s : p.getSymbols()) {
         Uri symbolResult = resolver.insert(SymbolContentProvider.CONTENT_URI, SymbolHelper.fromSymbol(s, pid));
         if (symbolResult != null)
-          Log.v(TAG, "added symbol with id: " + symbolResult.getLastPathSegment());
+          Timber.v("added symbol with id: %s", symbolResult.getLastPathSegment());
       }
     }
 
@@ -191,7 +191,7 @@ public class StockManager {
 
   public void cancelCall() {
     if (cc != null) {
-      Log.v(TAG, "canceling call");
+      Timber.v("canceling call");
       cc.cancel();
     } else {
       if (onErrorListener != null)

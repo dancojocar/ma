@@ -2,7 +2,6 @@ package com.example.ma.sm.dialog;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -10,8 +9,9 @@ import android.widget.EditText;
 import com.example.ma.sm.R;
 import com.example.ma.sm.StockApp;
 
+import timber.log.Timber;
+
 public class NewPortfolio extends Dialog {
-  private static final String TAG = NewPortfolio.class.getSimpleName();
 
   public NewPortfolio(Context context, final StockApp app) {
     super(context);
@@ -26,7 +26,7 @@ public class NewPortfolio extends Dialog {
       @Override
       public void onClick(View v) {
         String portfolioName = et.getText().toString();
-        Log.v(TAG, "onClick: " + portfolioName);
+        Timber.v("onClick: %s", portfolioName);
         app.getManager().addPortfolio(portfolioName);
         dismiss();
       }
@@ -34,7 +34,7 @@ public class NewPortfolio extends Dialog {
     cancel.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
-        Log.v(TAG, "cancel onClick");
+        Timber.v("cancel onClick");
         dismiss();
       }
     });
