@@ -32,6 +32,7 @@ import com.example.ma.sm.model.Portfolio;
 import com.example.ma.sm.oauth.GoogleSheetAPI;
 import com.example.ma.sm.preferences.UserSettingsActivity;
 import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
+import com.example.ma.sm.util.Constants;
 import com.example.ma.sm.util.ErrorHandler;
 
 public class StockMarketActivity extends AppCompatActivity
@@ -71,7 +72,6 @@ public class StockMarketActivity extends AppCompatActivity
     navigationView.setNavigationItemSelectedListener(this);
 
     handler = new ErrorHandler(Looper.getMainLooper(), this);
-
     Log.v(TAG, "onCreate done");
   }
 
@@ -115,6 +115,8 @@ public class StockMarketActivity extends AppCompatActivity
   @SuppressWarnings("StatementWithEmptyBody")
   @Override
   public boolean onNavigationItemSelected(MenuItem item) {
+    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
     // Handle navigation view item clicks here.
     int id = item.getItemId();
     if (id == R.id.nav_one_column) {
@@ -134,23 +136,37 @@ public class StockMarketActivity extends AppCompatActivity
     } else if (id == R.id.nav_settings) {
       showPreferences();
     } else if (id == R.id.nav_wifi) {
-      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-      Log.v(TAG, "wifi setting: " + prefs.getBoolean("wifi", true));
+      Log.v(TAG, "wifi setting: " + prefs.getBoolean(Constants.WIFI, true));
     } else if (id == R.id.nav_sql) {
       new SQLSample().demo(this);
     } else if (id == R.id.nav_google) {
       openAuthActivity();
     } else if (id == R.id.nav_google_clear) {
-      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
       prefs.edit().remove(GoogleSheetAPI.PREF_ACCOUNT_NAME).apply();
     } else if (id == R.id.nav_files) {
       gotoFiles();
+    } else if (id == R.id.nav_ws) {
+      boolean wifi = prefs.getBoolean(Constants.WIFI, true);
+      if (wifi)
+        connectToWS();
+    } else if (id == R.id.nav_ws_close) {
+      boolean wifi = prefs.getBoolean(Constants.WIFI, true);
+      if (wifi)
+        disconnectFromWS();
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
     drawer.closeDrawer(GravityCompat.START);
     Log.v(TAG, "onNavigationItemSelected done");
     return true;
+  }
+
+  private void disconnectFromWS() {
+    app.getManager().disconnectFromWS();
+  }
+
+  private void connectToWS() {
+    app.getManager().connectToWS();
   }
 
   private void gotoFiles() {

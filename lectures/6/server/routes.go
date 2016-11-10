@@ -60,5 +60,11 @@ var routes = Routes{
 		"/token-auth",
 		Login,
 	},
+	Route{
+		"EchoHome",
+		"GET",
+		"/echoHome",
+		EchoHome,
+	},
 
 }

@@ -41,7 +41,6 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
   private PortfolioAdapter adapter;
   private ProgressBar progressBar;
 
-
   /**
    * Mandatory empty constructor for the fragment manager to instantiate the
    * fragment (e.g. upon screen orientation changes).
@@ -72,13 +71,11 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
                            Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.fragment_portfolio_list, container, false);
-    if (savedInstanceState == null) {
-      if (view != null) {
-        View innerView = view.findViewById(R.id.list);
-        // Set the adapter
-        if (innerView instanceof RecyclerView) {
-          recyclerView = (RecyclerView) innerView;
-        }
+    if (view != null) {
+      View innerView = view.findViewById(R.id.list);
+      // Set the adapter
+      if (innerView instanceof RecyclerView) {
+        recyclerView = (RecyclerView) innerView;
       }
     }
     if (recyclerView != null) {
@@ -87,6 +84,10 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
       } else {
         recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
       }
+      if (adapter == null) {
+        adapter = new PortfolioAdapter(this.getContext(), app.getManager().getPortfolios(), listener);
+      }
+      recyclerView.setAdapter(adapter);
     }
     if (view != null)
       progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
@@ -129,9 +130,6 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
 
   private void loadData() {
     getLoaderManager().initLoader(0, null, this);
-    adapter = new PortfolioAdapter(this.getContext(), app.getManager().getPortfolios(), listener);
-    if (recyclerView != null)
-      recyclerView.setAdapter(adapter);
   }
 
   @Override

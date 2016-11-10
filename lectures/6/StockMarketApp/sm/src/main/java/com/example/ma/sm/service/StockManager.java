@@ -19,6 +19,7 @@ import com.example.ma.sm.model.Symbol;
 import com.example.ma.sm.model.User;
 import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.net.ServerNotifier;
+import com.example.ma.sm.net.WebSocketClient;
 import com.example.ma.sm.provider.PortfolioContentProvider;
 import com.example.ma.sm.provider.SymbolContentProvider;
 import com.example.ma.sm.provider.UserContentProvider;
@@ -41,6 +42,7 @@ public class StockManager {
   private ContentResolver resolver;
   private final StockApp app;
   private User user;
+  private WebSocketClient ws;
 
   public StockManager(Context context) {
     app = (StockApp) context;
@@ -52,7 +54,7 @@ public class StockManager {
     Portfolio p = new Portfolio(portfolioName);
     addPortfolio(p);
     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(app);
-    if (prefs.getBoolean("network_preference",false))
+    if (prefs.getBoolean("network_preference", false))
       pushContentToServer(p);
   }
 
@@ -211,5 +213,20 @@ public class StockManager {
   public void deleteTokens() {
     final ContentResolver resolver = app.getContentResolver();
     resolver.delete(UserContentProvider.CONTENT_URI, null, null);
+  }
+
+  public void connectToWS() {
+    ws = new WebSocketClient(this);
+    ws.connect(app);
+  }
+
+  public void disconnectFromWS() {
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        ws.close("user requested");
+      }
+    });
+    t.start();
   }
 }
