@@ -11,9 +11,11 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
+import com.example.ma.sm.StockApp;
 import com.example.ma.sm.database.DBContract;
 import com.example.ma.sm.provider.SymbolContentProvider;
 import com.example.ma.sm.util.SwipeDismissListViewTouchListener;
+import com.squareup.leakcanary.RefWatcher;
 
 import timber.log.Timber;
 
@@ -102,5 +104,12 @@ public class PortfolioDetailFragment extends ListFragment implements LoaderManag
   @Override
   public void onLoaderReset(Loader<Cursor> loader) {
     adapter.swapCursor(null);
+  }
+
+  @Override
+  public void onDestroyView() {
+    super.onDestroyView();
+    RefWatcher refWatcher = StockApp.getRefWatcher();
+    refWatcher.watch(this);
   }
 }

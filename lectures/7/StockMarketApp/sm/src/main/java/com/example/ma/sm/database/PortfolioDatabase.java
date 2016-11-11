@@ -49,4 +49,5 @@ public class PortfolioDatabase extends SQLiteOpenHelper {
     onUpgrade(db, oldVersion, newVersion);
     Timber.v("onDowngrade");
   }
+
 }
