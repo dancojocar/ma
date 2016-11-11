@@ -8,6 +8,7 @@ import com.crashlytics.android.core.CrashlyticsCore;
 import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.service.StockManager;
 import com.squareup.leakcanary.LeakCanary;
+import com.squareup.leakcanary.RefWatcher;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -18,11 +19,22 @@ import timber.log.Timber;
 import static timber.log.Timber.DebugTree;
 
 public class StockApp extends Application {
+
+  private static StockApp instance;
   @Inject
   StockManager manager;
   @Inject
   ClientConnection client;
+  private RefWatcher refWatcher;
   private Injector injector;
+
+  public static StockApp get() {
+    return instance;
+  }
+
+  public static RefWatcher getRefWatcher() {
+    return StockApp.get().refWatcher;
+  }
 
   @Override
   public void onCreate() {
@@ -32,7 +44,8 @@ public class StockApp extends Application {
       // You should not init your app in this process.
       return;
     }
-    LeakCanary.install(this);
+    refWatcher = LeakCanary.install(this);
+    instance = (StockApp) getApplicationContext();
     injector = DaggerInjector.builder()
         .appModule(new AppModule(this)).build();
     injector.inject(this);

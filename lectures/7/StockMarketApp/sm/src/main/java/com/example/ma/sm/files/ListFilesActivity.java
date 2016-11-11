@@ -8,10 +8,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ma.sm.R;
+import com.example.ma.sm.fragments.BaseActivity;
 
 import java.io.File;
 
-public class ListFilesActivity extends AppCompatActivity {
+public class ListFilesActivity extends BaseActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {

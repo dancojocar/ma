@@ -16,7 +16,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,6 +25,7 @@ import android.widget.Toast;
 import com.example.ma.sm.database.SQLSample;
 import com.example.ma.sm.dialog.NewPortfolio;
 import com.example.ma.sm.files.ListFilesActivity;
+import com.example.ma.sm.fragments.BaseActivity;
 import com.example.ma.sm.fragments.PortfolioDetailActivity;
 import com.example.ma.sm.fragments.PortfolioFragment;
 import com.example.ma.sm.model.Portfolio;
@@ -37,18 +37,17 @@ import com.example.ma.sm.util.ErrorHandler;
 
 import timber.log.Timber;
 
-public class StockMarketActivity extends AppCompatActivity
+public class StockMarketActivity extends BaseActivity
     implements NavigationView.OnNavigationItemSelectedListener,
     PortfolioFragment.OnListFragmentInteractionListener,
     OnErrorUpdateListener {
 
-  private StockApp app;
+  private StockApp app = StockApp.get();
   private Handler handler;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    app = (StockApp) getApplication();
     app.getManager().setOnErrorUpdateListener(this);
     setContentView(R.layout.activity_main);
     Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -153,7 +152,7 @@ public class StockMarketActivity extends AppCompatActivity
       boolean wifi = prefs.getBoolean(Constants.WIFI, true);
       if (wifi)
         disconnectFromWS();
-    } else if (id == R.id.nav_crash){
+    } else if (id == R.id.nav_crash) {
       throw new RuntimeException("crash");
     }
 

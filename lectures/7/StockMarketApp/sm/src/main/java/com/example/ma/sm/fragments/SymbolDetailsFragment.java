@@ -3,7 +3,6 @@ package com.example.ma.sm.fragments;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -28,7 +27,7 @@ import timber.log.Timber;
 
 import static com.example.ma.sm.database.DBContract.SymbolTable;
 
-public class SymbolDetailsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class SymbolDetailsFragment extends BaseFragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
   private long symbolId;
   private TextView id;

@@ -17,7 +17,7 @@ import com.example.ma.sm.model.Portfolio;
  * {@link RecyclerView.Adapter} that can display a {@link Portfolio}
  */
 public class PortfolioAdapter extends CursorRecyclerViewAdapter<PortfolioAdapter.ViewHolder> {
-  private final PortfolioFragment.OnListFragmentInteractionListener listener;
+  private PortfolioFragment.OnListFragmentInteractionListener listener;
 
   public PortfolioAdapter(Context context, Cursor cursor, PortfolioFragment.OnListFragmentInteractionListener listener) {
     super(context, cursor);

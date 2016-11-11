@@ -2,9 +2,8 @@ package com.example.ma.sm.fragments;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 
-public class SymbolDetailsActivity extends AppCompatActivity {
+public class SymbolDetailsActivity extends BaseActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {

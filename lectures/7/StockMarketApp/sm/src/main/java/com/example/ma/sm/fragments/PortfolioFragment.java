@@ -31,7 +31,7 @@ import static com.example.ma.sm.database.DBContract.PortfolioTable;
  * A fragment representing a list of Items.
  * <p/>
  */
-public class PortfolioFragment extends Fragment implements OnCancellableListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class PortfolioFragment extends BaseFragment implements OnCancellableListener, LoaderManager.LoaderCallbacks<Cursor> {
 
   public static final String ARG_COLUMN_COUNT = "column-count";
   private StockApp app;
@@ -172,6 +172,7 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
   @Override
   public void onDestroy() {
     super.onDestroy();
+    adapter.swapCursor(null);
     Timber.v("onDestroy");
   }
 

@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.ma.sm.R;
+import com.example.ma.sm.fragments.BaseActivity;
 import com.example.ma.sm.net.GoogleSheetsRequestTask;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -40,7 +41,7 @@ import pub.devrel.easypermissions.EasyPermissions;
  * <p>
  * keytool -exportcert -keystore ~/.android/debug.keystore -list -v
  */
-public class GoogleSheetAPI extends Activity
+public class GoogleSheetAPI extends BaseActivity
     implements EasyPermissions.PermissionCallbacks {
   public static final String PREF_ACCOUNT_NAME = "accountName";
   static final int REQUEST_ACCOUNT_PICKER = 1000;
