@@ -1,5 +1,8 @@
 package com.example.ma.sm;
 
+import com.example.ma.sm.fragments.PortfolioDetailFragment;
+import com.example.ma.sm.fragments.PortfolioFragment;
+import com.example.ma.sm.fragments.SymbolDetailsFragment;
 import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.service.StockManager;
 
@@ -15,4 +18,10 @@ public interface Injector {
   void inject(StockManager manager);
 
   void inject(ClientConnection restClient);
+
+  void inject(PortfolioFragment fragment);
+
+  void inject(PortfolioDetailFragment fragment);
+
+  void inject(SymbolDetailsFragment fragment);
 }

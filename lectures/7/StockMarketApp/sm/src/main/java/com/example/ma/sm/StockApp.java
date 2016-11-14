@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.crashlytics.android.Crashlytics;
 import com.crashlytics.android.core.CrashlyticsCore;
+import com.example.ma.sm.database.Migration;
 import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.service.StockManager;
 import com.squareup.leakcanary.LeakCanary;
@@ -14,6 +15,9 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 import io.fabric.sdk.android.Fabric;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
+import io.realm.exceptions.RealmMigrationNeededException;
 import timber.log.Timber;
 
 import static timber.log.Timber.DebugTree;
@@ -48,6 +52,30 @@ public class StockApp extends Application {
     instance = (StockApp) getApplicationContext();
     injector = DaggerInjector.builder()
         .appModule(new AppModule(this)).build();
+    RealmConfiguration config = new RealmConfiguration.Builder(this)
+        .name("default0.realm")
+        .schemaVersion(1)
+        .build();
+
+    // You can then manually call Realm.migrateRealm().
+    try {
+      Realm.migrateRealm(config, new Migration());
+    } catch (Exception ignored) {
+      // If the Realm file doesn't exist, just ignore.
+    }
+
+    Realm realm = null;
+    try {
+      Realm.setDefaultConfiguration(config);
+      realm = Realm.getDefaultInstance();
+    } catch (RealmMigrationNeededException e) {
+      Realm.deleteRealm(config);
+      //Realm file has been deleted.
+      Realm.setDefaultConfiguration(config);
+    } finally {
+      if (realm != null)
+        realm.close();
+    }
     injector.inject(this);
     manager.setServerListener(client);
 

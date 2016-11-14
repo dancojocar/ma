@@ -4,45 +4,51 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 import com.example.ma.sm.StockApp;
-import com.example.ma.sm.database.DBContract;
-import com.example.ma.sm.provider.SymbolContentProvider;
+import com.example.ma.sm.model.Symbol;
 import com.example.ma.sm.util.SwipeDismissListViewTouchListener;
 import com.squareup.leakcanary.RefWatcher;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 import timber.log.Timber;
 
 import static com.example.ma.sm.database.DBContract.SymbolTable;
 
 
-public class PortfolioDetailFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class PortfolioDetailFragment extends ListFragment {
 
-  private long portfolioId;
-  private SimpleCursorAdapter adapter;
+  private ArrayAdapter<String> adapter;
+  private RealmResults<Symbol> allSorted;
+  @Inject
+  Realm realm;
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
     super.onActivityCreated(savedInstanceState);
     Timber.v("onActivityCreated");
+    StockApp.get().injector().inject(this);
 
-    portfolioId = getArguments().getLong("portfolioId");
+    long portfolioId = getArguments().getLong("portfolioId");
 
-    String[] mFromColumns = {
-        DBContract.SymbolTable.COLUMN_NAME
-    };
-    int[] mToFields = {
-        android.R.id.text1
-    };
-
-    getLoaderManager().initLoader(0, null, this);
-    adapter = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_list_item_activated_1, null, mFromColumns, mToFields, 0);
+    allSorted = realm.where(Symbol.class).
+        equalTo(SymbolTable.COLUMN_PORTFOLIO_ID, portfolioId).
+        findAllSorted(SymbolTable.COLUMN_NAME);
+    List<String> list = new ArrayList<>(allSorted.size());
+    for (Symbol symbol : allSorted) {
+      list.add(symbol.getName());
+    }
+    adapter = new ArrayAdapter<>(this.getContext(), android.R.layout.simple_list_item_activated_1, list);
     setListAdapter(adapter);
 
     SwipeDismissListViewTouchListener touchListener =
@@ -78,9 +84,8 @@ public class PortfolioDetailFragment extends ListFragment implements LoaderManag
 
   @Override
   public void onListItemClick(ListView listView, View v, int position, long id) {
-    Cursor cursor = ((SimpleCursorAdapter) listView.getAdapter()).getCursor();
-    cursor.moveToPosition(position);
-    long symbolId = Long.parseLong(cursor.getString(cursor.getColumnIndex(SymbolTable._ID)));
+    Symbol symbol = allSorted.get(position);
+    long symbolId = symbol.getId();
     Intent intent = new Intent();
     intent.setClass(getContext(), SymbolDetailsActivity.class);
     intent.putExtra("symbolId", symbolId);
@@ -88,27 +93,9 @@ public class PortfolioDetailFragment extends ListFragment implements LoaderManag
   }
 
   @Override
-  public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-    String[] projection = {SymbolTable._ID, SymbolTable.COLUMN_NAME};
-    String selection = SymbolTable.COLUMN_PORTFOLIO_ID + " = ? ";
-    String[] selectionArgs = new String[]{String.valueOf(portfolioId)};
-    String order = SymbolTable.COLUMN_NAME + " ASC ";
-    return new CursorLoader(this.getContext(), SymbolContentProvider.CONTENT_URI, projection, selection, selectionArgs, order);
-  }
-
-  @Override
-  public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-    adapter.swapCursor(cursor);
-  }
-
-  @Override
-  public void onLoaderReset(Loader<Cursor> loader) {
-    adapter.swapCursor(null);
-  }
-
-  @Override
   public void onDestroyView() {
     super.onDestroyView();
+    realm.close();
     RefWatcher refWatcher = StockApp.getRefWatcher();
     refWatcher.watch(this);
   }
