@@ -8,6 +8,7 @@ import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import io.realm.Realm;
 import timber.log.Timber;
 
 @Module
@@ -31,6 +32,11 @@ public class AppModule {
   ClientConnection provideClient() {
     Timber.v("create stock rest client");
     return new StockRestConnection(app);
+  }
+
+  @Provides
+  Realm provideRealm() {
+    return Realm.getDefaultInstance();
   }
 
 }

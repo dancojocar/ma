@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import io.realm.RealmList;
 import timber.log.Timber;
 
 public class PortfolioReader implements ResourceReader<Portfolio> {
@@ -43,8 +44,8 @@ public class PortfolioReader implements ResourceReader<Portfolio> {
     return portfolio;
   }
 
-  private List<Symbol> readSymbols(JsonReader reader) throws IOException {
-    List<Symbol> symbols = new ArrayList<>();
+  private RealmList<Symbol> readSymbols(JsonReader reader) throws IOException {
+    RealmList<Symbol> symbols = new RealmList<>();
     reader.beginArray();
     while (reader.hasNext()) {
       symbols.add(resourceReader.read(reader));

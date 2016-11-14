@@ -1,14 +1,18 @@
 package com.example.ma.sm.model;
 
-import java.io.Serializable;
 import java.util.Date;
 
-public class Symbol implements Serializable {
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
+public class Symbol extends RealmObject {
+  @PrimaryKey
   private long id;
   private String name;
   private Date acquisitionDate;
   private long quantity;
   private double acquisitionPrice;
+  private long portfolioId;
 
   public Symbol() {
 
@@ -56,5 +60,13 @@ public class Symbol implements Serializable {
 
   public void setAcquisitionPrice(double acquisitionPrice) {
     this.acquisitionPrice = acquisitionPrice;
+  }
+
+  public long getPortfolioId() {
+    return portfolioId;
+  }
+
+  public void setPortfolioId(long portfolioId) {
+    this.portfolioId = portfolioId;
   }
 }

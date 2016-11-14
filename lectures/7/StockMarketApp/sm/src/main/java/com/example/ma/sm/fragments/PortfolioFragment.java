@@ -1,13 +1,9 @@
 package com.example.ma.sm.fragments;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -20,26 +16,30 @@ import com.example.ma.sm.R;
 import com.example.ma.sm.StockApp;
 import com.example.ma.sm.adapter.PortfolioAdapter;
 import com.example.ma.sm.model.Portfolio;
-import com.example.ma.sm.provider.PortfolioContentProvider;
 import com.example.ma.sm.task.listeners.OnCancellableListener;
 
-import timber.log.Timber;
+import javax.inject.Inject;
 
-import static com.example.ma.sm.database.DBContract.PortfolioTable;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import io.realm.Realm;
+import timber.log.Timber;
 
 /**
  * A fragment representing a list of Items.
  * <p/>
  */
-public class PortfolioFragment extends BaseFragment implements OnCancellableListener, LoaderManager.LoaderCallbacks<Cursor> {
+public class PortfolioFragment extends BaseFragment implements OnCancellableListener {
 
   public static final String ARG_COLUMN_COUNT = "column-count";
-  private StockApp app;
   private int mColumnCount = 1;
   private OnListFragmentInteractionListener listener;
-  private RecyclerView recyclerView;
-  private PortfolioAdapter adapter;
-  private ProgressBar progressBar;
+  @BindView(R.id.list)
+  RecyclerView recyclerView;
+  @BindView(R.id.progressBar)
+  ProgressBar progressBar;
+  @Inject
+  Realm realm;
 
   /**
    * Mandatory empty constructor for the fragment manager to instantiate the
@@ -64,6 +64,7 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
     if (getArguments() != null) {
       mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
     }
+    StockApp.get().injector().inject(this);
     Timber.v("onCreate");
   }
 
@@ -71,27 +72,8 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
                            Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.fragment_portfolio_list, container, false);
-    if (view != null) {
-      View innerView = view.findViewById(R.id.list);
-      // Set the adapter
-      if (innerView instanceof RecyclerView) {
-        recyclerView = (RecyclerView) innerView;
-      }
-    }
-    if (recyclerView != null) {
-      if (mColumnCount <= 1) {
-        recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
-      } else {
-        recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
-      }
-      if (adapter == null) {
-        adapter = new PortfolioAdapter(this.getContext(), app.getManager().getPortfolios(), listener);
-      }
-      recyclerView.setAdapter(adapter);
-    }
-    if (view != null)
-      progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
-
+    ButterKnife.setDebug(true);
+    ButterKnife.bind(this, view);
     Timber.v("onCreateView");
     return view;
   }
@@ -99,6 +81,12 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
   @Override
   public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
+    if (mColumnCount <= 1) {
+      recyclerView.setLayoutManager(new LinearLayoutManager(recyclerView.getContext()));
+    } else {
+      recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
+    }
+    recyclerView.setAdapter(new PortfolioAdapter(realm.allObjects(Portfolio.class), listener));
     Timber.v("onViewCreated");
   }
 
@@ -111,68 +99,13 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
       throw new RuntimeException(context.toString()
           + " must implement OnListFragmentInteractionListener");
     }
-    app = (StockApp) context.getApplicationContext();
     Timber.v("onAttach");
-  }
-
-  @Override
-  public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-    super.onActivityCreated(savedInstanceState);
-    Timber.v("onActivityCreated");
-  }
-
-  @Override
-  public void onStart() {
-    super.onStart();
-    loadData();
-    Timber.v("onStart");
-  }
-
-  private void loadData() {
-    getLoaderManager().initLoader(0, null, this);
-  }
-
-  @Override
-  public void onResume() {
-    super.onResume();
-    Timber.v("onResume");
-  }
-
-  @Override
-  public void onPause() {
-    super.onPause();
-    Timber.v("onPause");
-  }
-
-  @Override
-  public void onStop() {
-    super.onStop();
-    Timber.v("onStop");
-  }
-
-  @Override
-  public void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);
-    Timber.v("onSaveInstanceState");
-  }
-
-  @Override
-  public void onDetach() {
-    super.onDetach();
-    listener = null;
-    Timber.v("onDetach");
-  }
-
-  @Override
-  public void onDestroyView() {
-    super.onDestroyView();
-    Timber.v("onDestroyView");
   }
 
   @Override
   public void onDestroy() {
     super.onDestroy();
-    adapter.swapCursor(null);
+    realm.close();
     Timber.v("onDestroy");
   }
 
@@ -184,23 +117,6 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
         progressBar.setVisibility(View.GONE);
       }
     });
-  }
-
-  @Override
-  public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    String[] projection = {PortfolioTable._ID, PortfolioTable.COLUMN_NAME, PortfolioTable.COLUMN_LAST_MODIFIED};
-    return new CursorLoader(this.getContext(), PortfolioContentProvider.CONTENT_URI, projection, null, null, null);
-  }
-
-  @Override
-  public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-    if (adapter != null)
-      adapter.swapCursor(data);
-  }
-
-  @Override
-  public void onLoaderReset(Loader<Cursor> loader) {
-    adapter.swapCursor(null);
   }
 
   /**

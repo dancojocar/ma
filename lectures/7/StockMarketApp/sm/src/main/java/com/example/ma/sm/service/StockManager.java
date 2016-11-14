@@ -4,14 +4,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
 import com.example.ma.sm.StockApp;
 import com.example.ma.sm.database.DBContract;
-import com.example.ma.sm.helper.PortfolioHelper;
-import com.example.ma.sm.helper.SymbolHelper;
 import com.example.ma.sm.helper.UserHelper;
 import com.example.ma.sm.model.Portfolio;
 import com.example.ma.sm.model.Symbol;
@@ -20,7 +17,6 @@ import com.example.ma.sm.net.ClientConnection;
 import com.example.ma.sm.net.ServerNotifier;
 import com.example.ma.sm.net.WebSocketClient;
 import com.example.ma.sm.provider.PortfolioContentProvider;
-import com.example.ma.sm.provider.SymbolContentProvider;
 import com.example.ma.sm.provider.UserContentProvider;
 import com.example.ma.sm.task.CancellableCall;
 import com.example.ma.sm.task.listeners.OnErrorListener;
@@ -31,6 +27,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import io.realm.Realm;
+import io.realm.RealmList;
 import timber.log.Timber;
 
 public class StockManager {
@@ -43,6 +41,8 @@ public class StockManager {
   private ContentResolver resolver;
   private User user;
   private WebSocketClient ws;
+  @Inject
+  Realm realm;
 
   public StockManager(Context context) {
     app = (StockApp) context;
@@ -91,7 +91,9 @@ public class StockManager {
   }
 
   public void delete() {
-    resolver.delete(PortfolioContentProvider.CONTENT_URI, null, null);
+    realm.beginTransaction();
+    realm.clear(Portfolio.class);
+    realm.commitTransaction();
   }
 
   public void fetchData() {
@@ -176,17 +178,25 @@ public class StockManager {
   }
 
   private void addPortfolio(Portfolio p) {
-    Uri result = resolver.insert(PortfolioContentProvider.CONTENT_URI, PortfolioHelper.fromPortfolio(p));
-    if (result != null) {
-      long pid = Long.parseLong(result.getLastPathSegment());
-      Timber.v("added portfolio with id: %d", pid);
-      for (Symbol s : p.getSymbols()) {
-        Uri symbolResult = resolver.insert(SymbolContentProvider.CONTENT_URI, SymbolHelper.fromSymbol(s, pid));
-        if (symbolResult != null)
-          Timber.v("added symbol with id: %s", symbolResult.getLastPathSegment());
-      }
+    realm.beginTransaction();
+    Portfolio portfolio = realm.createObject(Portfolio.class);
+    int nextID = realm.where(Portfolio.class).max("id").intValue() + 1;
+    portfolio.setId(nextID);
+    portfolio.setLastModified(p.getLastModified());
+    portfolio.setName(p.getName());
+    RealmList<Symbol> symbols = new RealmList<>();
+    for (Symbol s : p.getSymbols()) {
+      Symbol symbol = realm.createObject(Symbol.class);
+      symbol.setName(s.getName());
+      nextID = realm.where(Symbol.class).max("id").intValue() + 1;
+      symbol.setId(nextID);
+      symbol.setAcquisitionDate(s.getAcquisitionDate());
+      symbol.setAcquisitionPrice(s.getAcquisitionPrice());
+      symbol.setQuantity(s.getQuantity());
+      symbol.setPortfolioId(portfolio.getId());
     }
-
+    portfolio.setSymbols(symbols);
+    realm.commitTransaction();
   }
 
   public void cancelCall() {
@@ -228,5 +238,9 @@ public class StockManager {
       }
     });
     t.start();
+  }
+
+  public void setRealm(Realm realm) {
+    this.realm = realm;
   }
 }

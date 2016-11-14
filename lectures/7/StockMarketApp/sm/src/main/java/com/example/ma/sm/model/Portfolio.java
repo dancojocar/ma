@@ -1,16 +1,18 @@
 package com.example.ma.sm.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 
-public class Portfolio implements Serializable {
+import io.realm.RealmList;
+import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
+
+public class Portfolio extends RealmObject {
+  @PrimaryKey
   private long id;
   private String name;
   private Date lastModified;
-  private List<Symbol> symbols;
+  private RealmList<Symbol> symbols;
 
   public Portfolio() {
   }
@@ -18,7 +20,7 @@ public class Portfolio implements Serializable {
   public Portfolio(String name) {
     this.name = name;
     this.lastModified = new Date(System.currentTimeMillis());
-    symbols = new ArrayList<>();
+    symbols = new RealmList<>();
     Random r = new Random();
     for (int i = 0; i < r.nextInt(3) + 2; i++) {
       Symbol symbol = new Symbol("S" + i + " " + System.currentTimeMillis());
@@ -54,11 +56,11 @@ public class Portfolio implements Serializable {
     this.lastModified = lastModified;
   }
 
-  public List<Symbol> getSymbols() {
+  public RealmList<Symbol> getSymbols() {
     return symbols;
   }
 
-  public void setSymbols(List<Symbol> symbols) {
+  public void setSymbols(RealmList<Symbol> symbols) {
     this.symbols = symbols;
   }
 }
