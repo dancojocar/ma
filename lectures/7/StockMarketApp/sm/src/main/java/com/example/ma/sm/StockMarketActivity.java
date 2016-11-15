@@ -31,6 +31,7 @@ import com.example.ma.sm.fragments.PortfolioFragment;
 import com.example.ma.sm.model.Portfolio;
 import com.example.ma.sm.oauth.GoogleSheetAPI;
 import com.example.ma.sm.preferences.UserSettingsActivity;
+import com.example.ma.sm.rx.RxDemo;
 import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
 import com.example.ma.sm.util.Constants;
 import com.example.ma.sm.util.ErrorHandler;
@@ -154,6 +155,8 @@ public class StockMarketActivity extends BaseActivity
         disconnectFromWS();
     } else if (id == R.id.nav_crash) {
       throw new RuntimeException("crash");
+    } else if (id == R.id.nav_rx) {
+      new RxDemo().start();
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
