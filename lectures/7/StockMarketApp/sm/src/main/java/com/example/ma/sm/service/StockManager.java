@@ -177,7 +177,7 @@ public class StockManager {
       addPortfolio(p);
   }
 
-  private void addPortfolio(Portfolio p) {
+  public void addPortfolio(Portfolio p) {
     realm.beginTransaction();
     Portfolio portfolio = realm.createObject(Portfolio.class);
     int nextID = realm.where(Portfolio.class).max("id").intValue() + 1;
@@ -186,17 +186,17 @@ public class StockManager {
     portfolio.setName(p.getName());
     RealmList<Symbol> symbols = new RealmList<>();
     for (Symbol s : p.getSymbols()) {
-      Symbol symbol = realm.createObject(Symbol.class);
-      symbol.setName(s.getName());
-      nextID = realm.where(Symbol.class).max("id").intValue() + 1;
-      symbol.setId(nextID);
-      symbol.setAcquisitionDate(s.getAcquisitionDate());
-      symbol.setAcquisitionPrice(s.getAcquisitionPrice());
-      symbol.setQuantity(s.getQuantity());
-      symbol.setPortfolioId(portfolio.getId());
+      addSymbol(portfolio.getId(), s);
     }
     portfolio.setSymbols(symbols);
     realm.commitTransaction();
+  }
+
+  public void addSymbol(long portfolioId, Symbol s) {
+    int nextID = realm.where(Symbol.class).max("id").intValue() + 1;
+    s.setId(nextID);
+    s.setPortfolioId(portfolioId);
+    realm.copyToRealmOrUpdate(s);
   }
 
   public void cancelCall() {

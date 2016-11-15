@@ -1,5 +1,6 @@
 package com.example.ma.sm;
 
+import com.example.ma.sm.fragments.NewSymbolFragment;
 import com.example.ma.sm.fragments.PortfolioDetailFragment;
 import com.example.ma.sm.fragments.PortfolioFragment;
 import com.example.ma.sm.fragments.SymbolDetailsFragment;
@@ -24,4 +25,6 @@ public interface Injector {
   void inject(PortfolioDetailFragment fragment);
 
   void inject(SymbolDetailsFragment fragment);
+
+  void inject(NewSymbolFragment newSymbol);
 }

@@ -1,17 +1,14 @@
 package com.example.ma.sm.fragments;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 
 import com.example.ma.sm.StockApp;
 import com.example.ma.sm.model.Symbol;
-import com.example.ma.sm.util.SwipeDismissListViewTouchListener;
 import com.squareup.leakcanary.RefWatcher;
 
 import java.util.ArrayList;
@@ -28,10 +25,10 @@ import static com.example.ma.sm.database.DBContract.SymbolTable;
 
 public class PortfolioDetailFragment extends ListFragment {
 
-  private ArrayAdapter<String> adapter;
   private RealmResults<Symbol> allSorted;
   @Inject
   Realm realm;
+  private ArrayAdapter<String> adapter;
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
@@ -50,31 +47,6 @@ public class PortfolioDetailFragment extends ListFragment {
     }
     adapter = new ArrayAdapter<>(this.getContext(), android.R.layout.simple_list_item_activated_1, list);
     setListAdapter(adapter);
-
-    SwipeDismissListViewTouchListener touchListener =
-        new SwipeDismissListViewTouchListener(
-            getListView(),
-            new SwipeDismissListViewTouchListener.DismissCallbacks() {
-              @Override
-              public boolean canDismiss(int position) {
-                return true;
-              }
-
-              @Override
-              public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-                Cursor cursor = ((SimpleCursorAdapter) listView.getAdapter()).getCursor();
-                for (int position : reverseSortedPositions) {
-                  cursor.moveToPosition(position);
-                  String symbolID = cursor.getString(cursor.getColumnIndex(SymbolTable._ID));
-                  Timber.v("deleting symbolId: %s", symbolID);
-                }
-                adapter.notifyDataSetChanged();
-              }
-            });
-    getListView().setOnTouchListener(touchListener);
-    // Setting this scroll listener is required to ensure that during ListView scrolling,
-    // we don't look for swipes.
-    getListView().setOnScrollListener(touchListener.makeScrollListener());
   }
 
   @Override
@@ -95,6 +67,7 @@ public class PortfolioDetailFragment extends ListFragment {
   @Override
   public void onDestroyView() {
     super.onDestroyView();
+    allSorted = null;
     realm.close();
     RefWatcher refWatcher = StockApp.getRefWatcher();
     refWatcher.watch(this);
