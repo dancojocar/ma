@@ -3,10 +3,12 @@ package com.example.ma.sm.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.ma.sm.R;
 import com.example.ma.sm.StockApp;
 import com.example.ma.sm.model.Symbol;
 import com.squareup.leakcanary.RefWatcher;
@@ -28,7 +30,6 @@ public class PortfolioDetailFragment extends ListFragment {
   private RealmResults<Symbol> allSorted;
   @Inject
   Realm realm;
-  private ArrayAdapter<String> adapter;
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {
@@ -45,8 +46,10 @@ public class PortfolioDetailFragment extends ListFragment {
     for (Symbol symbol : allSorted) {
       list.add(symbol.getName());
     }
-    adapter = new ArrayAdapter<>(this.getContext(), android.R.layout.simple_list_item_activated_1, list);
+    ArrayAdapter<String> adapter = new ArrayAdapter<>(this.getContext(), android.R.layout.simple_list_item_activated_1, list);
     setListAdapter(adapter);
+    int color = ContextCompat.getColor(getContext(), android.R.color.white);
+    getListView().setBackgroundColor(color);
   }
 
   @Override

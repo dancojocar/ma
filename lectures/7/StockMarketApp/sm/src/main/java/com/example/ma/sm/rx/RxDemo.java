@@ -6,6 +6,7 @@ import android.widget.Button;
 import com.jakewharton.rxbinding.view.RxView;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Observer;
@@ -20,10 +21,15 @@ import timber.log.Timber;
 
 public class RxDemo {
 
-  public void helloWorld() {
+  public void start() {
+    helloWorld();
+    fromOperator();
+    fetch();
+  }
+
+  private void helloWorld() {
     Observable<String> myObservable
         = Observable.just("Hello"); // Emits "Hello"
-
 
     Observer<String> myObserver = new Observer<String>() {
       @Override
@@ -33,7 +39,7 @@ public class RxDemo {
 
       @Override
       public void onError(Throwable e) {
-        // Called when the observable encounters an error
+        Timber.e(e, "Unknown error");
       }
 
       @Override
@@ -49,18 +55,18 @@ public class RxDemo {
   }
 
 
-  public void fromOperator() {
+  private void fromOperator() {
     Observable<Integer> myArrayObservable
         = Observable.from(new Integer[]{1, 2, 3, 4, 5, 6}); // Emits each item of the array, one at a time
 
-    myArrayObservable.map(new Func1<Integer, Integer>() { // Input and Output are both Integer
+    myArrayObservable = myArrayObservable.map(new Func1<Integer, Integer>() { // Input and Output are both Integer
       @Override
       public Integer call(Integer integer) {
         return integer * integer; // Square the number
       }
     });
 
-    myArrayObservable
+    myArrayObservable = myArrayObservable
         .skip(2) // Skip the first two items
         .filter(new Func1<Integer, Boolean>() {
           @Override
@@ -78,7 +84,7 @@ public class RxDemo {
   }
 
 
-  public void fetch() {
+  private void fetch() {
     Observable<String> fetchFromGoogle = Observable.create(new Observable.OnSubscribe<String>() {
       @Override
       public void call(Subscriber<? super String> subscriber) {
@@ -157,11 +163,5 @@ public class RxDemo {
     //...
     buttonSub.unsubscribe();
 
-  }
-
-  public void start() {
-    helloWorld();
-//    fromOperator();
-//    fetch();
   }
 }

@@ -11,7 +11,8 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class PortfolioDetailActivity extends BaseActivity {
+public class PortfolioDetailActivity extends BaseActivity
+    implements NewSymbolFragment.OnListFragmentInteractionListener {
 
   @BindView(R.id.symbol_fab)
   FloatingActionButton fab;
@@ -53,4 +54,15 @@ public class PortfolioDetailActivity extends BaseActivity {
         .commit();
   }
 
+  @Override
+  public void onListFragmentInteraction(long portfolioId) {
+    Bundle bundle = new Bundle();
+    bundle.putLong("portfolioId", portfolioId);
+    PortfolioDetailFragment details = new PortfolioDetailFragment();
+    details.setArguments(bundle);
+    getSupportFragmentManager()
+        .beginTransaction()
+        .add(R.id.symbol_content, details)
+        .commit();
+  }
 }
