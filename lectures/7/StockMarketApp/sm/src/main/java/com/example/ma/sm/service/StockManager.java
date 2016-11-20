@@ -193,7 +193,11 @@ public class StockManager {
   }
 
   public void addSymbol(long portfolioId, Symbol s) {
-    int nextID = realm.where(Symbol.class).max("id").intValue() + 1;
+    Number id = realm.where(Symbol.class).max("id");
+    int nextID = 1;
+    if (id != null) {
+      nextID = id.intValue() + 1;
+    }
     s.setId(nextID);
     s.setPortfolioId(portfolioId);
     realm.copyToRealmOrUpdate(s);

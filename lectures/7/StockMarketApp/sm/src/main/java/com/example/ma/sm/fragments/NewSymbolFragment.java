@@ -1,5 +1,6 @@
 package com.example.ma.sm.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -51,6 +52,7 @@ public class NewSymbolFragment extends BaseFragment {
 
   @Inject
   Realm realm;
+  private OnListFragmentInteractionListener listener;
 
   @Override
   public View onCreateView(LayoutInflater inflater,
@@ -145,6 +147,7 @@ public class NewSymbolFragment extends BaseFragment {
       Toast.makeText(getContext(), "Saved", Toast.LENGTH_SHORT).show();
       realm.commitTransaction();
       getFragmentManager().popBackStack();
+      listener.onListFragmentInteraction(portfolioId);
     } else {
       Toast.makeText(getContext(), "Not able to save!", Toast.LENGTH_SHORT).show();
     }
@@ -154,5 +157,21 @@ public class NewSymbolFragment extends BaseFragment {
   public void onDestroy() {
     super.onDestroy();
     realm.close();
+  }
+
+  @Override
+  public void onAttach(Context context) {
+    super.onAttach(context);
+    if (context instanceof OnListFragmentInteractionListener) {
+      listener = (OnListFragmentInteractionListener) context;
+    } else {
+      throw new RuntimeException(context.toString()
+          + " must implement OnListFragmentInteractionListener");
+    }
+    Timber.v("onAttach");
+  }
+
+  public interface OnListFragmentInteractionListener {
+    void onListFragmentInteraction(long portfolioId);
   }
 }
