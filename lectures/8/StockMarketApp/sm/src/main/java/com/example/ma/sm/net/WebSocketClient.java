@@ -15,12 +15,13 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-import okio.ByteString;
+import okhttp3.ws.WebSocket;
+import okhttp3.ws.WebSocketCall;
+import okhttp3.ws.WebSocketListener;
+import okio.Buffer;
 import timber.log.Timber;
 
-import static okhttp3.WebSocket.TEXT;
+import static okhttp3.ws.WebSocket.TEXT;
 
 public final class WebSocketClient implements WebSocketListener {
   private final ExecutorService writeExecutor = Executors.newSingleThreadExecutor();
@@ -39,8 +40,8 @@ public final class WebSocketClient implements WebSocketListener {
     Request request = new Request.Builder()
         .url(ctx.getString(R.string.wsConnectionUrl))
         .build();
-    client.newWebSocketCall(request).enqueue(this);
-
+    WebSocketCall call = WebSocketCall.create(client, request);
+    call.enqueue(this);
     // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
     client.dispatcher().executorService().shutdown();
   }
@@ -52,7 +53,7 @@ public final class WebSocketClient implements WebSocketListener {
       @Override
       public void run() {
         try {
-          webSocket.message(RequestBody.create(TEXT, "Hello from app"));
+          webSocket.sendMessage(RequestBody.create(TEXT, "Hello from app"));
         } catch (IOException e) {
           Timber.e(e, "error while opening the connection");
         }
@@ -71,7 +72,7 @@ public final class WebSocketClient implements WebSocketListener {
   }
 
   @Override
-  public void onFailure(Throwable e, Response response) {
+  public void onFailure(IOException e, Response response) {
     Timber.e(e, "error while opening the connection");
     writeExecutor.shutdown();
   }
@@ -95,8 +96,8 @@ public final class WebSocketClient implements WebSocketListener {
   }
 
   @Override
-  public void onPong(ByteString payload) {
-    Timber.v("PONG: %s", payload.utf8());
+  public void onPong(Buffer payload) {
+    Timber.v("PONG: %s", payload.readUtf8());
   }
 
   @Override
