@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_rx"
+        android:icon="@drawable/ic_menu_files"
+        android:title="Rx Demo"/>
+
+    <item android:title="Number of columns">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_one_column"
+                    android:icon="@drawable/ic_one_column"
+                    android:title="One"/>
+                <item
+                    android:id="@+id/nav_two_columns"
+                    android:icon="@drawable/ic_two_columns"
+                    android:title="Two"/>
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Data">
+        <menu>
+            <item
+                android:id="@+id/nav_login"
+                android:icon="@drawable/ic_menu_login"
+                android:title="Login"/>
+            <item
+                android:id="@+id/nav_refresh"
+                android:icon="@drawable/ic_menu_refresh"
+                android:title="Fetch"/>
+            <item
+                android:id="@+id/nav_delete"
+                android:icon="@drawable/ic_menu_delete"
+                android:title="Clear"/>
+            <item
+                android:id="@+id/nav_deleteToken"
+                android:icon="@drawable/ic_menu_delete"
+                android:title="Clear Tokens"/>
+            <item
+                android:id="@+id/nav_cancel"
+                android:icon="@drawable/ic_menu_cancel"
+                android:title="Cancel"/>
+        </menu>
+    </item>
+    <item android:title="WebServices">
+        <menu>
+            <item
+                android:id="@+id/nav_ws"
+                android:icon="@drawable/ic_menu_auth"
+                android:title="Connect"/>
+            <item
+                android:id="@+id/nav_ws_close"
+                android:icon="@drawable/ic_menu_delete"
+                android:title="Disconnect"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_menu_manage"
+        android:title="Settings"/>
+    <item
+        android:id="@+id/nav_wifi"
+        android:icon="@drawable/ic_menu_gallery"
+        android:title="Wifi status"/>
+    <item
+        android:id="@+id/nav_sql"
+        android:icon="@drawable/ic_menu_slideshow"
+        android:title="SQL Demo"/>
+    <item
+        android:id="@+id/nav_files"
+        android:icon="@drawable/ic_menu_files"
+        android:title="List files"/>
+
+    <item android:title="Data">
+        <menu>
+            <item
+                android:id="@+id/nav_google"
+                android:icon="@drawable/ic_menu_auth"
+                android:title="Google Docs"/>
+            <item
+                android:id="@+id/nav_google_clear"
+                android:icon="@drawable/ic_menu_auth_clear"
+                android:title="Clear OAuth Cache"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/nav_crash"
+        android:icon="@drawable/ic_menu_delete"
+        android:title="Throw exception"/>
+</menu>
