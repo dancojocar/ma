@@ -18,6 +18,11 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
 
@@ -31,7 +36,9 @@ import timber.log.Timber;
 
 public class LocationDemo extends BaseActivity implements GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, LocationListener,
-    EasyPermissions.PermissionCallbacks {
+    EasyPermissions.PermissionCallbacks,
+    OnMapReadyCallback {
+
 
   static final int SETTINGS_SCREEN = 1000;
   static final int REQUEST_ACCESS_FINE_LOCATION = 1001;
@@ -46,6 +53,8 @@ public class LocationDemo extends BaseActivity implements GoogleApiClient.Connec
   GoogleApiClient client;
   LocationRequest request;
 
+  GoogleMap map;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -57,6 +66,10 @@ public class LocationDemo extends BaseActivity implements GoogleApiClient.Connec
         .addConnectionCallbacks(this)
         .addOnConnectionFailedListener(this)
         .build();
+
+    SupportMapFragment mapFragment =
+        (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+    mapFragment.getMapAsync(this);
   }
 
   @Override
@@ -125,9 +138,13 @@ public class LocationDemo extends BaseActivity implements GoogleApiClient.Connec
   @Override
   public void onLocationChanged(Location location) {
     Timber.v("onLocationChanged");
-    textLatitude.setText(Double.toString(location.getLatitude()));
-    textLongitude.setText(Double.toString(location.getLongitude()));
+    double latitude = location.getLatitude();
+    textLatitude.setText(Double.toString(latitude));
+    double longitude = location.getLongitude();
+    textLongitude.setText(Double.toString(longitude));
     textAltitude.setText(Double.toString(location.getAltitude()));
+    if (map != null)
+      map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("Marker"));
   }
 
   @Override
@@ -170,4 +187,8 @@ public class LocationDemo extends BaseActivity implements GoogleApiClient.Connec
     }
   }
 
+  @Override
+  public void onMapReady(GoogleMap googleMap) {
+    map = googleMap;
+  }
 }
