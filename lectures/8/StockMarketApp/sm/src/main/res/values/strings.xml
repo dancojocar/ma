@@ -86,4 +86,5 @@
     <string name="timing">Timing:</string>
     <string name="delay">Delay:</string>
     <string name="deadline">Deadline:</string>
+    <string name="pressure_sensor_not_available">The pressure sensor is not available :(</string>
 </resources>

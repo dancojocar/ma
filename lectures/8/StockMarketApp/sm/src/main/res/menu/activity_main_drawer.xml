@@ -15,6 +15,11 @@
         android:title="Acceleration Sensor"/>
 
     <item
+        android:id="@+id/nav_temperature"
+        android:icon="@drawable/ic_menu_gallery"
+        android:title="Temperature Sensor"/>
+
+    <item
         android:id="@+id/nav_rx"
         android:icon="@drawable/ic_menu_files"
         android:title="Rx Demo"/>
