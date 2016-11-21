@@ -28,10 +28,13 @@ import com.example.ma.sm.files.ListFilesActivity;
 import com.example.ma.sm.fragments.BaseActivity;
 import com.example.ma.sm.fragments.PortfolioDetailActivity;
 import com.example.ma.sm.fragments.PortfolioFragment;
+import com.example.ma.sm.jobs.TestJobActivity;
+import com.example.ma.sm.location.LocationDemo;
 import com.example.ma.sm.model.Portfolio;
 import com.example.ma.sm.oauth.GoogleSheetAPI;
 import com.example.ma.sm.preferences.UserSettingsActivity;
 import com.example.ma.sm.rx.RxDemo;
+import com.example.ma.sm.sensors.AccelerationDemo;
 import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
 import com.example.ma.sm.util.Constants;
 import com.example.ma.sm.util.ErrorHandler;
@@ -157,6 +160,12 @@ public class StockMarketActivity extends BaseActivity
       throw new RuntimeException("crash");
     } else if (id == R.id.nav_rx) {
       new RxDemo().start();
+    } else if (id == R.id.nav_location) {
+      gotoActivity(LocationDemo.class);
+    } else if (id == R.id.nav_test_job) {
+      gotoActivity(TestJobActivity.class);
+    } else if (id == R.id.nav_acceleration) {
+      gotoActivity(AccelerationDemo.class);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
