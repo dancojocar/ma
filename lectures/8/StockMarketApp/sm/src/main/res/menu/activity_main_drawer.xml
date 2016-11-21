@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item
-        android:id="@+id/nav_location"
-        android:icon="@drawable/ic_menu_gallery"
-        android:title="Location Demo"/>
-    <item
-        android:id="@+id/nav_test_job"
-        android:icon="@drawable/ic_menu_gallery"
-        android:title="Test Job Activity"/>
+    <item android:title="Services/Sensors">
+        <menu>
+            <item
+                android:id="@+id/nav_location"
+                android:icon="@drawable/ic_menu_gallery"
+                android:title="Location Demo"/>
+            <item
+                android:id="@+id/nav_test_job"
+                android:icon="@drawable/ic_menu_gallery"
+                android:title="Test Job Activity"/>
 
-    <item
-        android:id="@+id/nav_acceleration"
-        android:icon="@drawable/ic_menu_gallery"
-        android:title="Acceleration Sensor"/>
+            <item
+                android:id="@+id/nav_acceleration"
+                android:icon="@drawable/ic_menu_gallery"
+                android:title="Acceleration Sensor"/>
 
-    <item
-        android:id="@+id/nav_temperature"
-        android:icon="@drawable/ic_menu_gallery"
-        android:title="Temperature Sensor"/>
+            <item
+                android:id="@+id/nav_pressure"
+                android:icon="@drawable/ic_menu_gallery"
+                android:title="Pressure Sensor"/>
+        </menu>
+    </item>
 
     <item
         android:id="@+id/nav_rx"
