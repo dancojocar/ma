@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.ma.sm"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -69,6 +69,7 @@ dependencies {
     testCompile 'com.squareup.leakcanary:leakcanary-android-no-op:1.5'
     testCompile 'junit:junit:4.12'
     compile 'com.google.android.gms:play-services:9.8.0'
+    compile 'org.achartengine:achartengine:1.2.0'
     apt 'com.jakewharton:butterknife-compiler:8.4.0'
     apt 'com.google.dagger:dagger-compiler:2.7'
     provided 'javax.annotation:jsr250-api:1.0'

@@ -86,12 +86,15 @@
             android:label="@string/title_activity_location_demo"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
-        <activity android:name=".jobs.TestJobActivity" />
+        <activity android:name=".jobs.TestJobActivity"/>
+
         <service
             android:name=".service.TestJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true"/>
-        <activity android:name=".sensors.AccelerationDemo" />
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <activity android:name=".sensors.AccelerationDemo"/>
+        <activity android:name=".sensors.PressureDemo"/>
     </application>
 
 </manifest>

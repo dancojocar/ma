@@ -35,6 +35,7 @@ import com.example.ma.sm.oauth.GoogleSheetAPI;
 import com.example.ma.sm.preferences.UserSettingsActivity;
 import com.example.ma.sm.rx.RxDemo;
 import com.example.ma.sm.sensors.AccelerationDemo;
+import com.example.ma.sm.sensors.PressureDemo;
 import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
 import com.example.ma.sm.util.Constants;
 import com.example.ma.sm.util.ErrorHandler;
@@ -166,6 +167,8 @@ public class StockMarketActivity extends BaseActivity
       gotoActivity(TestJobActivity.class);
     } else if (id == R.id.nav_acceleration) {
       gotoActivity(AccelerationDemo.class);
+    } else if (id == R.id.nav_temperature) {
+      gotoActivity(PressureDemo.class);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
