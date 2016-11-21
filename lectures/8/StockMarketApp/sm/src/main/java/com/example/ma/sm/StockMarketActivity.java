@@ -167,7 +167,7 @@ public class StockMarketActivity extends BaseActivity
       gotoActivity(TestJobActivity.class);
     } else if (id == R.id.nav_acceleration) {
       gotoActivity(AccelerationDemo.class);
-    } else if (id == R.id.nav_temperature) {
+    } else if (id == R.id.nav_pressure) {
       gotoActivity(PressureDemo.class);
     }
 
