@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
         android:name=".StockApp"
@@ -31,8 +33,10 @@
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="07f1083ce0f24f513a95bcbb3b749f8c2753935d"
-            />
+            android:value="07f1083ce0f24f513a95bcbb3b749f8c2753935d"/>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
 
         <provider
             android:name=".provider.PortfolioContentProvider"
@@ -63,20 +67,28 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name=".service.TokenRefreshListenerService">
+        <service android:name=".service.TokenRefreshListenerService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
-
-        <service
-            android:name=".service.NotificationsListenerService">
+        <service android:name=".service.NotificationsListenerService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
 
+        <activity
+            android:name=".location.LocationDemo"
+            android:label="@string/title_activity_location_demo"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity android:name=".jobs.TestJobActivity" />
+        <service
+            android:name=".service.TestJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
+        <activity android:name=".sensors.AccelerationDemo" />
     </application>
 
 </manifest>
