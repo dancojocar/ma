@@ -42,6 +42,7 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
   private XYMultipleSeriesDataset dataset;
   private GraphicalView chartView;
   private long counter;
+  private long now;
 
   @Override
   protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -95,17 +96,22 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
       tv.setText(R.string.pressure_sensor_not_available);
       view.addView(tv);
     }
+    now = System.currentTimeMillis();
   }
 
   @Override
   public void onSensorChanged(SensorEvent sensorEvent) {
-    float currentPressure = sensorEvent.values[0];
-    Timber.v("Current pressure: %f", currentPressure);
-    pressureText.setText(String.valueOf(currentPressure));
-    dataset.removeSeries(series);
-    series.add(counter++, currentPressure);
-    dataset.addSeries(series);
-    chartView.repaint();
+    long time = System.currentTimeMillis();
+    if (time - now > 1 * 1000) {
+      now = time;
+      float currentPressure = sensorEvent.values[0];
+      Timber.v("Current pressure: %f", currentPressure);
+      pressureText.setText(String.valueOf(currentPressure));
+      dataset.removeSeries(series);
+      series.add(counter++, currentPressure);
+      dataset.addSeries(series);
+      chartView.repaint();
+    }
   }
 
   @Override
