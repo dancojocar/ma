@@ -52,7 +52,8 @@ public class StockApp extends Application {
     instance = (StockApp) getApplicationContext();
     injector = DaggerInjector.builder()
         .appModule(new AppModule(this)).build();
-    RealmConfiguration config = new RealmConfiguration.Builder(this)
+    Realm.init(this);
+    RealmConfiguration config = new RealmConfiguration.Builder()
         .name("default0.realm")
         .schemaVersion(1)
         .build();

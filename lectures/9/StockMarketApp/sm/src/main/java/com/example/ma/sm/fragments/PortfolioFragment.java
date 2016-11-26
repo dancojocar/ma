@@ -86,7 +86,7 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
     } else {
       recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
     }
-    recyclerView.setAdapter(new PortfolioAdapter(realm.allObjects(Portfolio.class), listener));
+    recyclerView.setAdapter(new PortfolioAdapter(realm.where(Portfolio.class).findAll(), listener));
     Timber.v("onViewCreated");
   }
 

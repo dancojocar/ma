@@ -10,6 +10,7 @@ buildscript {
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
         classpath 'com.google.gms:google-services:3.0.0'
         classpath 'com.jakewharton:butterknife-gradle-plugin:8.4.0'
+        classpath "io.realm:realm-gradle-plugin:2.2.0"
 
         // The Fabric Gradle plugin uses an open ended version to react
         // quickly to Android tooling updates
