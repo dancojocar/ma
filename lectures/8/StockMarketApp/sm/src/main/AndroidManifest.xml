@@ -93,6 +93,10 @@
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
 
+        <service
+            android:name=".service.ExampleService"
+            android:exported="false"/>
+
         <activity android:name=".sensors.AccelerationDemo"/>
         <activity android:name=".sensors.PressureDemo"/>
     </application>
