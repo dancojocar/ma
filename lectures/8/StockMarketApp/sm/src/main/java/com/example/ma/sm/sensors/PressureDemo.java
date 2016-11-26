@@ -53,6 +53,10 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
     // Get an instance of the sensor service, and use that to get an instance of
     // a particular sensor.
     sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
+    for (Sensor s : sensors) {
+      Timber.v("Sensor: %s type: %d ", s.getName(), s.getType());
+    }
     pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
     if (pressure != null) {
 
