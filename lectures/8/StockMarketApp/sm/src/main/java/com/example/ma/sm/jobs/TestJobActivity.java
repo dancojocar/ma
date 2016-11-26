@@ -22,6 +22,8 @@ import com.example.ma.sm.R;
 import com.example.ma.sm.fragments.BaseActivity;
 import com.example.ma.sm.service.TestJobService;
 
+import java.lang.ref.WeakReference;
+
 import butterknife.BindColor;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -69,22 +71,34 @@ public class TestJobActivity extends BaseActivity {
 
   private static int kJobId = 0;
 
-  Handler mHandler = new Handler(/* default looper */) {
+  private MyHandler handler =new MyHandler(this);
+
+  private static class MyHandler extends Handler {
+    private final WeakReference<TestJobActivity> wActivity;
+
+
+    public MyHandler(TestJobActivity activity) {
+      this.wActivity = new WeakReference<>(activity);
+    }
+
     @Override
     public void handleMessage(Message msg) {
-      switch (msg.what) {
-        case MSG_UNCOLOUR_START:
-          mShowStartView.setBackgroundColor(defaultColor);
-          break;
-        case MSG_UNCOLOUR_STOP:
-          mShowStopView.setBackgroundColor(defaultColor);
-          break;
-        case MSG_SERVICE_OBJ:
-          mTestService = (TestJobService) msg.obj;
-          mTestService.setUiCallback(TestJobActivity.this);
+      TestJobActivity activity = wActivity.get();
+      if (activity != null) {
+        switch (msg.what) {
+          case MSG_UNCOLOUR_START:
+            activity.mShowStartView.setBackgroundColor(activity.defaultColor);
+            break;
+          case MSG_UNCOLOUR_STOP:
+            activity.mShowStopView.setBackgroundColor(activity.defaultColor);
+            break;
+          case MSG_SERVICE_OBJ:
+            activity.mTestService = (TestJobService) msg.obj;
+            activity.mTestService.setUiCallback(activity);
+        }
       }
     }
-  };
+  }
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -95,7 +109,7 @@ public class TestJobActivity extends BaseActivity {
     mServiceComponent = new ComponentName(this, TestJobService.class);
     // Start service and provide it a way to communicate with us.
     Intent startServiceIntent = new Intent(this, TestJobService.class);
-    startServiceIntent.putExtra("messenger", new Messenger(mHandler));
+    startServiceIntent.putExtra("messenger", new Messenger(handler));
     startService(startServiceIntent);
   }
 
@@ -164,8 +178,8 @@ public class TestJobActivity extends BaseActivity {
    */
   public void onReceivedStartJob(JobParameters params) {
     mShowStartView.setBackgroundColor(startJobColor);
-    Message m = Message.obtain(mHandler, MSG_UNCOLOUR_START);
-    mHandler.sendMessageDelayed(m, 1000L); // uncolour in 1 second.
+    Message m = Message.obtain(handler, MSG_UNCOLOUR_START);
+    handler.sendMessageDelayed(m, 1000L); // uncolour in 1 second.
     mParamsTextView.setText("Executing: " + params.getJobId() + " " + params.getExtras());
   }
 
@@ -177,8 +191,8 @@ public class TestJobActivity extends BaseActivity {
    */
   public void onReceivedStopJob() {
     mShowStopView.setBackgroundColor(stopJobColor);
-    Message m = Message.obtain(mHandler, MSG_UNCOLOUR_STOP);
-    mHandler.sendMessageDelayed(m, 2000L); // uncolour in 1 second.
+    Message m = Message.obtain(handler, MSG_UNCOLOUR_STOP);
+    handler.sendMessageDelayed(m, 2000L); // uncolour in 1 second.
     mParamsTextView.setText("");
   }
 }
