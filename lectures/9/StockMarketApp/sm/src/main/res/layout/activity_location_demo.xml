@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context="com.example.ma.sm.location.LocationDemo">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Latitude: "/>
+
+    <TextView
+        android:id="@+id/latitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Longitude: "/>
+
+    <TextView
+        android:id="@+id/longitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Altitude: "/>
+
+    <TextView
+        android:id="@+id/altitude"
+        android:layout_width="wrap_content"
+
+        android:layout_height="wrap_content"/>
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/map"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              class="com.google.android.gms.maps.SupportMapFragment" />
+
+</LinearLayout>
