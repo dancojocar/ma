@@ -34,7 +34,8 @@ import pub.devrel.easypermissions.EasyPermissions;
 import timber.log.Timber;
 
 
-public class LocationDemo extends BaseActivity implements GoogleApiClient.ConnectionCallbacks,
+public class LocationDemo extends BaseActivity
+    implements GoogleApiClient.ConnectionCallbacks,
     GoogleApiClient.OnConnectionFailedListener, LocationListener,
     EasyPermissions.PermissionCallbacks,
     OnMapReadyCallback {
