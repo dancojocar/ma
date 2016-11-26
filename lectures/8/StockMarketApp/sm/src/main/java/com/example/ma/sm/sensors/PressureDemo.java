@@ -22,6 +22,7 @@ import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
 import org.achartengine.renderer.XYSeriesRenderer;
 
+import java.util.List;
 import java.util.Random;
 
 import butterknife.BindView;
@@ -63,11 +64,11 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
 
       // Create the renderer
       XYSeriesRenderer renderer = new XYSeriesRenderer();
-      renderer.setLineWidth(2);
+      renderer.setLineWidth(5);
       renderer.setColor(Color.RED);
       renderer.setDisplayBoundingPoints(true);
       renderer.setPointStyle(PointStyle.CIRCLE);
-      renderer.setPointStrokeWidth(3);
+      renderer.setPointStrokeWidth(10);
 
       // register the renderer
       XYMultipleSeriesRenderer multiRenderer = new XYMultipleSeriesRenderer();
@@ -80,7 +81,7 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
       // Disable Pan on two axis
       multiRenderer.setPanEnabled(false, false);
       multiRenderer.setYAxisMax(1100);
-      multiRenderer.setYAxisMin(800);
+      multiRenderer.setYAxisMin(0);
       multiRenderer.setShowGrid(true); // we show the grid
 
       dataset = new XYMultipleSeriesDataset();

@@ -13,6 +13,7 @@ public class ExampleService extends Service {
 
   @Override
   public void onCreate() {
+
     Timber.v("The service is being created");
   }
 

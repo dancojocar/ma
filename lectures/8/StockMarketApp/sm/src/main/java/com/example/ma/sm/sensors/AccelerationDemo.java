@@ -17,6 +17,8 @@ import android.view.View;
 
 import com.example.ma.sm.fragments.BaseActivity;
 
+import timber.log.Timber;
+
 public class AccelerationDemo extends BaseActivity {
   private SensorManager mSensorManager;
   private GraphView mGraphView;
@@ -113,6 +115,7 @@ public class AccelerationDemo extends BaseActivity {
 //            Timber.v("magnetic field: %s x: %f y: %f z: %f", event.sensor.getName(), event.values[0], event.values[1], event.values[2]);
           }
           paint.setColor(mColors[i]);
+          paint.setStrokeWidth(15);
           canvas.drawLine(mLastX, mLastValues[i], newX, v, paint);
           mLastValues[i] = v;
           if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
