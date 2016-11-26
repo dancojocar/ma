@@ -36,6 +36,7 @@ import com.example.ma.sm.preferences.UserSettingsActivity;
 import com.example.ma.sm.rx.RxDemo;
 import com.example.ma.sm.sensors.AccelerationDemo;
 import com.example.ma.sm.sensors.PressureDemo;
+import com.example.ma.sm.service.ExampleService;
 import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
 import com.example.ma.sm.util.Constants;
 import com.example.ma.sm.util.ErrorHandler;
@@ -169,6 +170,9 @@ public class StockMarketActivity extends BaseActivity
       gotoActivity(AccelerationDemo.class);
     } else if (id == R.id.nav_pressure) {
       gotoActivity(PressureDemo.class);
+    } else if (id == R.id.nav_service) {
+      Intent service = new Intent(this, ExampleService.class);
+      startService(service);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
