@@ -195,4 +195,10 @@ public class TestJobActivity extends BaseActivity {
     handler.sendMessageDelayed(m, 2000L); // uncolour in 1 second.
     mParamsTextView.setText("");
   }
+
+  @Override
+  protected void onDestroy() {
+    super.onDestroy();
+    mTestService.setUiCallback(null);
+  }
 }
