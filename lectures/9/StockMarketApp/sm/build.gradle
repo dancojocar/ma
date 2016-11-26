@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'io.fabric'
 apply plugin: 'com.jakewharton.butterknife'
+apply plugin: 'realm-android'
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
@@ -60,7 +61,6 @@ dependencies {
         transitive = true;
     }
     compile 'com.jakewharton:butterknife:8.4.0'
-    compile 'io.realm:realm-android:0.87.4'
     compile 'io.reactivex:rxandroid:1.2.0'
     compile 'io.reactivex:rxjava:1.1.4'
     compile 'com.jakewharton.rxbinding:rxbinding:0.4.0'

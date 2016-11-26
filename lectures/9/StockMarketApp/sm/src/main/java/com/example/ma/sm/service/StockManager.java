@@ -92,7 +92,7 @@ public class StockManager {
 
   public void delete() {
     realm.beginTransaction();
-    realm.clear(Portfolio.class);
+    realm.delete(Portfolio.class);
     realm.commitTransaction();
   }
 
@@ -179,9 +179,11 @@ public class StockManager {
 
   public void addPortfolio(Portfolio p) {
     realm.beginTransaction();
-    Portfolio portfolio = realm.createObject(Portfolio.class);
-    int nextID = realm.where(Portfolio.class).max("id").intValue() + 1;
-    portfolio.setId(nextID);
+    Number id = realm.where(Portfolio.class).max("id");
+    int nextID = 1;
+    if (id != null)
+      nextID = id.intValue() + 1;
+    Portfolio portfolio = realm.createObject(Portfolio.class, nextID);
     portfolio.setLastModified(p.getLastModified());
     portfolio.setName(p.getName());
     RealmList<Symbol> symbols = new RealmList<>();
