@@ -122,7 +122,7 @@ public class CrossfadeActivity extends BaseActivity {
         // animations.
         showView.animate()
                 .alpha(1f)
-                .setDuration(mShortAnimationDuration)
+                .setDuration(2000)
                 .setListener(null);
 
         // Animate the "hide" view to 0% opacity. After the animation ends, set its visibility
