@@ -4,6 +4,10 @@
         android:id="@+id/nav_animations"
         android:icon="@drawable/ic_menu_gallery"
         android:title="Animations"/>
+    <item
+        android:id="@+id/nav_apidemo"
+        android:icon="@drawable/ic_menu_gallery"
+        android:title="ApiDemo"/>
 
     <item android:title="Services/Sensors">
         <menu>

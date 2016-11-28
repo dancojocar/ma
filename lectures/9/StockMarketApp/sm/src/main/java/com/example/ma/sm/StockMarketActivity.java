@@ -23,6 +23,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.ma.sm.animations.AnimationsActivity;
+import com.example.ma.sm.animations.ApiDemo;
 import com.example.ma.sm.database.SQLSample;
 import com.example.ma.sm.dialog.NewPortfolio;
 import com.example.ma.sm.files.ListFilesActivity;
@@ -176,6 +177,8 @@ public class StockMarketActivity extends BaseActivity
       startService(service);
     } else if (id == R.id.nav_animations) {
       gotoActivity(AnimationsActivity.class);
+    } else if (id == R.id.nav_apidemo) {
+      gotoActivity(ApiDemo.class);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
