@@ -11,6 +11,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
@@ -20,6 +21,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.ma.sm.animations.AnimationsActivity;
@@ -271,12 +273,14 @@ public class StockMarketActivity extends BaseActivity
   }
 
   @Override
-  public void onListFragmentInteraction(Portfolio portfolio) {
+  public void onListFragmentInteraction(Portfolio portfolio, ImageView iv) {
     Toast.makeText(getApplication(), "Show portfolio details", Toast.LENGTH_SHORT).show();
     Intent intent = new Intent();
     intent.setClass(this, PortfolioDetailActivity.class);
     intent.putExtra("portfolioId", portfolio.getId());
-    startActivity(intent);
+    ActivityOptionsCompat options = ActivityOptionsCompat.
+        makeSceneTransitionAnimation(this, iv, "portfolio_image");
+    startActivity(intent, options.toBundle());
   }
 
   @Override

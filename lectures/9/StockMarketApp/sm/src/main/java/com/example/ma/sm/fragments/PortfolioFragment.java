@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.example.ma.sm.R;
@@ -86,7 +87,7 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
     } else {
       recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
     }
-    recyclerView.setAdapter(new PortfolioAdapter(realm.where(Portfolio.class).findAll(), listener));
+    recyclerView.setAdapter(new PortfolioAdapter(getContext(), realm.where(Portfolio.class).findAll(), listener));
     Timber.v("onViewCreated");
   }
 
@@ -130,7 +131,7 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
    * >Communicating with Other Fragments</a> for more information.
    */
   public interface OnListFragmentInteractionListener {
-    void onListFragmentInteraction(Portfolio item);
+    void onListFragmentInteraction(Portfolio item, ImageView iv);
   }
 
 }
