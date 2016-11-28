@@ -1,9 +1,11 @@
 package com.example.ma.sm.fragments;
 
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.example.ma.sm.R;
 
@@ -14,6 +16,9 @@ import butterknife.OnClick;
 public class PortfolioDetailActivity extends BaseActivity
     implements NewSymbolFragment.OnListFragmentInteractionListener {
 
+  @BindView(R.id.portfolio_image)
+  ImageView image;
+
   @BindView(R.id.symbol_fab)
   FloatingActionButton fab;
 
@@ -22,6 +27,12 @@ public class PortfolioDetailActivity extends BaseActivity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.symbols);
     ButterKnife.bind(this);
+    TypedArray images = getResources().obtainTypedArray(R.array.portfolio_images);
+    long portfolioId = getIntent().getExtras().getLong("portfolioId");
+    int photoId = 1 + (int) (portfolioId % 4);
+    image.setImageResource(images.getResourceId(photoId, R.drawable.photo1));
+    images.recycle();
+
     fab.setVisibility(View.VISIBLE);
     if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
       // If the screen is now in landscape mode, we can show the

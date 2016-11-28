@@ -341,4 +341,12 @@
         <item>NAVIGATION_MODE_TABS</item>
         <item>NAVIGATION_MODE_LIST</item>
     </string-array>
+    <array name="portfolio_images">
+        <item>@drawable/photo1</item>
+        <item>@drawable/photo2</item>
+        <item>@drawable/photo3</item>
+        <item>@drawable/photo4</item>
+        <item>@drawable/photo5</item>
+        <item>@drawable/photo6</item>
+    </array>
 </resources>
