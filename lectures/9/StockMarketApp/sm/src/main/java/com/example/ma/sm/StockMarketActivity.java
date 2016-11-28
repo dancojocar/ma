@@ -22,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.ma.sm.animations.AnimationsActivity;
 import com.example.ma.sm.database.SQLSample;
 import com.example.ma.sm.dialog.NewPortfolio;
 import com.example.ma.sm.files.ListFilesActivity;
@@ -173,6 +174,8 @@ public class StockMarketActivity extends BaseActivity
     } else if (id == R.id.nav_service) {
       Intent service = new Intent(this, ExampleService.class);
       startService(service);
+    } else if (id == R.id.nav_animations) {
+      gotoActivity(AnimationsActivity.class);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -260,6 +263,7 @@ public class StockMarketActivity extends BaseActivity
   @Override
   protected void onDestroy() {
     super.onDestroy();
+    app.getManager().setOnErrorUpdateListener(null);
     Timber.v("onDestroy done");
   }
 
