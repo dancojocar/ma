@@ -23,8 +23,8 @@ import io.realm.RealmResults;
  */
 public class PortfolioAdapter extends RecyclerView.Adapter<PortfolioAdapter.ViewHolder> implements RealmChangeListener {
 
-  private PortfolioFragment.OnListFragmentInteractionListener listener;
   private final RealmResults<Portfolio> portfolios;
+  private PortfolioFragment.OnListFragmentInteractionListener listener;
   private Context context;
 
   public PortfolioAdapter(Context context, RealmResults<Portfolio> portfolios, PortfolioFragment.OnListFragmentInteractionListener listener) {

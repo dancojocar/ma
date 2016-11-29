@@ -35,7 +35,7 @@ public class TestJobActivity extends BaseActivity {
   public static final int MSG_UNCOLOUR_START = 0;
   public static final int MSG_UNCOLOUR_STOP = 1;
   public static final int MSG_SERVICE_OBJ = 2;
-
+  private static int kJobId = 0;
   // UI fields.
   @BindColor(R.color.none_received)
   int defaultColor;
@@ -43,7 +43,6 @@ public class TestJobActivity extends BaseActivity {
   int startJobColor;
   @BindColor(R.color.stop_received)
   int stopJobColor;
-
   @BindView(R.id.onstart_textview)
   TextView mShowStartView;
   @BindView(R.id.onstop_textview)
@@ -62,43 +61,12 @@ public class TestJobActivity extends BaseActivity {
   CheckBox mRequiresChargingCheckBox;
   @BindView(R.id.checkbox_idle)
   CheckBox mRequiresIdleCheckbox;
-
   ComponentName mServiceComponent;
   /**
    * Service object to interact scheduled jobs.
    */
   TestJobService mTestService;
-
-  private static int kJobId = 0;
-
-  private MyHandler handler =new MyHandler(this);
-
-  private static class MyHandler extends Handler {
-    private final WeakReference<TestJobActivity> wActivity;
-
-
-    public MyHandler(TestJobActivity activity) {
-      this.wActivity = new WeakReference<>(activity);
-    }
-
-    @Override
-    public void handleMessage(Message msg) {
-      TestJobActivity activity = wActivity.get();
-      if (activity != null) {
-        switch (msg.what) {
-          case MSG_UNCOLOUR_START:
-            activity.mShowStartView.setBackgroundColor(activity.defaultColor);
-            break;
-          case MSG_UNCOLOUR_STOP:
-            activity.mShowStopView.setBackgroundColor(activity.defaultColor);
-            break;
-          case MSG_SERVICE_OBJ:
-            activity.mTestService = (TestJobService) msg.obj;
-            activity.mTestService.setUiCallback(activity);
-        }
-      }
-    }
-  }
+  private MyHandler handler = new MyHandler(this);
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -121,7 +89,6 @@ public class TestJobActivity extends BaseActivity {
     }
     return true;
   }
-
 
   @OnClick(R.id.schedule_button)
   public void scheduleJob(View v) {
@@ -200,5 +167,32 @@ public class TestJobActivity extends BaseActivity {
   protected void onDestroy() {
     super.onDestroy();
     mTestService.setUiCallback(null);
+  }
+
+  private static class MyHandler extends Handler {
+    private final WeakReference<TestJobActivity> wActivity;
+
+
+    public MyHandler(TestJobActivity activity) {
+      this.wActivity = new WeakReference<>(activity);
+    }
+
+    @Override
+    public void handleMessage(Message msg) {
+      TestJobActivity activity = wActivity.get();
+      if (activity != null) {
+        switch (msg.what) {
+          case MSG_UNCOLOUR_START:
+            activity.mShowStartView.setBackgroundColor(activity.defaultColor);
+            break;
+          case MSG_UNCOLOUR_STOP:
+            activity.mShowStopView.setBackgroundColor(activity.defaultColor);
+            break;
+          case MSG_SERVICE_OBJ:
+            activity.mTestService = (TestJobService) msg.obj;
+            activity.mTestService.setUiCallback(activity);
+        }
+      }
+    }
   }
 }

@@ -7,9 +7,7 @@ import com.example.ma.sm.model.Portfolio;
 import com.example.ma.sm.model.Symbol;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import io.realm.RealmList;
 import timber.log.Timber;

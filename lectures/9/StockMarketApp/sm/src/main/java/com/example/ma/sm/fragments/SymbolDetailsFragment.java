@@ -29,9 +29,6 @@ import timber.log.Timber;
 
 public class SymbolDetailsFragment extends BaseFragment {
 
-  private DecimalFormat df = new DecimalFormat("##.##");
-
-  private long symbolId;
   @BindView(R.id.symbol_name)
   TextView name;
   @BindView(R.id.symbol_quantity)
@@ -46,7 +43,8 @@ public class SymbolDetailsFragment extends BaseFragment {
   EditText ed;
   @Inject
   Realm realm;
-
+  private DecimalFormat df = new DecimalFormat("##.##");
+  private long symbolId;
 
   @Override
   public View onCreateView(LayoutInflater inflater, final ViewGroup container,

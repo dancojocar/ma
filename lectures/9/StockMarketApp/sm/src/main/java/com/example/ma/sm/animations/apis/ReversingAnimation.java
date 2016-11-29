@@ -18,11 +18,9 @@ package com.example.ma.sm.animations.apis;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -39,93 +37,95 @@ import android.widget.LinearLayout;
 
 import com.example.ma.sm.R;
 
+import java.util.ArrayList;
+
 public class ReversingAnimation extends Activity {
 
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.animation_reversing);
+    LinearLayout container = (LinearLayout) findViewById(R.id.container);
+    final MyAnimationView animView = new MyAnimationView(this);
+    container.addView(animView);
+
+    Button starter = (Button) findViewById(R.id.startButton);
+    starter.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        animView.startAnimation();
+      }
+    });
+
+    Button reverser = (Button) findViewById(R.id.reverseButton);
+    reverser.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        animView.reverseAnimation();
+      }
+    });
+
+  }
+
+  public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
+
+    public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
+    ValueAnimator bounceAnim = null;
+    ShapeHolder ball = null;
+
+    public MyAnimationView(Context context) {
+      super(context);
+      ball = createBall(25, 25);
+    }
+
+    private void createAnimation() {
+      if (bounceAnim == null) {
+        bounceAnim = ObjectAnimator.ofFloat(ball, "y", ball.getY(), getHeight() - 50f).
+            setDuration(1500);
+        bounceAnim.setInterpolator(new AccelerateInterpolator(2f));
+        bounceAnim.addUpdateListener(this);
+      }
+    }
+
+    public void startAnimation() {
+      createAnimation();
+      bounceAnim.start();
+    }
+
+    public void reverseAnimation() {
+      createAnimation();
+      bounceAnim.reverse();
+    }
+
+    private ShapeHolder createBall(float x, float y) {
+      OvalShape circle = new OvalShape();
+      circle.resize(50f, 50f);
+      ShapeDrawable drawable = new ShapeDrawable(circle);
+      ShapeHolder shapeHolder = new ShapeHolder(drawable);
+      shapeHolder.setX(x - 25f);
+      shapeHolder.setY(y - 25f);
+      int red = (int) (Math.random() * 255);
+      int green = (int) (Math.random() * 255);
+      int blue = (int) (Math.random() * 255);
+      int color = 0xff000000 | red << 16 | green << 8 | blue;
+      Paint paint = drawable.getPaint(); //new Paint(Paint.ANTI_ALIAS_FLAG);
+      int darkColor = 0xff000000 | red / 4 << 16 | green / 4 << 8 | blue / 4;
+      RadialGradient gradient = new RadialGradient(37.5f, 12.5f,
+          50f, color, darkColor, Shader.TileMode.CLAMP);
+      paint.setShader(gradient);
+      shapeHolder.setPaint(paint);
+      return shapeHolder;
+    }
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.animation_reversing);
-        LinearLayout container = (LinearLayout) findViewById(R.id.container);
-        final MyAnimationView animView = new MyAnimationView(this);
-        container.addView(animView);
-
-        Button starter = (Button) findViewById(R.id.startButton);
-        starter.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                animView.startAnimation();
-            }
-        });
-
-        Button reverser = (Button) findViewById(R.id.reverseButton);
-        reverser.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                animView.reverseAnimation();
-            }
-        });
-
+    protected void onDraw(Canvas canvas) {
+      canvas.save();
+      canvas.translate(ball.getX(), ball.getY());
+      ball.getShape().draw(canvas);
+      canvas.restore();
     }
 
-    public class MyAnimationView extends View implements ValueAnimator.AnimatorUpdateListener {
-
-        public final ArrayList<ShapeHolder> balls = new ArrayList<ShapeHolder>();
-        ValueAnimator bounceAnim = null;
-        ShapeHolder ball = null;
-
-        public MyAnimationView(Context context) {
-            super(context);
-            ball = createBall(25, 25);
-        }
-
-        private void createAnimation() {
-            if (bounceAnim == null) {
-                bounceAnim = ObjectAnimator.ofFloat(ball, "y", ball.getY(), getHeight() - 50f).
-                        setDuration(1500);
-                bounceAnim.setInterpolator(new AccelerateInterpolator(2f));
-                bounceAnim.addUpdateListener(this);
-            }
-        }
-
-        public void startAnimation() {
-            createAnimation();
-            bounceAnim.start();
-        }
-
-        public void reverseAnimation() {
-            createAnimation();
-            bounceAnim.reverse();
-        }
-
-        private ShapeHolder createBall(float x, float y) {
-            OvalShape circle = new OvalShape();
-            circle.resize(50f, 50f);
-            ShapeDrawable drawable = new ShapeDrawable(circle);
-            ShapeHolder shapeHolder = new ShapeHolder(drawable);
-            shapeHolder.setX(x - 25f);
-            shapeHolder.setY(y - 25f);
-            int red = (int)(Math.random() * 255);
-            int green = (int)(Math.random() * 255);
-            int blue = (int)(Math.random() * 255);
-            int color = 0xff000000 | red << 16 | green << 8 | blue;
-            Paint paint = drawable.getPaint(); //new Paint(Paint.ANTI_ALIAS_FLAG);
-            int darkColor = 0xff000000 | red/4 << 16 | green/4 << 8 | blue/4;
-            RadialGradient gradient = new RadialGradient(37.5f, 12.5f,
-                    50f, color, darkColor, Shader.TileMode.CLAMP);
-            paint.setShader(gradient);
-            shapeHolder.setPaint(paint);
-            return shapeHolder;
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            canvas.save();
-            canvas.translate(ball.getX(), ball.getY());
-            ball.getShape().draw(canvas);
-            canvas.restore();
-        }
-
-        public void onAnimationUpdate(ValueAnimator animation) {
-            invalidate();
-        }
-
+    public void onAnimationUpdate(ValueAnimator animation) {
+      invalidate();
     }
+
+  }
 }

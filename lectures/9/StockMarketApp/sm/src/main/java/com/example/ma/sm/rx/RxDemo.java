@@ -6,7 +6,6 @@ import android.widget.Button;
 import com.jakewharton.rxbinding.view.RxView;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Observer;

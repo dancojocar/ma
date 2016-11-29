@@ -18,22 +18,19 @@ package com.example.ma.sm.animations.apis;
 
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
+
 import android.animation.Animator;
-import android.animation.ObjectAnimator;
-import android.widget.LinearLayout;
-
 import android.animation.AnimatorListenerAdapter;
-import android.animation.Keyframe;
 import android.animation.LayoutTransition;
-import android.animation.PropertyValuesHolder;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 
 import com.example.ma.sm.R;
 
@@ -43,95 +40,97 @@ import com.example.ma.sm.R;
  */
 public class LayoutAnimationsHideShow extends Activity {
 
-    private int numButtons = 4;
-    ViewGroup container = null;
-    private LayoutTransition mTransitioner;
+  ViewGroup container = null;
+  private int numButtons = 4;
+  private LayoutTransition mTransitioner;
 
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_animations_hideshow);
+  /**
+   * Called when the activity is first created.
+   */
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.layout_animations_hideshow);
 
-        final CheckBox hideGoneCB = (CheckBox) findViewById(R.id.hideGoneCB);
+    final CheckBox hideGoneCB = (CheckBox) findViewById(R.id.hideGoneCB);
 
-        container = new LinearLayout(this);
-        container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT));
+    container = new LinearLayout(this);
+    container.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT));
 
-        // Add a slew of buttons to the container. We won't add any more buttons at runtime, but
-        // will just show/hide the buttons we've already created
-        for (int i = 0; i < numButtons; ++i) {
-            Button newButton = new Button(this);
-            newButton.setText(String.valueOf(i));
-            container.addView(newButton);
-            newButton.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    v.setVisibility(hideGoneCB.isChecked() ? View.GONE : View.INVISIBLE);
-                }
-            });
+    // Add a slew of buttons to the container. We won't add any more buttons at runtime, but
+    // will just show/hide the buttons we've already created
+    for (int i = 0; i < numButtons; ++i) {
+      Button newButton = new Button(this);
+      newButton.setText(String.valueOf(i));
+      container.addView(newButton);
+      newButton.setOnClickListener(new View.OnClickListener() {
+        public void onClick(View v) {
+          v.setVisibility(hideGoneCB.isChecked() ? View.GONE : View.INVISIBLE);
         }
-
-        resetTransition();
-
-        ViewGroup parent = (ViewGroup) findViewById(R.id.parent);
-        parent.addView(container);
-
-        Button addButton = (Button) findViewById(R.id.addNewButton);
-        addButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                for (int i = 0; i < container.getChildCount(); ++i) {
-                    View view = (View) container.getChildAt(i);
-                    view.setVisibility(View.VISIBLE);
-                }
-            }
-        });
-
-        CheckBox customAnimCB = (CheckBox) findViewById(R.id.customAnimCB);
-        customAnimCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                long duration;
-                if (isChecked) {
-                    mTransitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
-                    mTransitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 30);
-                    setupCustomAnimations();
-                    duration = 500;
-                } else {
-                    resetTransition();
-                    duration = 300;
-                }
-                mTransitioner.setDuration(duration);
-            }
-        });
+      });
     }
 
-    private void resetTransition() {
-        mTransitioner = new LayoutTransition();
-        container.setLayoutTransition(mTransitioner);
-    }
+    resetTransition();
 
-    private void setupCustomAnimations() {
-        // Adding
-        ObjectAnimator animIn = ObjectAnimator.ofFloat(null, "rotationY", 90f, 0f).
-                setDuration(mTransitioner.getDuration(LayoutTransition.APPEARING));
-        mTransitioner.setAnimator(LayoutTransition.APPEARING, animIn);
-        animIn.addListener(new AnimatorListenerAdapter() {
-            public void onAnimationEnd(Animator anim) {
-                View view = (View) ((ObjectAnimator) anim).getTarget();
-                view.setRotationY(0f);
-            }
-        });
+    ViewGroup parent = (ViewGroup) findViewById(R.id.parent);
+    parent.addView(container);
 
-        // Removing
-        ObjectAnimator animOut = ObjectAnimator.ofFloat(null, "rotationX", 0f, 90f).
-                setDuration(mTransitioner.getDuration(LayoutTransition.DISAPPEARING));
-        mTransitioner.setAnimator(LayoutTransition.DISAPPEARING, animOut);
-        animOut.addListener(new AnimatorListenerAdapter() {
-            public void onAnimationEnd(Animator anim) {
-                View view = (View) ((ObjectAnimator) anim).getTarget();
-                view.setRotationX(0f);
-            }
-        });
+    Button addButton = (Button) findViewById(R.id.addNewButton);
+    addButton.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        for (int i = 0; i < container.getChildCount(); ++i) {
+          View view = (View) container.getChildAt(i);
+          view.setVisibility(View.VISIBLE);
+        }
+      }
+    });
 
-    }
+    CheckBox customAnimCB = (CheckBox) findViewById(R.id.customAnimCB);
+    customAnimCB.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+      public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        long duration;
+        if (isChecked) {
+          mTransitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
+          mTransitioner.setStagger(LayoutTransition.CHANGE_DISAPPEARING, 30);
+          setupCustomAnimations();
+          duration = 500;
+        } else {
+          resetTransition();
+          duration = 300;
+        }
+        mTransitioner.setDuration(duration);
+      }
+    });
+  }
+
+  private void resetTransition() {
+    mTransitioner = new LayoutTransition();
+    container.setLayoutTransition(mTransitioner);
+  }
+
+  private void setupCustomAnimations() {
+    // Adding
+    ObjectAnimator animIn = ObjectAnimator.ofFloat(null, "rotationY", 90f, 0f).
+        setDuration(mTransitioner.getDuration(LayoutTransition.APPEARING));
+    mTransitioner.setAnimator(LayoutTransition.APPEARING, animIn);
+    animIn.addListener(new AnimatorListenerAdapter() {
+      public void onAnimationEnd(Animator anim) {
+        View view = (View) ((ObjectAnimator) anim).getTarget();
+        view.setRotationY(0f);
+      }
+    });
+
+    // Removing
+    ObjectAnimator animOut = ObjectAnimator.ofFloat(null, "rotationX", 0f, 90f).
+        setDuration(mTransitioner.getDuration(LayoutTransition.DISAPPEARING));
+    mTransitioner.setAnimator(LayoutTransition.DISAPPEARING, animOut);
+    animOut.addListener(new AnimatorListenerAdapter() {
+      public void onAnimationEnd(Animator anim) {
+        View view = (View) ((ObjectAnimator) anim).getTarget();
+        view.setRotationX(0f);
+      }
+    });
+
+  }
 }

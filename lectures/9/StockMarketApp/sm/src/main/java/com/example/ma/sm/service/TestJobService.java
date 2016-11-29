@@ -24,8 +24,8 @@ import timber.log.Timber;
  */
 public class TestJobService extends JobService {
 
-  TestJobActivity mActivity;
   private final LinkedList<JobParameters> jobParamsMap = new LinkedList<>();
+  TestJobActivity mActivity;
 
   @Override
   public void onCreate() {
