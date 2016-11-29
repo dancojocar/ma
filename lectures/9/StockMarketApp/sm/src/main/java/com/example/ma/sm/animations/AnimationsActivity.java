@@ -57,7 +57,7 @@ public class AnimationsActivity extends ListActivity {
      * #onCreate(android.os.Bundle)} because the {@link Sample} constructor needs access to {@link
      * android.content.res.Resources}.
      */
-    private static Sample[] mSamples;
+    private Sample[] mSamples;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
