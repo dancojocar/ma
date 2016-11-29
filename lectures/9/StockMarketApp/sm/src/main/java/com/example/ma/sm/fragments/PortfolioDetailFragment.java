@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.example.ma.sm.R;
 import com.example.ma.sm.StockApp;
 import com.example.ma.sm.model.Symbol;
 import com.squareup.leakcanary.RefWatcher;
@@ -27,9 +26,9 @@ import static com.example.ma.sm.database.DBContract.SymbolTable;
 
 public class PortfolioDetailFragment extends ListFragment {
 
-  private RealmResults<Symbol> allSorted;
   @Inject
   Realm realm;
+  private RealmResults<Symbol> allSorted;
 
   @Override
   public void onActivityCreated(Bundle savedInstanceState) {

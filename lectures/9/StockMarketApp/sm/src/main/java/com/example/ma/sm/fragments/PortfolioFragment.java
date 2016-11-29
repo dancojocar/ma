@@ -33,14 +33,14 @@ import timber.log.Timber;
 public class PortfolioFragment extends BaseFragment implements OnCancellableListener {
 
   public static final String ARG_COLUMN_COUNT = "column-count";
-  private int mColumnCount = 1;
-  private OnListFragmentInteractionListener listener;
   @BindView(R.id.list)
   RecyclerView recyclerView;
   @BindView(R.id.progressBar)
   ProgressBar progressBar;
   @Inject
   Realm realm;
+  private int mColumnCount = 1;
+  private OnListFragmentInteractionListener listener;
 
   /**
    * Mandatory empty constructor for the fragment manager to instantiate the

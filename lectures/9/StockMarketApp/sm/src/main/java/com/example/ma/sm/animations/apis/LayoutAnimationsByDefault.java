@@ -19,10 +19,9 @@ package com.example.ma.sm.animations.apis;
 // Need the following import to get access to the app resources, since this
 // class is in a sub-package.
 
-import android.view.View;
-
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
 
@@ -34,29 +33,29 @@ import com.example.ma.sm.R;
  */
 public class LayoutAnimationsByDefault extends Activity {
 
-    private int numButtons = 1;
+  private int numButtons = 1;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
 
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_animations_by_default);
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.layout_animations_by_default);
 
-        final GridLayout gridContainer = (GridLayout) findViewById(R.id.gridContainer);
+    final GridLayout gridContainer = (GridLayout) findViewById(R.id.gridContainer);
 
-        Button addButton = (Button) findViewById(R.id.addNewButton);
-        addButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Button newButton = new Button(LayoutAnimationsByDefault.this);
-                newButton.setText(String.valueOf(numButtons++));
-                newButton.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        gridContainer.removeView(v);
-                    }
-                });
-                gridContainer.addView(newButton, Math.min(1, gridContainer.getChildCount()));
-            }
+    Button addButton = (Button) findViewById(R.id.addNewButton);
+    addButton.setOnClickListener(new View.OnClickListener() {
+      public void onClick(View v) {
+        Button newButton = new Button(LayoutAnimationsByDefault.this);
+        newButton.setText(String.valueOf(numButtons++));
+        newButton.setOnClickListener(new View.OnClickListener() {
+          public void onClick(View v) {
+            gridContainer.removeView(v);
+          }
         });
-    }
+        gridContainer.addView(newButton, Math.min(1, gridContainer.getChildCount()));
+      }
+    });
+  }
 
 }

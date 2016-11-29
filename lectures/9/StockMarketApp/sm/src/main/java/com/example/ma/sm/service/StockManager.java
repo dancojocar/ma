@@ -35,14 +35,14 @@ public class StockManager {
   private final StockApp app;
   @Inject
   ClientConnection client;
+  @Inject
+  Realm realm;
   private ServerNotifier serverNotifier;
   private OnErrorUpdateListener onErrorListener;
   private CancellableCall cc;
   private ContentResolver resolver;
   private User user;
   private WebSocketClient ws;
-  @Inject
-  Realm realm;
 
   public StockManager(Context context) {
     app = (StockApp) context;

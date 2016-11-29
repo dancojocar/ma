@@ -41,17 +41,14 @@ public class NewSymbolFragment extends BaseFragment {
   EditText quantity;
   @BindView(R.id.new_symbol_price)
   EditText price;
-
+  @Inject
+  Realm realm;
   private Observable<CharSequence> nameChangeObservable;
   private Observable<CharSequence> quantityChangeObservable;
   private Observable<CharSequence> priceChangeObservable;
-
   private Subscription subscription = null;
   private long portfolioId;
   private boolean valid;
-
-  @Inject
-  Realm realm;
   private OnListFragmentInteractionListener listener;
 
   @Override

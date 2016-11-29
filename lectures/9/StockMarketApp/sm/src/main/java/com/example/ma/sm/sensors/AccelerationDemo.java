@@ -17,11 +17,39 @@ import android.view.View;
 
 import com.example.ma.sm.fragments.BaseActivity;
 
-import timber.log.Timber;
-
 public class AccelerationDemo extends BaseActivity {
   private SensorManager mSensorManager;
   private GraphView mGraphView;
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    // Be sure to call the super class.
+    super.onCreate(savedInstanceState);
+
+    mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+    mGraphView = new GraphView(this);
+    setContentView(mGraphView);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    mSensorManager.registerListener(mGraphView,
+        mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+        SensorManager.SENSOR_DELAY_FASTEST);
+    mSensorManager.registerListener(mGraphView,
+        mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+        SensorManager.SENSOR_DELAY_FASTEST);
+    mSensorManager.registerListener(mGraphView,
+        mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
+        SensorManager.SENSOR_DELAY_FASTEST);
+  }
+
+  @Override
+  protected void onStop() {
+    mSensorManager.unregisterListener(mGraphView);
+    super.onStop();
+  }
 
   private class GraphView extends View implements SensorEventListener {
     private Bitmap mBitmap;
@@ -128,35 +156,5 @@ public class AccelerationDemo extends BaseActivity {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
     }
-  }
-
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    // Be sure to call the super class.
-    super.onCreate(savedInstanceState);
-
-    mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-    mGraphView = new GraphView(this);
-    setContentView(mGraphView);
-  }
-
-  @Override
-  protected void onResume() {
-    super.onResume();
-    mSensorManager.registerListener(mGraphView,
-        mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
-        SensorManager.SENSOR_DELAY_FASTEST);
-    mSensorManager.registerListener(mGraphView,
-        mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
-        SensorManager.SENSOR_DELAY_FASTEST);
-    mSensorManager.registerListener(mGraphView,
-        mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
-        SensorManager.SENSOR_DELAY_FASTEST);
-  }
-
-  @Override
-  protected void onStop() {
-    mSensorManager.unregisterListener(mGraphView);
-    super.onStop();
   }
 }
