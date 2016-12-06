@@ -1,0 +1,18 @@
+<ion-header>
+    <ion-navbar>
+        <ion-title>Ionic 2 Example - Create</ion-title>
+        <ion-buttons end>
+            <button (click)="save()"><ion-icon name="checkmark"></ion-icon></button>
+        </ion-buttons>
+    </ion-navbar>
+</ion-header>
+ 
+<ion-content class="add">
+    <ion-list>
+        <ion-item>
+            <ion-label floating>Todo Item</ion-label>
+            <ion-input type="text" [(ngModel)]="todoItem"></ion-input>
+        </ion-item>
+    </ion-list>
+</ion-content>
+
