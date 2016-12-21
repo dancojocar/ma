@@ -102,7 +102,7 @@ public class ActivityFanceApiDemo extends AppCompatActivity implements View.OnCl
         new Intent(FENCE_RECEIVER_ACTION),
         0);
 
-    //fence to activate when headphone is plugged in
+    //fence to activate when at rest
     Awareness.FenceApi.updateFences(mGoogleApiClient, new FenceUpdateRequest.Builder()
         .addFence(ACTIVITY_STILL_FENCE_KEY, activityStillFence, fencePendingIntent).build())
         .setResultCallback(new ResultCallbacks<Status>() {
@@ -121,7 +121,7 @@ public class ActivityFanceApiDemo extends AppCompatActivity implements View.OnCl
           }
         });
 
-    //fence to activate when headphone is unplugged in
+    //fence to activate when moving
     Awareness.FenceApi.updateFences(mGoogleApiClient, new FenceUpdateRequest.Builder()
         .addFence(ACTIVITY_MOVING_FENCE_KEY, activityMovingFence, fencePendingIntent).build());
   }
@@ -187,19 +187,19 @@ public class ActivityFanceApiDemo extends AppCompatActivity implements View.OnCl
             mActivityFenceStatusTv.setText("You are moving. Keep moving.:-)");
             break;
           case FenceState.UNKNOWN:
-            mActivityFenceStatusTv.setText("Confused.:-(");
+            mActivityFenceStatusTv.setText("Confused.:(");
             break;
         }
       } else if (TextUtils.equals(fenceState.getFenceKey(), ACTIVITY_MOVING_FENCE_KEY)) {
         switch (fenceState.getCurrentState()) {
-          case FenceState.FALSE:
-            mActivityFenceStatusTv.setText("You are still.");
-            break;
           case FenceState.TRUE: //User is moving
             mActivityFenceStatusTv.setText("You are moving. Keep moving.:-)");
             break;
+          case FenceState.FALSE:
+            mActivityFenceStatusTv.setText("You are still.");
+            break;
           case FenceState.UNKNOWN:
-            mActivityFenceStatusTv.setText("Confused.:-(");
+            mActivityFenceStatusTv.setText("Confused.:(");
             break;
         }
       }
