@@ -1,0 +1,48 @@
+{
+  "name": "eddystone-beacon-emulator",
+  "version": "0.1.2",
+  "description": "Emulator for Eddystone beacon peripherals",
+  "os": [
+    "darwin"
+  ],
+  "license": "MIT",
+  "repository": "ragingwind/eddystone-beacon-emulator",
+  "author": {
+    "name": "ragingwind",
+    "email": "ragingwind@gmail.com",
+    "url": "ragingwind.me"
+  },
+  "bin": {
+    "eddystone-beacon-emulator": "cli.js"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {},
+  "files": [
+    "index.js",
+    "cli.js"
+  ],
+  "keywords": [
+    "eddystone",
+    "eddystone configuration service",
+    "emulator",
+    "eddystone-beacon",
+    "bleno"
+  ],
+  "dependencies": {
+    "bleno": "^0.1.14",
+    "debug": "^2.2.0",
+    "eddystone-beacon": "^1.0.1",
+    "eddystone-beacon-config": "^0.1.2",
+    "eddystone-uid": "^0.1.2",
+    "meow": "^3.3.0",
+    "node-uuid": "^1.4.3",
+    "object-assign": "^3.0.0",
+    "pulsebeat": "^0.1.0",
+    "random-measure": "^0.1.0"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  }
+}
