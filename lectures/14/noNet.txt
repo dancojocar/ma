@@ -1,0 +1,147 @@
+--- Useful libraries ---
+
+compile 'io.reactivex:rxandroid:1.2.1'
+compile 'io.reactivex:rxjava:1.1.6'
+compile 'com.squareup.retrofit2:retrofit:2.1.0'
+compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+compile 'com.jakewharton.timber:timber:4.5.0'
+compile 'com.jakewharton:butterknife:8.4.0'
+annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'
+
+--- Plugins ---
+
+apply plugin: 'com.jakewharton.butterknife'
+apply plugin: 'realm-android'
+
+--- Plugin info in big gradle prop file -> dependencies section ---
+        classpath 'io.realm:realm-gradle-plugin:2.2.0'
+        classpath 'com.jakewharton:butterknife-gradle-plugin:8.4.0'
+
+
+--- Retrofit Service Sample --
+
+public interface Service {
+  String SERVICE_ENDPOINT = "http://192.168.2.1:3000";
+
+
+  @GET("url")
+  Observable<List<Item>> getItems();
+
+  @POST("url")
+  Observable<Item> addItem(@Body Item i);
+
+}
+
+--- Retrofit Service Factory ---
+
+public class ServiceFactory {
+
+  public static <T> T createRetrofitService(final Class<T> clazz, final String endPoint) {
+    Retrofit retrofit = new Retrofit.Builder()
+        .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create())
+        .baseUrl(endPoint)
+        .build();
+    return retrofit.create(clazz);
+  }
+} 
+
+
+--- Timber init ---
+Timber.plant(new Timber.DebugTree());
+
+--- Realm init ---
+Realm.init(this);
+RealmConfiguration config = new RealmConfiguration.Builder().build();
+Realm.deleteRealm(config);
+Realm.setDefaultConfiguration(config);
+
+--- rx interval ---
+
+Observable.interval(rate, TimeUnit.SECONDS)
+          .timeInterval()
+          .observeOn(AndroidSchedulers.mainThread())
+          .subscribe(new Subscriber<TimeInterval<Long>>() {
+            @Override
+            public void onCompleted() {
+            }
+
+            @Override
+            public void onError(Throwable e) {
+              Timber.e(e, "Error ");
+              unsubscribe();
+            }
+
+            @Override
+            public void onNext(TimeInterval<Long> longTimeInterval) {
+            }
+          });
+
+--- rx retrofit call with timeout ---
+service.getItems()
+        .timeout(5, TimeUnit.SECONDS)
+        .subscribeOn(Schedulers.newThread())
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Subscriber<List<Items>>() {
+          @Override
+          public void onCompleted() {
+          }
+
+          @Override
+          public void onError(Throwable e) {
+          }
+
+          @Override
+          public void onNext(final List<Item> items) {
+          }
+        });
+    ;
+  } 
+
+-- realm query
+
+realm.executeTransaction(new Realm.Transaction() {
+              @Override
+              public void execute(Realm realm) {
+                RealmResults<Item> result = realm.where(Item.class).findAll();
+                List<Item> items = realm.copyFromRealm(result);
+              }
+            });
+
+-- realm async update
+realm.executeTransactionAsync(new Realm.Transaction() {
+              @Override
+              public void execute(Realm realm) {
+                realm.copyToRealmOrUpdate(items);
+              }
+            });
+
+
+-- Snackbar action sample ---
+
+Snackbar.make(recyclerView, error, Snackbar.LENGTH_INDEFINITE)
+        .setAction("RETRY", new View.OnClickListener() {
+          @Override
+          public void onClick(View view) {
+          }
+        }).show();
+
+
+--- Intent with results ---
+Intent intent = new Intent(getApplication(), NewBook.class);
+    startActivityForResult(intent, 10000);
+
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+...
+  }
+
+
+--- Determine conectivity ---
+ConnectivityManager cm = (ConnectivityManager) context
+        .getSystemService(Context.CONNECTIVITY_SERVICE);
+    NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+    return networkInfo != null && networkInfo.isConnected();
+
+
