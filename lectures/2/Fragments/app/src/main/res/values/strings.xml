@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Fragments</string>
+    <string name="textViewLabel">Test: %1d</string>
+    <string name="okButton">OK: %1d</string>
+</resources>
