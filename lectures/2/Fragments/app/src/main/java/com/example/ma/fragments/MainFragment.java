@@ -61,7 +61,7 @@ public class MainFragment extends Fragment {
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    listener.onSelect("Button: " + count + " was pressed!");
+                    listener.onSelect(getString(R.string.onPressMessage, count));
                 }
             });
             hl.addView(button);

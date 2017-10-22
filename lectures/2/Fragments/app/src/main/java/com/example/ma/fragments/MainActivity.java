@@ -14,6 +14,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnSe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG,"onCreate");
         setContentView(R.layout.main);
 
         if (savedInstanceState != null) {
