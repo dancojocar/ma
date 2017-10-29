@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Number of columns">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_one_column"
+                    android:icon="@drawable/ic_one_column"
+                    android:title="One"/>
+                <item
+                    android:id="@+id/nav_two_columns"
+                    android:icon="@drawable/ic_two_columns"
+                    android:title="Two"/>
+            </group>
+        </menu>
+    </item>
+
+    <item android:title="Data">
+        <menu>
+            <item
+                android:id="@+id/nav_refresh"
+                android:icon="@drawable/ic_menu_refresh"
+                android:title="Fetch"/>
+            <item
+                android:id="@+id/nav_delete"
+                android:icon="@drawable/ic_menu_delete"
+                android:title="Clear"/>
+            <item
+                android:id="@+id/nav_cancel"
+                android:icon="@drawable/ic_menu_cancel"
+                android:title="Cancel"/>
+        </menu>
+    </item>
+    <item
+        android:id="@+id/nav_settings"
+        android:icon="@drawable/ic_menu_manage"
+        android:title="Settings"/>
+    <item
+        android:id="@+id/nav_wifi"
+        android:icon="@drawable/ic_menu_gallery"
+        android:title="Wifi status"/>
+
+    <item
+        android:id="@+id/nav_old_db"
+        android:icon="@drawable/ic_menu_slideshow"
+        android:title="Demo old db"/>
+    <item
+        android:id="@+id/nav_new_db"
+        android:icon="@drawable/ic_menu_slideshow"
+        android:title="Demo new db"/>
+</menu>

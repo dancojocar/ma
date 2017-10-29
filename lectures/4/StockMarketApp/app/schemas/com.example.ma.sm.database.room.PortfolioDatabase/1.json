@@ -1,0 +1,113 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "7dad1289eb0d04cae3b3e6e6d5cdda98",
+    "entities": [
+      {
+        "tableName": "PortfolioEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT, `description` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [
+          {
+            "name": "index_PortfolioEntity_title",
+            "unique": false,
+            "columnNames": [
+              "title"
+            ],
+            "createSql": "CREATE  INDEX `index_PortfolioEntity_title` ON `${TABLE_NAME}` (`title`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "SymbolEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT, `value` REAL NOT NULL, `portfolio_id` INTEGER NOT NULL, FOREIGN KEY(`portfolio_id`) REFERENCES `PortfolioEntity`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "portfolio",
+            "columnName": "portfolio_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [
+          {
+            "name": "index_SymbolEntity_portfolio_id",
+            "unique": false,
+            "columnNames": [
+              "portfolio_id"
+            ],
+            "createSql": "CREATE  INDEX `index_SymbolEntity_portfolio_id` ON `${TABLE_NAME}` (`portfolio_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "PortfolioEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "portfolio_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"7dad1289eb0d04cae3b3e6e6d5cdda98\")"
+    ]
+  }
+}

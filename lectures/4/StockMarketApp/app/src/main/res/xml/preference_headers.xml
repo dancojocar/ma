@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+    <header
+        android:fragment="com.example.ma.sm.preferences.UserSettingsActivity$DemoSettingsFragment"
+        android:icon="@drawable/ic_settings_applications"
+        android:summary="An example of some preferences."
+        android:title="Demo settings" />
+
+    <header
+        android:fragment="com.example.ma.sm.preferences.UserSettingsActivity$WifiSettingsFragment"
+        android:icon="@drawable/ic_settings_display"
+        android:summary="Some other preferences you can see."
+        android:title="Wifi settings">
+        <!-- Arbitrary key/value pairs can be included with a header as
+             arguments to its fragment. -->
+        <extra
+            android:name="someKey"
+            android:value="someHeaderValue" />
+    </header>
+    <header
+        android:icon="@drawable/ic_settings_display"
+        android:summary="Launches an Intent."
+        android:title="Intent">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="http://www.android.com" />
+    </header>
+
+</preference-headers>
