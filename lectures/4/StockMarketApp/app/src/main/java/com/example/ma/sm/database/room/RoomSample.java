@@ -16,7 +16,7 @@ public class RoomSample {
         PortfolioDatabase db = Room.databaseBuilder(context,
             PortfolioDatabase.class, "portfolios.db")
 //            .addMigrations(MIGRATION_1_2)
-//            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration()
             .build();
 
         PortfolioDao portfolioDao = db.portfolioDao();
@@ -27,21 +27,22 @@ public class RoomSample {
         portfolioDao.insert(portfolio);
 
         List<PortfolioEntity> portfolios = portfolioDao.getEntries();
+        portfolio=portfolios.get(0);
         for (PortfolioEntity p :
             portfolios) {
           Log.d(TAG, "portfolio = " + p);
         }
-        portfolioDao.delete(portfolio);
+//        portfolioDao.delete(portfolio);
 //        portfolioDao.nukeAll();
 
-//        PortfolioSymbolsDao psDao = db.portfolioSymbolsDao();
-//        listPortfoliosWithTheirSymbols(psDao);
-//        SymbolEntity symbol = new SymbolEntity();
-//        symbol.setName("test Symbol");
-//        symbol.setValue(10.0);
-//        symbol.setPortfolio(portfolio.getId());
-//        psDao.addSymbol(symbol);
-//        listPortfoliosWithTheirSymbols(psDao);
+        PortfolioSymbolsDao psDao = db.portfolioSymbolsDao();
+        listPortfoliosWithTheirSymbols(psDao);
+        SymbolEntity symbol = new SymbolEntity();
+        symbol.setName("test Symbol");
+        symbol.setValue(10.0);
+        symbol.setPortfolio(portfolio.getId());
+        psDao.addSymbol(symbol);
+        listPortfoliosWithTheirSymbols(psDao);
       }
     });
     bg.start();

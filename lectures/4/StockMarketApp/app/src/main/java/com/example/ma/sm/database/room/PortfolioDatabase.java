@@ -5,7 +5,7 @@ import android.arch.persistence.room.Database;
 import android.arch.persistence.room.RoomDatabase;
 import android.arch.persistence.room.migration.Migration;
 
-@Database(entities = {PortfolioEntity.class, SymbolEntity.class}, version = 1)
+@Database(entities = {PortfolioEntity.class, SymbolEntity.class}, version = 2)
 public abstract class PortfolioDatabase
     extends RoomDatabase {
   public abstract PortfolioDao portfolioDao();
