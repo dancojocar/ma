@@ -53,7 +53,10 @@ export default class App extends React.Component {
   retrieveData() {
     console.log("retrieveData")
     this.setState({text: "retrieveData"})
-    return fetch(`${apiUrl}/p`, {method: 'GET', headers: authHeaders(this.state.token)})
+    return fetch(`${apiUrl}/p`, {
+      method: 'GET',
+      headers: authHeaders(this.state.token)
+    })
       .then(res => {
         return res.json();
       })
