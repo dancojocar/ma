@@ -1,11 +1,12 @@
 package com.example.ma.sm.net;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.widget.TextView;
 
-import com.example.ma.sm.oauth.GoogleSheetAPI;
+import com.example.ma.sm.R;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -15,6 +16,7 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,24 +25,24 @@ import java.util.List;
  * Placing the API calls in their own task ensures the UI stays responsive.
  */
 public class GoogleSheetsRequestTask extends AsyncTask<Void, Void, List<String>> {
-  private GoogleSheetAPI googleSheetAPI;
+  private WeakReference<Activity> activity;
   private com.google.api.services.sheets.v4.Sheets service = null;
   private Exception lastError = null;
-  private TextView textOutput;
+  private WeakReference<TextView> textOutput;
   private ProgressDialog progress;
 
-  static final int REQUEST_AUTHORIZATION = 1001;
+  private static final int REQUEST_AUTHORIZATION = 1001;
 
-  public GoogleSheetsRequestTask(GoogleSheetAPI googleSheetAPI, GoogleAccountCredential credential,
+  public GoogleSheetsRequestTask(Activity activity, GoogleAccountCredential credential,
                                  TextView tv, ProgressDialog progress) {
-    this.googleSheetAPI = googleSheetAPI;
+    this.activity = new WeakReference<>(activity);
     HttpTransport transport = AndroidHttp.newCompatibleTransport();
     JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
     service = new com.google.api.services.sheets.v4.Sheets.Builder(
         transport, jsonFactory, credential)
         .setApplicationName("PortfolioApp")
         .build();
-    this.textOutput = tv;
+    this.textOutput = new WeakReference<>(tv);
     this.progress = progress;
   }
 
@@ -62,15 +64,15 @@ public class GoogleSheetsRequestTask extends AsyncTask<Void, Void, List<String>>
 
   /**
    * Fetch a list of names and majors of students in a sample spreadsheet:
-   * https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+   * https://docs.google.com/spreadsheets/d/1d2cGX1jJhjzWQrU8UONUzg6Gd7R6LNqEHfcPUzb5L1I/edit
    *
    * @return List of names and majors
-   * @throws IOException
+   * @throws IOException when trying to access the document
    */
   private List<String> getDataFromApi() throws IOException {
-    String spreadsheetId = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms";
+    String spreadsheetId = "1d2cGX1jJhjzWQrU8UONUzg6Gd7R6LNqEHfcPUzb5L1I";
     String range = "Class Data!A2:E20";
-    List<String> results = new ArrayList<String>();
+    List<String> results = new ArrayList<>();
     ValueRange response = this.service.spreadsheets().values()
         .get(spreadsheetId, range)
         .execute();
@@ -87,7 +89,7 @@ public class GoogleSheetsRequestTask extends AsyncTask<Void, Void, List<String>>
 
   @Override
   protected void onPreExecute() {
-    textOutput.setText("");
+    textOutput.get().setText("");
     progress.show();
   }
 
@@ -95,10 +97,10 @@ public class GoogleSheetsRequestTask extends AsyncTask<Void, Void, List<String>>
   protected void onPostExecute(List<String> output) {
     progress.dismiss();
     if (output == null || output.size() == 0) {
-      textOutput.setText("No results returned.");
+      textOutput.get().setText(R.string.noResultMessage);
     } else {
-      output.add(0, "Data retrieved using the Google Sheets API:");
-      textOutput.setText(TextUtils.join("\n", output));
+      output.add(0, activity.get().getString(R.string.dataHeader));
+      textOutput.get().setText(TextUtils.join("\n", output));
     }
   }
 
@@ -107,15 +109,15 @@ public class GoogleSheetsRequestTask extends AsyncTask<Void, Void, List<String>>
     progress.dismiss();
     if (lastError != null) {
       if (lastError instanceof UserRecoverableAuthIOException) {
-        googleSheetAPI.startActivityForResult(
+        activity.get().startActivityForResult(
             ((UserRecoverableAuthIOException) lastError).getIntent(),
             REQUEST_AUTHORIZATION);
       } else {
-        textOutput.setText("The following error occurred:\n"
-            + lastError.getMessage());
+        textOutput.get().setText(activity.get().getString(R.string.errorOnCancel,
+            lastError.getMessage()));
       }
     } else {
-      textOutput.setText("Request cancelled.");
+      textOutput.get().setText(R.string.cancelRequestMessage);
     }
   }
 }

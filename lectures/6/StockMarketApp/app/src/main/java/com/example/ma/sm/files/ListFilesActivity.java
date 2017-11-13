@@ -23,13 +23,13 @@ public class ListFilesActivity extends AppCompatActivity {
   }
 
   private void loadContent() {
-    TextView tv = (TextView) findViewById(R.id.files);
+    TextView tv = findViewById(R.id.files);
     tv.setText(getFilesFromDir(getFilesDir()));
 
-    TextView tvCaches = (TextView) findViewById(R.id.caches);
+    TextView tvCaches = findViewById(R.id.caches);
     tvCaches.setText(getFilesFromDir(getCacheDir()));
 
-    TextView tvExternals = (TextView) findViewById(R.id.externalFiles);
+    TextView tvExternals = findViewById(R.id.externalFiles);
 
     String state = Environment.getExternalStorageState();
     if (Environment.MEDIA_MOUNTED.equals(state)) {

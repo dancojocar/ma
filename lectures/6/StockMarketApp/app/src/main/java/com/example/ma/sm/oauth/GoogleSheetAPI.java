@@ -35,12 +35,10 @@ import pub.devrel.easypermissions.EasyPermissions;
 /**
  * Enable the api using:
  * https://console.developers.google.com/start/api?id=sheets.googleapis.com
- *
+ * <p>
  * Following: https://developers.google.com/sheets/quickstart/android
- *
+ * <p>
  * keytool -exportcert -keystore ~/.android/debug.keystore -list -v
- *
- *
  */
 public class GoogleSheetAPI extends Activity
     implements EasyPermissions.PermissionCallbacks {
@@ -67,8 +65,8 @@ public class GoogleSheetAPI extends Activity
     super.onCreate(savedInstanceState);
     setContentView(R.layout.auth_main);
 
-    apiButton = (Button) findViewById(R.id.authButton);
-    textOutput = (TextView) findViewById(R.id.authMessage);
+    apiButton = findViewById(R.id.authButton);
+    textOutput = findViewById(R.id.authMessage);
 
     apiButton.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -81,7 +79,7 @@ public class GoogleSheetAPI extends Activity
     });
 
     progress = new ProgressDialog(this);
-    progress.setMessage("Calling Google Sheets API ...");
+    progress.setMessage(getString(R.string.progressGoogleSheetMessage));
 
     // Initialize credentials and service object.
     credentials = GoogleAccountCredential.usingOAuth2(
@@ -103,7 +101,7 @@ public class GoogleSheetAPI extends Activity
     } else if (credentials.getSelectedAccountName() == null) {
       chooseAccount();
     } else if (!isDeviceOnline()) {
-      textOutput.setText("No network connection available.");
+      textOutput.setText(R.string.noNetConnection);
     } else {
       new GoogleSheetsRequestTask(this, credentials, textOutput, progress).execute();
     }
@@ -123,7 +121,8 @@ public class GoogleSheetAPI extends Activity
   private void chooseAccount() {
     if (EasyPermissions.hasPermissions(
         this, Manifest.permission.GET_ACCOUNTS)) {
-      SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+      SharedPreferences prefs =
+          PreferenceManager.getDefaultSharedPreferences(this);
       String accountName = prefs.getString(PREF_ACCOUNT_NAME, null);
       if (accountName != null) {
         credentials.setSelectedAccountName(accountName);
@@ -163,8 +162,7 @@ public class GoogleSheetAPI extends Activity
       case REQUEST_GOOGLE_PLAY_SERVICES:
         if (resultCode != RESULT_OK) {
           textOutput.setText(
-              "This app requires Google Play Services. Please install " +
-                  "Google Play Services on your device and relaunch this app.");
+              getString(R.string.installGooglePlayMessage));
         } else {
           getResultsFromApi();
         }
@@ -242,6 +240,7 @@ public class GoogleSheetAPI extends Activity
   private boolean isDeviceOnline() {
     ConnectivityManager connMgr =
         (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    assert connMgr != null;
     NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
     return (networkInfo != null && networkInfo.isConnected());
   }
@@ -284,7 +283,8 @@ public class GoogleSheetAPI extends Activity
    */
   void showGooglePlayServicesAvailabilityErrorDialog(
       final int connectionStatusCode) {
-    GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+    GoogleApiAvailability apiAvailability =
+        GoogleApiAvailability.getInstance();
     Dialog dialog = apiAvailability.getErrorDialog(
         GoogleSheetAPI.this,
         connectionStatusCode,

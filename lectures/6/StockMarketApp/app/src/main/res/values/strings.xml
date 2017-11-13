@@ -66,5 +66,13 @@
     <string name="title_wifi_settings">WiFi settings</string>
     <string name="default_value_list_preference">beta</string>
     <string name="default_value_edittext_preference">Default value</string>
+    <string name="noNetConnection">No network connection available.</string>
+    <string name="installGooglePlayMessage">This app requires Google Play Services. Please install\nGoogle Play Services on your device and relaunch this app.</string>
+    <string name="progressGoogleSheetMessage">Calling Google Sheets API …</string>
+    <string name="noResultMessage">No results returned.</string>
+    <string name="dataHeader">Data retrieved using the Google Sheets API:</string>
+    <string name="errorOnCancel">The following error occurred: %s</string>
+    <string name="cancelRequestMessage">Request cancelled.</string>
+    <string name="noExternalMedia">No external storage mounted!</string>
 
 </resources>

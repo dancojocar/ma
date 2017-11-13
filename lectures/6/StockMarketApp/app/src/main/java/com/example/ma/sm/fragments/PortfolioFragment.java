@@ -3,6 +3,7 @@ package com.example.ma.sm.fragments;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -68,14 +69,16 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
   }
 
   @Override
-  public View onCreateView(LayoutInflater inflater, ViewGroup container,
+  public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                            Bundle savedInstanceState) {
     View view = inflater.inflate(R.layout.fragment_portfolio_list, container, false);
-    if (view != null) {
-      View innerView = view.findViewById(R.id.list);
-      // Set the adapter
-      if (innerView instanceof RecyclerView) {
-        recyclerView = (RecyclerView) innerView;
+    if (savedInstanceState == null) {
+      if (view != null) {
+        View innerView = view.findViewById(R.id.list);
+        // Set the adapter
+        if (innerView instanceof RecyclerView) {
+          recyclerView = (RecyclerView) innerView;
+        }
       }
     }
     if (recyclerView != null) {
@@ -84,20 +87,16 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
       } else {
         recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
       }
-      if (adapter == null) {
-        adapter = new PortfolioAdapter(this.getContext(), app.getManager().getPortfolios(), listener);
-      }
-      recyclerView.setAdapter(adapter);
     }
     if (view != null)
-      progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+      progressBar = view.findViewById(R.id.progressBar);
 
     Log.v(TAG, "onCreateView");
     return view;
   }
 
   @Override
-  public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
     Log.v(TAG, "onViewCreated");
   }
@@ -130,6 +129,9 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
 
   private void loadData() {
     getLoaderManager().initLoader(0, null, this);
+    adapter = new PortfolioAdapter(this.getContext(), app.getManager().getPortfolios(), listener);
+    if (recyclerView != null)
+      recyclerView.setAdapter(adapter);
   }
 
   @Override
@@ -151,7 +153,7 @@ public class PortfolioFragment extends Fragment implements OnCancellableListener
   }
 
   @Override
-  public void onSaveInstanceState(Bundle outState) {
+  public void onSaveInstanceState(@NonNull Bundle outState) {
     super.onSaveInstanceState(outState);
     Log.v(TAG, "onSaveInstanceState");
   }
