@@ -72,6 +72,7 @@ public class StockMarketActivity extends AppCompatActivity
     navigationView.setNavigationItemSelectedListener(this);
 
     handler = new ErrorHandler(Looper.getMainLooper(), this);
+
     Log.v(TAG, "onCreate done");
   }
 
