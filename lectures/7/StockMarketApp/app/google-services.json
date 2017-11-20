@@ -1,0 +1,52 @@
+{
+  "project_info": {
+    "project_number": "787948585500",
+    "project_id": "tonal-mote-148019"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787948585500:android:47a0316e8d3579de",
+        "android_client_info": {
+          "package_name": "com.example.ma.sm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "787948585500-tr726v8k818pkti7av0je4c305guom13.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ma.sm",
+            "certificate_hash": "1499BC8AA27BE3BECF4300E93DB9045AF92D6150"
+          }
+        },
+        {
+          "client_id": "787948585500-ki9aoqu1ovsd2aughjrp9ma3hvns1g4l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ma.sm",
+            "certificate_hash": "39DDF3AB13A024C8C40BEE2317D66A83E387C968"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBc6jFhH00Yr2PgT-k9CGaX4jn90pLlBt0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
