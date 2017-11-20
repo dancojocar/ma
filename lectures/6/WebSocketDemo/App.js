@@ -42,7 +42,7 @@ export default class App extends React.Component {
   }
 
   openConnection() {
-    ws = new WebSocket('ws://192.168.86.53:8080/echo');
+    ws = new WebSocket('ws://192.168.43.137:8080/echo');
     ws.onopen = () => {
       // connection opened
       // send a message
