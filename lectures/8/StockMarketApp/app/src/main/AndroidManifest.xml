@@ -99,6 +99,7 @@
 
         <activity android:name=".sensors.AccelerationDemo"/>
         <activity android:name=".sensors.PressureDemo"/>
+        <activity android:name=".sensors.AccelerometerPlayActivity" />
     </application>
 
 </manifest>

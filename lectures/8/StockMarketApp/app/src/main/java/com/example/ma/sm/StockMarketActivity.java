@@ -35,6 +35,7 @@ import com.example.ma.sm.oauth.GoogleSheetAPI;
 import com.example.ma.sm.preferences.UserSettingsActivity;
 import com.example.ma.sm.rx.RxDemo;
 import com.example.ma.sm.sensors.AccelerationDemo;
+import com.example.ma.sm.sensors.AccelerometerPlayActivity;
 import com.example.ma.sm.sensors.PressureDemo;
 import com.example.ma.sm.service.ExampleService;
 import com.example.ma.sm.task.listeners.OnErrorUpdateListener;
@@ -176,6 +177,8 @@ public class StockMarketActivity extends BaseActivity
     } else if (id == R.id.nav_service_stop) {
       Intent service = new Intent(this, ExampleService.class);
       stopService(service);
+    } else if (id == R.id.nav_play_demo) {
+      gotoActivity(AccelerometerPlayActivity.class);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
