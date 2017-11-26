@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.example.ma.sm">
+
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
+    <application
+        android:name=".StockApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".StockMarketActivity"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name=".fragments.PortfolioDetailActivity"/>
+        <activity android:name=".fragments.SymbolDetailsActivity"/>
+        <activity android:name=".preferences.UserSettingsActivity"/>
+        <activity android:name=".oauth.GoogleSheetAPI"/>
+
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="07f1083ce0f24f513a95bcbb3b749f8c2753935d"/>
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBa1BvGyqo1z_1c1Qd0kEUaRRWvKRxAQ4k"/>
+
+        <provider
+            android:name=".provider.PortfolioContentProvider"
+            android:authorities="portfolio"
+            android:enabled="true"
+            android:exported="false"/>
+        <provider
+            android:name=".provider.SymbolContentProvider"
+            android:authorities="symbol"
+            android:enabled="true"
+            android:exported="false"/>
+        <provider
+            android:name=".provider.UserContentProvider"
+            android:authorities="user"
+            android:enabled="true"
+            android:exported="false"/>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
+
+        <activity android:name=".files.ListFilesActivity"/>
+
+        <receiver android:name=".receiver.NetworkChangeReceiver">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+                <action android:name="android.net.wifi.WIFI_STATE_CHANGED"/>
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".service.TokenRefreshListenerService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+        <service android:name=".service.NotificationsListenerService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".location.LocationDemo"
+            android:label="@string/title_activity_location_demo"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
+        <activity android:name=".jobs.TestJobActivity"/>
+
+        <service
+            android:name=".service.TestJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
+
+        <service
+            android:name=".service.ExampleService"
+            android:exported="false"/>
+
+        <activity android:name=".sensors.AccelerationDemo"/>
+        <activity android:name=".sensors.PressureDemo"/>
+    </application>
+
+</manifest>
