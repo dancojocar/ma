@@ -28,6 +28,12 @@
                 android:id="@+id/nav_pressure"
                 android:icon="@drawable/ic_menu_gallery"
                 android:title="Pressure Sensor"/>
+            <item
+                android:id="@+id/nav_play_demo"
+                android:icon="@drawable/ic_menu_gallery"
+                android:title="Accelerometer Play"/>
+
+
         </menu>
     </item>
 
