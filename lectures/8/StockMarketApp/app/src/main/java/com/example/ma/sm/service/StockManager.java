@@ -41,8 +41,6 @@ public class StockManager {
   private ContentResolver resolver;
   private User user;
   private WebSocketClient ws;
-  @Inject
-  Realm realm;
 
   public StockManager(Context context) {
     app = (StockApp) context;
@@ -91,9 +89,11 @@ public class StockManager {
   }
 
   public void delete() {
+    Realm realm = Realm.getDefaultInstance();
     realm.beginTransaction();
-    realm.clear(Portfolio.class);
+    realm.delete(Portfolio.class);
     realm.commitTransaction();
+    realm.close();
   }
 
   public void fetchData() {
@@ -178,10 +178,13 @@ public class StockManager {
   }
 
   public void addPortfolio(Portfolio p) {
+    Realm realm = Realm.getDefaultInstance();
     realm.beginTransaction();
-    Portfolio portfolio = realm.createObject(Portfolio.class);
-    int nextID = realm.where(Portfolio.class).max("id").intValue() + 1;
-    portfolio.setId(nextID);
+    Number maxId = realm.where(Portfolio.class).max("id");
+    int nextID = 1;
+    if (maxId != null)
+      nextID = maxId.intValue() + 1;
+    Portfolio portfolio = realm.createObject(Portfolio.class, nextID);
     portfolio.setLastModified(p.getLastModified());
     portfolio.setName(p.getName());
     RealmList<Symbol> symbols = new RealmList<>();
@@ -190,9 +193,11 @@ public class StockManager {
     }
     portfolio.setSymbols(symbols);
     realm.commitTransaction();
+    realm.close();
   }
 
   public void addSymbol(long portfolioId, Symbol s) {
+    Realm realm = Realm.getDefaultInstance();
     Number id = realm.where(Symbol.class).max("id");
     int nextID = 1;
     if (id != null) {
@@ -201,6 +206,7 @@ public class StockManager {
     s.setId(nextID);
     s.setPortfolioId(portfolioId);
     realm.copyToRealmOrUpdate(s);
+    realm.close();
   }
 
   public void cancelCall() {
@@ -242,9 +248,5 @@ public class StockManager {
       }
     });
     t.start();
-  }
-
-  public void setRealm(Realm realm) {
-    this.realm = realm;
   }
 }

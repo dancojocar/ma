@@ -1,30 +1,23 @@
 package com.example.ma.sm.net;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.ma.sm.R;
 import com.example.ma.sm.service.StockManager;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
-import okhttp3.ws.WebSocket;
-import okhttp3.ws.WebSocketCall;
-import okhttp3.ws.WebSocketListener;
-import okio.Buffer;
-import timber.log.Timber;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
-import static okhttp3.ws.WebSocket.TEXT;
-
-public final class WebSocketClient implements WebSocketListener {
-  private final ExecutorService writeExecutor = Executors.newSingleThreadExecutor();
+public final class WebSocketClient extends WebSocketListener {
+  private static final String TAG = WebSocketClient.class.getSimpleName();
   private WebSocket ws;
   private StockManager manager;
 
@@ -40,69 +33,56 @@ public final class WebSocketClient implements WebSocketListener {
     Request request = new Request.Builder()
         .url(ctx.getString(R.string.wsConnectionUrl))
         .build();
-    WebSocketCall call = WebSocketCall.create(client, request);
-    call.enqueue(this);
+    client.newWebSocket(request, this);
+
     // Trigger shutdown of the dispatcher's executor so this process can exit cleanly.
     client.dispatcher().executorService().shutdown();
+    Log.i(TAG, "Client connected");
   }
 
   @Override
   public void onOpen(final WebSocket webSocket, Response response) {
     this.ws = webSocket;
-    writeExecutor.execute(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          webSocket.sendMessage(RequestBody.create(TEXT, "Hello from app"));
-        } catch (IOException e) {
-          Timber.e(e, "error while opening the connection");
-        }
-      }
-    });
+    webSocket.send("Hello from app");
+    webSocket.send("Use: ");
+    webSocket.send(" - append - to trigger an append of portfolios");
+    webSocket.send(" - clear - to clear all the portfolios");
   }
 
   public void close(String reason) {
     if (ws != null) {
-      try {
-        ws.close(1000, reason);
-      } catch (IOException e) {
-        Timber.e(e, "Unable to close the ws connection");
-      }
+      ws.close(1000, reason);
     }
   }
 
   @Override
-  public void onFailure(IOException e, Response response) {
-    Timber.e(e, "error while opening the connection");
-    writeExecutor.shutdown();
+  public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
+    Log.e(TAG, "error while opening the connection", t);
   }
 
   @Override
-  public void onMessage(ResponseBody message) throws IOException {
-    if (message.contentType() == TEXT) {
-      String text = message.string();
-      if ("append".equalsIgnoreCase(text)) {
-        Timber.v("request data append ");
-        manager.fetchData();
-      } else if ("clear".equalsIgnoreCase(text) || "clean".equalsIgnoreCase(text)) {
-        Timber.v("request cleanup local data ");
-        manager.delete();
-      }
-      Timber.v("MESSAGE: %s", text);
-    } else {
-      Timber.v("MESSAGE: %s", message.source().readByteString().hex());
+  public void onMessage(WebSocket webSocket, String text) {
+    if ("append".equalsIgnoreCase(text)) {
+      Log.v(TAG, "request data append ");
+      manager.fetchData();
+    } else if ("clear".equalsIgnoreCase(text) || "clean".equalsIgnoreCase(text)) {
+      Log.v(TAG, "request cleanup local data ");
+      manager.delete();
+    } else if ("fetch".equalsIgnoreCase(text)) {
+      Log.v(TAG, "re-init");
+      manager.delete();
+      manager.fetchData();
     }
-    message.close();
+    Log.v(TAG, "MESSAGE: " + text);
   }
 
   @Override
-  public void onPong(Buffer payload) {
-    Timber.v("PONG: %s", payload.readUtf8());
+  public void onClosing(WebSocket webSocket, int code, String reason) {
+    Log.v(TAG, "onClosing: " + code + " " + reason);
   }
 
   @Override
-  public void onClose(int code, String reason) {
-    Timber.v("CLOSE: %d reason: %s", code, reason);
-    writeExecutor.shutdown();
+  public void onClosed(WebSocket webSocket, int code, String reason) {
+    Log.v(TAG, "onClosed: " + code + " " + reason);
   }
 }
