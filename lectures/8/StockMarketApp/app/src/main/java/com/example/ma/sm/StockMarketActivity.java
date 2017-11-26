@@ -173,6 +173,9 @@ public class StockMarketActivity extends BaseActivity
     } else if (id == R.id.nav_service) {
       Intent service = new Intent(this, ExampleService.class);
       startService(service);
+    } else if (id == R.id.nav_service_stop) {
+      Intent service = new Intent(this, ExampleService.class);
+      stopService(service);
     }
 
     DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

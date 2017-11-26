@@ -47,11 +47,11 @@ public class TestJobService extends JobService {
   public int onStartCommand(Intent intent, int flags, int startId) {
     Timber.v("onStartCommand");
     Messenger callback = intent.getParcelableExtra("messenger");
-    Message m = Message.obtain();
-    m.what = TestJobActivity.MSG_SERVICE_OBJ;
-    m.obj = this;
+    Message message = Message.obtain();
+    message.what = TestJobActivity.MSG_SERVICE_OBJ;
+    message.obj = this;
     try {
-      callback.send(m);
+      callback.send(message);
     } catch (RemoteException e) {
       Timber.e(e, "Error passing service object back to activity.");
     }
@@ -93,7 +93,9 @@ public class TestJobService extends JobService {
     Timber.v("Scheduling job");
     JobScheduler tm =
         (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-    tm.schedule(t);
+    if (tm != null) {
+      tm.schedule(t);
+    }
   }
 
   /**

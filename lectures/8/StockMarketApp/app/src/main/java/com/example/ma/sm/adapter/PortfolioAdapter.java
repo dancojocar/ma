@@ -55,7 +55,7 @@ public class PortfolioAdapter extends RecyclerView.Adapter<PortfolioAdapter.View
   }
 
   @Override
-  public void onChange() {
+  public void onChange(Object o) {
     notifyDataSetChanged();
   }
 

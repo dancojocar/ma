@@ -38,8 +38,8 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
   RecyclerView recyclerView;
   @BindView(R.id.progressBar)
   ProgressBar progressBar;
-  @Inject
-  Realm realm;
+  private Realm realm;
+
 
   /**
    * Mandatory empty constructor for the fragment manager to instantiate the
@@ -86,7 +86,8 @@ public class PortfolioFragment extends BaseFragment implements OnCancellableList
     } else {
       recyclerView.setLayoutManager(new GridLayoutManager(recyclerView.getContext(), mColumnCount));
     }
-    recyclerView.setAdapter(new PortfolioAdapter(realm.allObjects(Portfolio.class), listener));
+    realm = Realm.getDefaultInstance();
+    recyclerView.setAdapter(new PortfolioAdapter(realm.where(Portfolio.class).findAll(), listener));
     Timber.v("onViewCreated");
   }
 

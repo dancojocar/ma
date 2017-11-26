@@ -52,7 +52,8 @@ public class StockApp extends Application {
     instance = (StockApp) getApplicationContext();
     injector = DaggerInjector.builder()
         .appModule(new AppModule(this)).build();
-    RealmConfiguration config = new RealmConfiguration.Builder(this)
+    Realm.init(getApplicationContext());
+    RealmConfiguration config = new RealmConfiguration.Builder()
         .name("default0.realm")
         .schemaVersion(1)
         .build();
@@ -115,7 +116,7 @@ public class StockApp extends Application {
     private static final String CRASHLYTICS_KEY_MESSAGE = "message";
 
     @Override
-    protected void log(int priority, @Nullable String tag, @Nullable String message, @Nullable Throwable t) {
+    protected void log(int priority, @Nullable String tag, @Nullable String message, @Nullable Throwable throwable) {
       if (priority == Log.VERBOSE || priority == Log.DEBUG || priority == Log.INFO) {
         return;
       }
@@ -124,10 +125,10 @@ public class StockApp extends Application {
       Crashlytics.setString(CRASHLYTICS_KEY_TAG, tag);
       Crashlytics.setString(CRASHLYTICS_KEY_MESSAGE, message);
 
-      if (t == null) {
+      if (throwable == null) {
         Crashlytics.logException(new Exception(message));
       } else {
-        Crashlytics.logException(t);
+        Crashlytics.logException(throwable);
       }
     }
   }

@@ -18,6 +18,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -140,16 +141,20 @@ public class LocationDemo extends BaseActivity
   public void onLocationChanged(Location location) {
     Timber.v("onLocationChanged");
     double latitude = location.getLatitude();
-    textLatitude.setText(Double.toString(latitude));
+    textLatitude.setText(String.valueOf(latitude));
     double longitude = location.getLongitude();
-    textLongitude.setText(Double.toString(longitude));
-    textAltitude.setText(Double.toString(location.getAltitude()));
-    if (map != null)
-      map.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title("Marker"));
+    textLongitude.setText(String.valueOf(longitude));
+    textAltitude.setText(String.valueOf(location.getAltitude()));
+    if (map != null) {
+      LatLng position = new LatLng(latitude, longitude);
+      map.addMarker(new MarkerOptions().position(position).title("Marker"));
+      // Zoom in, animating the camera.
+      map.animateCamera(CameraUpdateFactory.newLatLngZoom(position, 15), 2000, null);
+    }
   }
 
   @Override
-  public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+  public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     // Forward results to EasyPermissions
     EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);

@@ -53,48 +53,49 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
     // Get an instance of the sensor service, and use that to get an instance of
     // a particular sensor.
     sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-    List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
-    for (Sensor s : sensors) {
-      Timber.v("Sensor: %s type: %d ", s.getName(), s.getType());
-    }
-    pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-    if (pressure != null) {
-
-      series = new XYSeries("Pressure");
-      Random r = new Random();
-      //add some bogus data
-      for (counter = 0; counter < 10; counter++) {
-        series.add(counter, 970 + 10 * r.nextDouble());
+    List<Sensor> sensors;
+    if (sensorManager != null) {
+      sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
+      for (Sensor s : sensors) {
+        Timber.v("Sensor: %s type: %d ", s.getName(), s.getType());
       }
+      pressure = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+      if (pressure != null) {
+        series = new XYSeries("Pressure");
+        Random r = new Random();
+        //add some bogus data
+        for (counter = 0; counter < 10; counter++) {
+          series.add(counter, 970 + 10 * r.nextDouble());
+        }
+        // Create the renderer
+        XYSeriesRenderer renderer = new XYSeriesRenderer();
+        renderer.setLineWidth(5);
+        renderer.setColor(Color.RED);
+        renderer.setDisplayBoundingPoints(true);
+        renderer.setPointStyle(PointStyle.CIRCLE);
+        renderer.setPointStrokeWidth(10);
 
-      // Create the renderer
-      XYSeriesRenderer renderer = new XYSeriesRenderer();
-      renderer.setLineWidth(5);
-      renderer.setColor(Color.RED);
-      renderer.setDisplayBoundingPoints(true);
-      renderer.setPointStyle(PointStyle.CIRCLE);
-      renderer.setPointStrokeWidth(10);
-
-      // register the renderer
-      XYMultipleSeriesRenderer multiRenderer = new XYMultipleSeriesRenderer();
-      multiRenderer.addSeriesRenderer(renderer);
-      multiRenderer.setLabelsTextSize(30);
+        // register the renderer
+        XYMultipleSeriesRenderer multiRenderer = new XYMultipleSeriesRenderer();
+        multiRenderer.addSeriesRenderer(renderer);
+        multiRenderer.setLabelsTextSize(30);
 
 
-      // We want to avoid black border
-      multiRenderer.setMarginsColor(Color.argb(0, 128, 0, 0)); // transparent margins
-      // Disable Pan on two axis
-      multiRenderer.setPanEnabled(false, false);
-      multiRenderer.setYAxisMax(1100);
-      multiRenderer.setYAxisMin(0);
-      multiRenderer.setShowGrid(true); // we show the grid
+        // We want to avoid black border
+        multiRenderer.setMarginsColor(Color.argb(0, 128, 0, 0)); // transparent margins
+        // Disable Pan on two axis
+        multiRenderer.setPanEnabled(false, false);
+        multiRenderer.setYAxisMax(1100);
+        multiRenderer.setYAxisMin(0);
+        multiRenderer.setShowGrid(true); // we show the grid
 
-      dataset = new XYMultipleSeriesDataset();
-      dataset.addSeries(series);
+        dataset = new XYMultipleSeriesDataset();
+        dataset.addSeries(series);
 
-      chartView = ChartFactory.getLineChartView(this, dataset, multiRenderer);
+        chartView = ChartFactory.getLineChartView(this, dataset, multiRenderer);
 
-      view.addView(chartView);
+        view.addView(chartView);
+      }
     } else {
       TextView tv = new TextView(this);
       tv.setText(R.string.pressure_sensor_not_available);
@@ -106,7 +107,7 @@ public class PressureDemo extends BaseActivity implements SensorEventListener {
   @Override
   public void onSensorChanged(SensorEvent sensorEvent) {
     long time = System.currentTimeMillis();
-    if (time - now > 1 * 1000) {
+    if (time - now > 1000) {
       now = time;
       float currentPressure = sensorEvent.values[0];
       Timber.v("Current pressure: %f", currentPressure);

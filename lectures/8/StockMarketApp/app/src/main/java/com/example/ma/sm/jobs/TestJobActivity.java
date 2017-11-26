@@ -71,13 +71,13 @@ public class TestJobActivity extends BaseActivity {
 
   private static int kJobId = 0;
 
-  private MyHandler handler =new MyHandler(this);
+  private MyHandler handler = new MyHandler(this);
 
   private static class MyHandler extends Handler {
     private final WeakReference<TestJobActivity> wActivity;
 
 
-    public MyHandler(TestJobActivity activity) {
+    MyHandler(TestJobActivity activity) {
       this.wActivity = new WeakReference<>(activity);
     }
 
@@ -156,7 +156,9 @@ public class TestJobActivity extends BaseActivity {
   public void cancelAllJobs(View v) {
     JobScheduler tm =
         (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
-    tm.cancelAll();
+    if (tm != null) {
+      tm.cancelAll();
+    }
   }
 
   /**
@@ -167,19 +169,19 @@ public class TestJobActivity extends BaseActivity {
     if (!ensureTestService()) {
       return;
     }
-    mTestService.callJobFinished();
-    mParamsTextView.setText("");
+    if (mTestService.callJobFinished())
+      mParamsTextView.setText("");
   }
 
   /**
    * Receives callback from the service when a job has landed
    * on the app. Colours the UI and post a message to
-   * uncolour it after a second.
+   * unColour it after a second.
    */
   public void onReceivedStartJob(JobParameters params) {
     mShowStartView.setBackgroundColor(startJobColor);
-    Message m = Message.obtain(handler, MSG_UNCOLOUR_START);
-    handler.sendMessageDelayed(m, 1000L); // uncolour in 1 second.
+    Message message = Message.obtain(handler, MSG_UNCOLOUR_START);
+    handler.sendMessageDelayed(message, 1000L); // unColour in 1 second.
     mParamsTextView.setText("Executing: " + params.getJobId() + " " + params.getExtras());
   }
 
