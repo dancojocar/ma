@@ -1,0 +1,12 @@
+<resources>
+    <item name="ic_menu_gallery" type="drawable">@android:drawable/ic_menu_gallery</item>
+    <item name="ic_menu_slideshow" type="drawable">@android:drawable/ic_menu_slideshow</item>
+    <item name="ic_menu_manage" type="drawable">@android:drawable/ic_menu_manage</item>
+    <item name="ic_menu_refresh" type="drawable">@android:drawable/ic_menu_search</item>
+    <item name="ic_menu_delete" type="drawable">@android:drawable/ic_delete</item>
+    <item name="ic_menu_cancel" type="drawable">@android:drawable/ic_menu_close_clear_cancel</item>
+    <item name="ic_menu_auth" type="drawable">@android:drawable/ic_dialog_info</item>
+    <item name="ic_menu_auth_clear" type="drawable">@android:drawable/ic_delete</item>
+    <item name="ic_menu_login" type="drawable">@android:drawable/ic_dialog_dialer</item>
+    <item name="ic_menu_files" type="drawable">@android:drawable/ic_menu_gallery</item>
+</resources>
