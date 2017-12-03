@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/label_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_margin="@dimen/text_margin"
+            android:text="Name:"/>
+
+        <TextView
+            android:id="@+id/label_quantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/label_name"
+            android:layout_margin="@dimen/text_margin"
+            android:text="Quantity:"/>
+
+        <TextView
+            android:id="@+id/label_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/label_quantity"
+            android:layout_margin="@dimen/text_margin"
+            android:text="Price:"/>
+
+        <TextView
+            android:id="@+id/label_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/label_price"
+            android:layout_margin="@dimen/text_margin"
+            android:text="Value:"/>
+
+        <TextView
+            android:id="@+id/label_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/label_value"
+            android:layout_margin="@dimen/text_margin"
+            android:text="Date:"/>
+
+
+        <TextView
+            android:id="@+id/label_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/label_date"
+            android:layout_margin="@dimen/text_margin"
+            android:text="File name:"/>
+
+        <Button
+            android:id="@+id/save_file"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/label_file"
+            android:layout_alignBottom="@+id/label_file"
+            android:layout_toEndOf="@+id/file_name"
+            android:text="SaveFile"/>
+
+        <Button
+            android:id="@+id/save_cache"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/save_file"
+            android:layout_alignBottom="@+id/save_file"
+            android:layout_marginStart="16dp"
+            android:layout_toEndOf="@+id/save_file"
+            android:text="SaveCache"/>
+
+        <EditText
+            android:id="@+id/file_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/label_file"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:layout_toEndOf="@+id/label_file"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+
+        <TextView
+            android:id="@+id/symbol_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/label_name"
+            android:layout_alignBottom="@+id/file_name"
+            android:layout_toEndOf="@+id/label_name"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+        <TextView
+            android:id="@+id/symbol_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/label_price"
+            android:layout_alignBottom="@+id/label_price"
+            android:layout_alignStart="@+id/symbol_name"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+        <TextView
+            android:id="@+id/symbol_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/label_value"
+            android:layout_alignBottom="@+id/label_value"
+            android:layout_alignStart="@+id/symbol_name"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+        <TextView
+            android:id="@+id/symbol_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/label_date"
+            android:layout_alignBottom="@+id/label_date"
+            android:layout_alignStart="@+id/symbol_name"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+        <TextView
+            android:id="@+id/symbol_quantity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/label_quantity"
+            android:layout_alignBottom="@+id/label_quantity"
+            android:layout_alignStart="@+id/symbol_name"
+            android:layout_marginLeft="@dimen/text_margin"
+            android:layout_marginRight="@dimen/text_margin"
+            android:textAppearance="?attr/textAppearanceListItem"/>
+
+    </RelativeLayout>
+</ScrollView>
