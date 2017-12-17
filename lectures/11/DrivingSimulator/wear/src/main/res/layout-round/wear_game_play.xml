@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.wearable.view.BoxInsetLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include layout="@layout/loading_indicator"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@id/screen_main"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            tools:context=".TrivialDriveActivity"
+            tools:deviceIds="wear_round">
+
+            <TextView
+                android:id="@+id/text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|center_horizontal"
+                android:layout_marginTop="@dimen/wear_contents_margin"
+                android:gravity="center"
+                android:text="@string/app_name"/>
+
+            <ImageView
+                android:id="@id/free_or_premium"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/wear_image_height"
+                android:contentDescription="@string/content_desc_free_vs_premium_indicator"
+                android:padding="@dimen/wear_image_padding"
+                android:src="@drawable/free"/>
+
+            <ImageView
+                android:id="@id/gas_gauge"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/wear_gas_height"
+                android:layout_gravity="center"
+                android:contentDescription="@string/content_desc_gas_gauge_indicator"
+                android:paddingBottom="@dimen/wear_gas_padding"/>
+
+            <Button
+                android:id="@id/button_drive"
+                style="@style/ButtonStyle"
+                android:layout_gravity="center"
+                android:text="@string/button_drive"/>
+
+            <Button
+                android:id="@id/button_purchase"
+                style="@style/ButtonStyle"
+                android:layout_gravity="center"
+                android:layout_marginBottom="@dimen/wear_contents_margin"
+                android:text="@string/button_purchase"/>
+        </LinearLayout>
+
+    </ScrollView>
+
+</android.support.wearable.view.BoxInsetLayout>
