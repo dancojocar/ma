@@ -1,33 +1,33 @@
 [submodule "exams/0202/server"]
-	path = archives/2017-2018/exams/0202/server
+	path = archives/2016-2017/exams/0202/server
 	url = git@github.com:dancojocar/exam.git
 [submodule "exams/0206/a"]
-	path = archives/2017-2018/exams/0206/a
+	path = archives/2016-2017/exams/0206/a
 	url = git@github.com:dancojocar/exam0206a.git
 [submodule "exams/0206/b"]
-	path = archives/2017-2018/exams/0206/b
+	path = archives/2016-2017/exams/0206/b
 	url = git@github.com:dancojocar/exam0206b.git
 [submodule "exams/0209/a"]
-	path = archives/2017-2018/exams/0209/a
+	path = archives/2016-2017/exams/0209/a
 	url = git@github.com:dancojocar/exam0209a.git
 [submodule "exams/0209/b"]
-	path = archives/2017-2018/exams/0209/b
+	path = archives/2016-2017/exams/0209/b
 	url = git@github.com:dancojocar/exam0209b.git
 [submodule "exams/0221/a"]
-	path = archives/2017-2018/exams/0221/a
+	path = archives/2016-2017/exams/0221/a
 	url = git@github.com:dancojocar/exam0221a.git
 [submodule "exams/0221/b"]
-	path = archives/2017-2018/exams/0221/b
+	path = archives/2016-2017/exams/0221/b
 	url = git@github.com:dancojocar/exam0221b.git
 [submodule "exams/0221/c"]
-	path = archives/2017-2018/exams/0221/c
+	path = archives/2016-2017/exams/0221/c
 	url = git@github.com:dancojocar/exam0221c.git
 [submodule "exams/0221/d"]
-	path = archives/2017-2018/exams/0221/d
+	path = archives/2016-2017/exams/0221/d
 	url = git@github.com:dancojocar/exam0221d.git
 [submodule "exams/0622/a"]
-	path = archives/2017-2018/exams/0622/a
+	path = archives/2016-2017/exams/0622/a
 	url = git@github.com:dancojocar/exam0622a.git
 [submodule "exams/0622/b"]
-	path = archives/2017-2018/exams/0622/b
+	path = archives/2016-2017/exams/0622/b
 	url = git@github.com:dancojocar/exam0622b.git
