@@ -14,7 +14,8 @@ import kotlinx.android.synthetic.main.app_bar_main.*
 import org.jetbrains.anko.*
 import org.jetbrains.anko.design.snackbar
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(),
+    NavigationView.OnNavigationItemSelectedListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,7 +67,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 logd("Replace with your own action")
             }
             R.id.nav_gallery -> {
-                Snackbar.make(drawer_layout, "Replace with your own action", Snackbar.LENGTH_LONG)
+                Snackbar.make(drawer_layout,
+                    "Replace with your own action",
+                    Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
             }
             R.id.nav_slideshow -> {
