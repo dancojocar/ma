@@ -1,0 +1,121 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion build_versions.target_sdk
+    buildToolsVersion build_versions.build_tools
+
+    defaultConfig {
+        applicationId "com.example.android.persistence.migration"
+        minSdkVersion build_versions.min_sdk
+        targetSdkVersion build_versions.target_sdk
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // used by Room, to test migrations
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    // used by Room, to test migrations
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+
+        // used by the room flavors to avoid duplication
+        room.java.srcDirs += "src/room_common/java"
+        room2.java.srcDirs += "src/room_common/java"
+        room3.java.srcDirs += "src/room_common/java"
+
+        androidTest.java.srcDirs += "src/androidTestRoom_Common/java"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    flavorDimensions "db"
+
+    productFlavors {
+        sqlite {
+            // Uses SQLiteOpenHelper and traditional SQLite interfaces. Database version 1
+            dimension "db"
+        }
+        room {
+            // Replaces implementation with Room and provides migrations to database version 2
+            dimension "db"
+        }
+        room2 {
+            // Updates the DB to a new schema, database version 3
+            dimension "db"
+        }
+        room3 {
+            // Updates the DB to a new schema, database version 4.
+            // Provides migration paths to go from version 2 to 3, version 3 to 4 and version 2 to 4
+            dimension "db"
+        }
+    }
+}
+
+dependencies {
+    //Support libraries
+    implementation deps.support.app_compat
+    implementation deps.support.v4
+    implementation deps.support.design
+    implementation deps.room.runtime
+    annotationProcessor deps.room.compiler
+
+    // Dependencies for local unit tests
+    testImplementation deps.junit
+    testImplementation deps.mockito.all
+    testImplementation deps.hamcrest
+
+    // Android Testing Support Library's runner and rules
+    androidTestImplementation deps.atsl.runner
+    androidTestImplementation deps.atsl.rules
+    androidTestImplementation deps.room.testing
+    androidTestImplementation deps.arch_core.testing
+
+    // Dependencies for Android unit tests
+    androidTestImplementation deps.junit
+    androidTestImplementation deps.mockito.core, { exclude group: 'net.bytebuddy' }
+    androidTestImplementation deps.dexmaker
+
+    // Espresso UI Testing
+    androidTestImplementation deps.espresso.core
+    androidTestImplementation deps.espresso.contrib
+    androidTestImplementation deps.espresso.intents
+
+    // Resolve conflicts between main and test APK:
+    // Resolve conflicts between main and test APK:
+    androidTestImplementation deps.support.annotations
+    androidTestImplementation deps.support.v4
+    androidTestImplementation deps.support.app_compat
+    androidTestImplementation deps.support.design
+}
