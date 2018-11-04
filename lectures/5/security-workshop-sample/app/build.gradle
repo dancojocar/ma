@@ -1,0 +1,130 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion max_sdk_version
+    buildToolsVersion build_tool_version
+    defaultConfig {
+        applicationId "co.temy.securitysample"
+        minSdkVersion min_sdk_version
+        targetSdkVersion max_sdk_version
+        versionCode app_version_number
+        versionName app_version_name
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField("String", "GOOGLE_VERIFICATION_API_KEY", '"AIzaSyAXp_YJBHPI4FLfJrlgjfFjMXbIVZWeKzk"')
+            buildConfigField("boolean", "IS_SAFETY_NET_ENABLED", "false")
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            buildConfigField("String", "GOOGLE_VERIFICATION_API_KEY", '"AIzaSyAHtzX19lqT_nkuORRuOOa9abuQ9f3rZhk"')
+            buildConfigField("boolean", "IS_SAFETY_NET_ENABLED", "false")
+        }
+
+        debugSafatyNet {
+            signingConfig signingConfigs.debug
+            buildConfigField("boolean", "IS_SAFETY_NET_ENABLED", "true")
+        }
+    }
+
+    flavorDimensions "workshopStage"
+
+    productFlavors {
+        completed {
+            dimension "workshopStage"
+        }
+
+        stage0 {
+            dimension "workshopStage"
+        }
+
+        stage1level1 {
+            dimension "workshopStage"
+        }
+
+        stage1level2 {
+            dimension "workshopStage"
+        }
+
+        stage1level3 {
+            dimension "workshopStage"
+        }
+
+        stage1level4 {
+            dimension "workshopStage"
+        }
+
+        stage2 {
+            dimension "workshopStage"
+        }
+
+        stage3 {
+            dimension "workshopStage"
+        }
+    }
+
+    sourceSets {
+        completed {
+            java.srcDirs = ["src/stages/completed"]
+        }
+
+        stage0 {
+            java.srcDirs = ["src/stages/stage0"]
+        }
+
+        stage1level1 {
+            java.srcDirs = ["src/stages/stage1/level1"]
+        }
+
+        stage1level2 {
+            java.srcDirs = ["src/stages/stage1/level2"]
+        }
+
+        stage1level3 {
+            java.srcDirs = ["src/stages/stage1/level3"]
+        }
+
+        stage1level4 {
+            java.srcDirs = ["src/stages/stage1/level4"]
+        }
+
+        stage2 {
+            java.srcDirs = ["src/stages/stage2"]
+        }
+
+        stage3 {
+            java.srcDirs = ["src/stages/stage3"]
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force "com.google.android.gms:play-services-base:$gms_version"
+        force "com.google.android.gms:play-services-safetynet:$gms_version"
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.android.support:appcompat-v7:$support_version"
+    implementation "com.android.support:design:$support_version"
+    implementation "com.android.support.constraint:constraint-layout:$constraint_layout_version"
+    implementation "com.google.android.gms:play-services-safetynet:$gms_version"
+    implementation "com.github.scottyab:safetynethelper:$safetynethelper_version"
+    implementation "com.google.code.gson:gson:$gson_version"
+    testImplementation "junit:junit:$junit_version"
+    androidTestImplementation "com.android.support.test:runner:$test_runner_version"
+    androidTestImplementation "com.android.support.test.espresso:espresso-core:$test_espresso_version"
+}
