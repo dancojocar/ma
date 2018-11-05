@@ -1,7 +1,7 @@
 package main
 
 import (
-    "log"
+    //"log"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	"net/http"
@@ -21,7 +21,7 @@ func RequireTokenAuthentication(rw http.ResponseWriter, req *http.Request, next 
 	})
 
 
-   log.Printf("Token: %s valid: %d",token,token.Valid)
+   // log.Printf("Token: %s valid: %d",token,token.Valid)
 
 	if err == nil && token.Valid && !authBackend.IsInBlacklist(req.Header.Get("Authorization")) {
 		next(rw, req)
