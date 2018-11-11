@@ -1,0 +1,17 @@
+{
+  "name": "wsserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "koa": "^2.6.2",
+    "koa-route": "^3.2.0",
+    "koa-router": "^7.4.0",
+    "koa-websocket": "^5.0.1"
+  }
+}
