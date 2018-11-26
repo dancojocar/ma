@@ -33,7 +33,7 @@ class MessagingFragment : Fragment(), View.OnClickListener {
   private var mService: Messenger? = null
   private var mBound: Boolean = false
 
-  private lateinit var rootView: View;
+  private lateinit var rootView: View
 
   private val mConnection = object : ServiceConnection {
     override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
@@ -72,15 +72,14 @@ class MessagingFragment : Fragment(), View.OnClickListener {
   }
 
   override fun onClick(view: View) {
-    if (view === rootView.send_1_conversation) {
-      sendMsg(1, 1)
-    } else if (view === rootView.send_2_conversations) {
-      sendMsg(2, 1)
-    } else if (view === rootView.send_1_conversation_3_messages) {
-      sendMsg(1, 3)
-    } else if (view === rootView.clear) {
-      MessageLogger.clear(context)
-      rootView.data_port.text = MessageLogger.getAllMessages(activity)
+    when {
+      view === rootView.send_1_conversation -> sendMsg(1, 1)
+      view === rootView.send_2_conversations -> sendMsg(2, 1)
+      view === rootView.send_1_conversation_3_messages -> sendMsg(1, 3)
+      view === rootView.clear -> {
+        MessageLogger.clear(context)
+        rootView.data_port.text = MessageLogger.getAllMessages(activity)
+      }
     }
   }
 
