@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ListViewAnimations</string>
+    <string name="viewpropertyanimator">ViewPropertyAnimator</string>
+    <string name="transient_state">Transient State</string>
+</resources>
