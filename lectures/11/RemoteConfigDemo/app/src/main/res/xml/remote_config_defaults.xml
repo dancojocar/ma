@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>hide_crash_logic</key>
+        <value>hide</value>
+    </entry>
+    <entry>
+        <key>hide_crash_value</key>
+        <value>show</value>
+    </entry>
+    <entry>
+        <key>hide_crash_nologic</key>
+        <value>Not available yet!</value>
+    </entry>
+    <entry>
+        <key>hello_message</key>
+        <value>Hello World!</value>
+    </entry>
+</defaultsMap>

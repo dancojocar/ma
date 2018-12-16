@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "549346475159",
+    "firebase_url": "https://drivingsimulator-dc57a.firebaseio.com",
+    "project_id": "drivingsimulator-dc57a",
+    "storage_bucket": "drivingsimulator-dc57a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:549346475159:android:085fd5b8790fc541",
+        "android_client_info": {
+          "package_name": "ro.ubbcluj.cs.ds"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "549346475159-jlmd1lnj59siemnee8bltpjip5b9n3hv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ro.ubbcluj.cs.ds",
+            "certificate_hash": "f7062547463017e11a157b330339b4f1591a3fed"
+          }
+        },
+        {
+          "client_id": "549346475159-r60bfibsiqgvigcdp2lfkttt9ohepmfo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyHAt71ZM2G9QQO5QryY6F3bC7vXg12FE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "549346475159-r60bfibsiqgvigcdp2lfkttt9ohepmfo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
