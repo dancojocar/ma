@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Books</string>
+    <string name="title_event_detail">Book Details</string>
+</resources>

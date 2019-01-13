@@ -1,0 +1,45 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion rootProject.buildToolsVersion
+    defaultConfig {
+        applicationId "com.example.android.testing.espresso.BasicSample"
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    lintOptions {
+        abortOnError false
+    }
+    productFlavors {
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    // App dependencies
+    implementation 'androidx.annotation:annotation:' + rootProject.androidxLibVersion;
+    implementation 'com.google.guava:guava:26.0-android'
+
+    // Testing-only dependencies
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    androidTestImplementation 'androidx.test:core:' + rootProject.coreVersion;
+    androidTestImplementation 'androidx.test:core-ktx:' + rootProject.coreVersion;
+    androidTestImplementation 'androidx.test.ext:junit:' + rootProject.extJUnitVersion;
+    androidTestImplementation 'androidx.test.ext:junit-ktx:' + rootProject.extJUnitVersion;
+    androidTestImplementation 'androidx.test:runner:' + rootProject.runnerVersion;
+    androidTestImplementation 'androidx.test.espresso:espresso-core:' + rootProject.espressoVersion;
+}
