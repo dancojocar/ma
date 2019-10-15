@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+  <Preference
+    app:fragment="ro.cojocar.dan.preferences.SettingsActivity$BasicPreferencesFragment"
+    app:summary="Sample preferences using basic attributes"
+    app:title="@string/basic_preferences" />
+
+  <Preference
+    app:fragment="ro.cojocar.dan.preferences.SettingsActivity$WidgetPreferencesFragment"
+    app:summary="Sample preferences with different widgets"
+    app:title="@string/widgets" />
+
+  <Preference
+    app:fragment="ro.cojocar.dan.preferences.SettingsActivity$DialogPreferencesFragment"
+    app:summary="Sample preferences that launch dialogs"
+    app:title="@string/dialogs" />
+
+  <Preference
+    app:fragment="ro.cojocar.dan.preferences.SettingsActivity$AdvancedPreferencesFragment"
+    app:summary="Sample preferences with advanced attributes"
+    app:title="@string/advanced_attributes" />
+
+</PreferenceScreen>

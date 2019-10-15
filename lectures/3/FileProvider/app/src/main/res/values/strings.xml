@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FileProvider</string>
+  <string name="share_demo">Share Demo</string>
+  <string name="share">Share</string>
+</resources>
