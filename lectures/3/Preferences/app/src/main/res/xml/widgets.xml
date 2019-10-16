@@ -22,6 +22,11 @@
       app:summary="@string/summary_checkbox_preference"
       app:title="@string/title_checkbox_preference" />
 
+    <CheckBoxPreference
+      app:key="checkbox2"
+      app:summary="@string/summary_checkbox_preference"
+      app:title="@string/title_checkbox_preference" />
+
     <SwitchPreferenceCompat
       app:key="switch"
       app:summary="@string/summary_switch_preference"
