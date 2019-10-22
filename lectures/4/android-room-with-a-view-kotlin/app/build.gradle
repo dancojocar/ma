@@ -1,0 +1,65 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+    defaultConfig {
+        applicationId "com.example.android.roomwordssample"
+        minSdkVersion 20
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        exclude 'META-INF/atomicfu.kotlin_module'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+
+    // Room components
+    implementation "androidx.room:room-runtime:$rootProject.roomVersion"
+    implementation "androidx.room:room-ktx:$rootProject.roomVersion"
+    kapt "androidx.room:room-compiler:$rootProject.roomVersion"
+    androidTestImplementation "androidx.room:room-testing:$rootProject.roomVersion"
+
+    // Lifecycle components
+    implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.archLifecycleVersion"
+    kapt "androidx.lifecycle:lifecycle-compiler:$rootProject.archLifecycleVersion"
+    androidTestImplementation "androidx.arch.core:core-testing:$rootProject.androidxArchVersion"
+
+    // ViewModel Kotlin support
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.archLifecycleVersion"
+
+    // Coroutines
+    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.coroutines"
+
+    // UI
+    implementation "com.google.android.material:material:$rootProject.materialVersion"
+
+    // Testing
+    androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation ('androidx.test.espresso:espresso-core:3.1.0', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+}
+
