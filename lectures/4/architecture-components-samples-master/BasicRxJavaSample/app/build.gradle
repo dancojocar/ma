@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion build_versions.target_sdk
+    buildToolsVersion build_versions.build_tools
+
+    defaultConfig {
+        applicationId "com.example.android.persistence"
+        minSdkVersion build_versions.min_sdk
+        targetSdkVersion build_versions.target_sdk
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    // Support libraries
+    implementation deps.support.app_compat
+    implementation deps.support.fragment_runtime
+    implementation deps.support.design
+    // Architecture components
+    implementation deps.lifecycle.runtime
+    annotationProcessor deps.lifecycle.compiler
+    implementation deps.room.runtime
+    annotationProcessor deps.room.compiler
+    implementation deps.room.rxjava2
+
+    // RxJava
+    implementation deps.rx_android
+    implementation deps.rxjava2
+
+    // Dependencies for local unit tests
+    testImplementation deps.junit
+    testImplementation deps.hamcrest
+    testImplementation deps.arch_core.testing
+    testImplementation deps.mockito.all
+
+    // Resolve conflicts between main and local unit tests
+    testImplementation deps.support.annotations
+    testImplementation deps.support.core_utils
+
+    // Android Testing Support Library's runner and rules
+    androidTestImplementation deps.atsl.runner
+    androidTestImplementation deps.atsl.rules
+    androidTestImplementation deps.room.testing
+    androidTestImplementation deps.arch_core.testing
+
+    // Dependencies for Android unit tests
+    androidTestImplementation deps.junit
+    androidTestImplementation deps.mockito.core, { exclude group: 'net.bytebuddy' }
+    androidTestImplementation deps.dexmaker
+
+    // Espresso UI Testing
+    androidTestImplementation deps.espresso.core
+    androidTestImplementation deps.espresso.contrib
+    androidTestImplementation deps.espresso.intents
+
+    // Resolve conflicts between main and test APK:
+    androidTestImplementation deps.support.annotations
+    androidTestImplementation deps.support.app_compat
+    androidTestImplementation deps.support.design
+}
