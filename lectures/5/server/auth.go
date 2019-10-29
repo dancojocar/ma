@@ -1,12 +1,11 @@
 package main
 
 import (
-    //"log"
 	"fmt"
-	jwt "github.com/dgrijalva/jwt-go"
-	"net/http"
-	_ "github.com/dgrijalva/jwt-go/request"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	_ "github.com/dgrijalva/jwt-go/request"
+	"net/http"
 )
 
 func RequireTokenAuthentication(rw http.ResponseWriter, req *http.Request, next http.HandlerFunc) {
@@ -14,7 +13,7 @@ func RequireTokenAuthentication(rw http.ResponseWriter, req *http.Request, next 
 
 	token, err := request.ParseFromRequest(req, request.OAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		} else {
 			return authBackend.PublicKey, nil
 		}

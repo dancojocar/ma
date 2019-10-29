@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
-	"github.com/pborman/uuid"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/pborman/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"os"
 	"time"
@@ -18,7 +18,6 @@ type JWTAuthenticationBackend struct {
 }
 
 const (
-	tokenDuration = 72
 	expireOffset = 3600
 )
 
@@ -88,15 +87,19 @@ func getPrivateKey() *rsa.PrivateKey {
 	}
 
 	pemfileinfo, _ := privateKeyFile.Stat()
-	var size int64 = pemfileinfo.Size()
+	var size = pemfileinfo.Size()
 	pembytes := make([]byte, size)
 
 	buffer := bufio.NewReader(privateKeyFile)
 	_, err = buffer.Read(pembytes)
 
-	data, _ := pem.Decode([]byte(pembytes))
+	data, _ := pem.Decode(pembytes)
 
-	privateKeyFile.Close()
+	err = privateKeyFile.Close()
+
+	if err != nil {
+		panic(err)
+	}
 
 	privateKeyImported, err := x509.ParsePKCS1PrivateKey(data.Bytes)
 
@@ -114,15 +117,18 @@ func getPublicKey() *rsa.PublicKey {
 	}
 
 	pemfileinfo, _ := publicKeyFile.Stat()
-	var size int64 = pemfileinfo.Size()
+	var size = pemfileinfo.Size()
 	pembytes := make([]byte, size)
 
 	buffer := bufio.NewReader(publicKeyFile)
 	_, err = buffer.Read(pembytes)
 
-	data, _ := pem.Decode([]byte(pembytes))
+	data, _ := pem.Decode(pembytes)
 
-	publicKeyFile.Close()
+	err = publicKeyFile.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	publicKeyImported, err := x509.ParsePKIXPublicKey(data.Bytes)
 

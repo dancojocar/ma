@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 	_ "github.com/dgrijalva/jwt-go/request"
 	"net/http"

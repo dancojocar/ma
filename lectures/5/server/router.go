@@ -12,7 +12,7 @@ func NewRouter() *mux.Router {
 		var handler http.Handler
 		handler = negroni.New(
 			negroni.HandlerFunc(RequireTokenAuthentication),
-			negroni.HandlerFunc(route.HandlerFunc),
+			route.HandlerFunc,
 		)
 
 		handler = Logger(handler, route.Name)
