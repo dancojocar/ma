@@ -40,5 +40,5 @@ func RepoDestroyPortfolio(id int) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("Could not find Portfolio with id of %d to delete", id)
+	return fmt.Errorf("could not find Portfolio with id of %d to delete", id)
 }

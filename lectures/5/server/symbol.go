@@ -7,5 +7,3 @@ type Symbol struct {
 	Quantity         int64 `json:"quantity,omitempty"`
 	AcquisitionPrice float64 `json:"acquisitionPrice,omitempty"`
 }
-
-type Symbols []Symbol

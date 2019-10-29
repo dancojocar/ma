@@ -6,17 +6,20 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
 	"strconv"
 	"time"
 )
 
-func Index(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	fmt.Fprintln(w, "Welcome!")
+func Index(w http.ResponseWriter, _ *http.Request, _ http.HandlerFunc) {
+	_, err := fmt.Fprintln(w, "Welcome!")
+	if err != nil {
+		panic(err)
+	}
 }
 
-func PortfolioIndex(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func PortfolioIndex(w http.ResponseWriter, _ *http.Request, _ http.HandlerFunc) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 
@@ -25,7 +28,7 @@ func PortfolioIndex(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 	}
 }
 
-func PortfolioShow(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func PortfolioShow(w http.ResponseWriter, r *http.Request, _ http.HandlerFunc) {
 	vars := mux.Vars(r)
 	portfolioId := vars["portfolioId"]
 
@@ -50,7 +53,7 @@ func PortfolioShow(w http.ResponseWriter, r *http.Request, next http.HandlerFunc
 	}
 }
 
-func PortfolioCreate(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func PortfolioCreate(w http.ResponseWriter, r *http.Request, _ http.HandlerFunc) {
 	var portfolio Portfolio
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {

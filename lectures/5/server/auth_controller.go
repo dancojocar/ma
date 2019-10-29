@@ -6,10 +6,13 @@ import (
 	"net/http"
 )
 
-func Login(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func Login(w http.ResponseWriter, r *http.Request, _ http.HandlerFunc) {
 	requestUser := new(User)
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&requestUser)
+	err := decoder.Decode(&requestUser)
+	if err != nil {
+		panic(err)
+	}
 
 	log.Printf(
 		"User: %s",
@@ -19,19 +22,28 @@ func Login(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	responseStatus, token := LoginService(requestUser)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(responseStatus)
-	w.Write(token)
+	_, err = w.Write(token)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func RefreshToken(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func RefreshToken(w http.ResponseWriter, r *http.Request, _ http.HandlerFunc) {
 	requestUser := new(User)
 	decoder := json.NewDecoder(r.Body)
-	decoder.Decode(&requestUser)
+	err := decoder.Decode(&requestUser)
+	if err != nil {
+		panic(err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(RefreshTokenService(requestUser))
+	_, err = w.Write(RefreshTokenService(requestUser))
+	if err != nil {
+		panic(err)
+	}
 }
 
-func Logout(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func Logout(w http.ResponseWriter, r *http.Request, _ http.HandlerFunc) {
 	err := LogoutService(r)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
