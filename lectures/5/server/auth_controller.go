@@ -8,6 +8,7 @@ import (
 
 func Login(w http.ResponseWriter, r *http.Request, _ http.HandlerFunc) {
 	requestUser := new(User)
+	log.Printf("body: %s", r.Body, )
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&requestUser)
 	if err != nil {
