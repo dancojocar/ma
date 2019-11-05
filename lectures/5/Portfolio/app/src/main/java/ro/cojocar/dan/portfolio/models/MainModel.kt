@@ -16,6 +16,7 @@ import ro.cojocar.dan.portfolio.service.LoginCredentials
 
 
 class MainModel : ViewModel() {
+  private var authToken: String? = null
   private val cache = SparseArray<List<Portfolio>>(10)
 
   private val mutablePortfolios = MutableLiveData<List<Portfolio>>().apply { value = emptyList() }
@@ -42,7 +43,11 @@ class MainModel : ViewModel() {
   }
 
   suspend fun auth(): Boolean {
-    return NetworkRepository.auth(LoginCredentials("test", "test1"))
+    if (authToken == null || authToken?.isEmpty() == true) {
+      authToken = NetworkRepository.auth(LoginCredentials("test", "test1"))
+      NetworkRepository.setToken(authToken)
+    }
+    return authToken?.isNotEmpty() ?: false
   }
 
   /**

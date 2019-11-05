@@ -3,7 +3,6 @@ package ro.cojocar.dan.portfolio.service
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.json.JSONObject
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
@@ -19,6 +18,7 @@ object PortfolioApi {
 
     @POST("/token-auth")
     suspend fun authenticate(@Body login: LoginCredentials): TokenHolder
+
   }
 
   private val interceptor: HttpLoggingInterceptor = HttpLoggingInterceptor().apply {

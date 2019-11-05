@@ -11,17 +11,16 @@ object NetworkRepository {
     return portfolios
   }
 
-  suspend fun auth(credentials: LoginCredentials): Boolean {
-    if (PortfolioApi.tokenInterceptor.token == null) {
-      val tokenHolder = PortfolioApi.service.authenticate(credentials)
-      val token = tokenHolder.token
-      PortfolioApi.tokenInterceptor.token = token
-      return token != ""
-    }
-    return true
+  suspend fun auth(credentials: LoginCredentials): String? {
+    val tokenHolder = PortfolioApi.service.authenticate(credentials)
+    return tokenHolder.token
   }
 
 
   private suspend fun getPortfoliosFromNetwork(): List<Portfolio> =
     PortfolioApi.service.getPortfolios()
+
+  fun setToken(authToken: String?) {
+    PortfolioApi.tokenInterceptor.token = authToken
+  }
 }
