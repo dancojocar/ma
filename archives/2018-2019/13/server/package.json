@@ -15,7 +15,7 @@
     "koa-convert": "^1.2.0",
     "koa-cors": "^0.0.16",
     "koa-router": "^7.1.0",
-    "ws": "^1.1.1"
+    "ws": "^7.2.0"
   },
   "devDependencies": {
     "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
