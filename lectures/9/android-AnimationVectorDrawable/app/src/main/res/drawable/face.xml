@@ -1,0 +1,21 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="200dp"
+  android:height="200dp"
+  android:viewportWidth="100"
+  android:viewportHeight="100">
+  <path
+    android:fillColor="@color/yellow"
+    android:pathData="@string/path_circle" />
+  <path
+    android:fillColor="@android:color/black"
+    android:pathData="@string/path_face_left_eye" />
+  <path
+    android:fillColor="@android:color/black"
+    android:pathData="@string/path_face_right_eye" />
+  <path
+    android:name="mouth"
+    android:pathData="@string/path_face_mouth_sad"
+    android:strokeWidth="@integer/stroke_width"
+    android:strokeColor="@android:color/black"
+    android:strokeLineCap="round" />
+</vector>

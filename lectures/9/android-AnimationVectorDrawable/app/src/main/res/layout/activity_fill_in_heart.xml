@@ -1,0 +1,11 @@
+<CheckBox xmlns:android="http://schemas.android.com/apk/res/android"
+  android:id="@+id/text"
+  android:layout_width="wrap_content"
+  android:layout_height="wrap_content"
+  android:layout_gravity="center"
+  android:button="@drawable/fill_in_heart"
+  android:gravity="center"
+  android:paddingStart="16dp"
+  android:text="@string/love_it"
+  android:textColor="@color/colorAccent"
+  android:textSize="64sp" /><!--android:background="@null"/>-->
