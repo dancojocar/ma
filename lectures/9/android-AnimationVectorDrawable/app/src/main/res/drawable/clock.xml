@@ -1,0 +1,32 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="200dp"
+  android:height="200dp"
+  android:viewportWidth="100"
+  android:viewportHeight="100">
+  <group
+    android:name="minutes"
+    android:pivotX="50"
+    android:pivotY="50"
+    android:rotation="0">
+    <path
+      android:pathData="M 50,50 L 50,12"
+      android:strokeWidth="@integer/stroke_width"
+      android:strokeColor="@android:color/holo_green_dark"
+      android:strokeLineCap="round" />
+  </group>
+  <group
+    android:name="hours"
+    android:pivotX="50"
+    android:pivotY="50"
+    android:rotation="0">
+    <path
+      android:pathData="M 50,50 L 24,50"
+      android:strokeWidth="@integer/stroke_width"
+      android:strokeColor="@android:color/holo_blue_dark"
+      android:strokeLineCap="round" />
+  </group>
+  <path
+    android:pathData="@string/path_circle"
+    android:strokeWidth="@integer/stroke_width"
+    android:strokeColor="@android:color/holo_red_dark" />
+</vector>

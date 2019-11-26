@@ -1,0 +1,9 @@
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:drawable="@drawable/clock">
+  <target
+    android:name="hours"
+    android:animation="@animator/hours_rotation" />
+  <target
+    android:name="minutes"
+    android:animation="@animator/minutes_rotation" />
+</animated-vector>
