@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2012 Google Inc. All rights reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<resources>
+
+    <style name="CardViewStyle" parent="CardViewStyle">
+        <item name="android:layout_marginTop">0dp</item>
+        <item name="android:layout_marginBottom">0dp</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_marginEnd">@dimen/card_view_margin</item>
+        <item name="android:layout_marginStart">@dimen/card_view_margin</item>
+        <item name="cardCornerRadius">@dimen/card_view_card_corner_radius</item>
+        <item name="cardElevation">@dimen/card_view_card_elevation</item>
+        <item name="cardPreventCornerOverlap">false</item>
+    </style>
+
+</resources>
