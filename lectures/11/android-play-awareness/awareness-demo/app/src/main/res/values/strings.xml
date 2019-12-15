@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Awarness Api Demo</string>
+    <string name="stillMessage">You are still.</string>
+    <string name="movingMessage">You are moving. Keep moving.:-)</string>
+    <string name="unknownMessage">Confused.:-(</string>
+    <string name="atWorkMessage">You are at work.</string>
+    <string name="notAtWorkMessage">You are not at work.</string>
+</resources>
