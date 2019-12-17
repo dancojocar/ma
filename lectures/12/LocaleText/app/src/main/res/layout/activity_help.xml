@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  tools:context="com.example.android.localetext2.HelpActivity">
+
+  <TextView
+    android:id="@+id/help_title"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/standard_margin"
+    android:layout_marginLeft="@dimen/standard_margin"
+    android:layout_marginTop="@dimen/standard_margin"
+    android:text="@string/action_help"
+    android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+  <com.google.android.material.floatingactionbutton.FloatingActionButton
+    android:id="@+id/fab"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/standard_margin"
+    android:layout_marginLeft="@dimen/standard_margin"
+    android:layout_marginTop="@dimen/standard_margin"
+    android:clickable="true"
+    app:fabSize="mini"
+    app:layout_constraintLeft_toLeftOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/help_title"
+    app:srcCompat="@android:drawable/ic_menu_call" />
+
+  <TextView
+    android:id="@+id/help_body"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/standard_margin"
+    android:layout_marginLeft="@dimen/standard_margin"
+    android:layout_marginEnd="@dimen/standard_margin"
+    android:layout_marginRight="@dimen/standard_margin"
+    android:padding="@dimen/standard_margin"
+    android:text="@string/help_text"
+    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="1.0"
+    app:layout_constraintLeft_toRightOf="@+id/fab"
+    app:layout_constraintRight_toRightOf="parent"
+    app:layout_constraintStart_toEndOf="@+id/fab"
+    app:layout_constraintTop_toBottomOf="@+id/help_title" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
