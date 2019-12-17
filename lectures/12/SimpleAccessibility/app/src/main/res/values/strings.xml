@@ -21,4 +21,14 @@ limitations under the License. -->
     <!-- Checkbox labels -->
     <string name="checkbox_text_jetpack">Enable jetpack</string>
     <string name="checkbox_text_hyperspace">Enable hyperspace</string>
+
+    <!-- Content descriptions for images and image buttons -->
+    <string name="imagebutton_contentdescription">Discard</string>
+    <string name="imageview_contentdescription">Partly cloudy</string>
+
+    <!-- Hint for edit text -->
+    <string name="edittext_text">Write your message</string>
+
+    <!-- Text for the textview label -->
+    <string name="label_message">Message</string>
 </resources>

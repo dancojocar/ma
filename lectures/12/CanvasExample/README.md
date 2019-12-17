@@ -1,25 +1,29 @@
-SimpleAccessibility (Solution Code) 
-===============================
+CanvasExample - Solution code
+=============================
 
-The SimpleAccessibility app demonstrates how to add accessible features 
-to your app's user interface.
+Draw on your device screen using your finger.
 
-All the functionality for this app is in the layout; the app has no actual 
-behavior.   
+Introduction
+------------
+
+This app uses a custom view to implement drawing on a canvas in response
+to touch events. All drawing happens on the UI thread by overriding the
+custom view's onDraw() method. You can use this technique when drawing
+always takes less time than a screen refresh cycle on all target devices.
 
 Pre-requisites
 --------------
 
-For this app you should be familiar with: 
-* Creating, building, and running apps in Android Studio.
-* Creating views and layouts in both Android Studio's design editor and XML.
-
+You need to know:
+- How to open, build, and run apps with Android Studio.
+- How to extract string resources and use string resources in the code.
+- How to create a custom view that handles touch or click events.
+- Basic understanding of the activity lifecycle.
 
 Getting Started
 ---------------
 
-1. Download and open this sample in Android Studio.
-
+1. Download and run the app.
 
 License
 -------
