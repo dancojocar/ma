@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">LocaleText</string>
+  <string name="action_help">Ajutor</string>
+  <string name="description">Nougat este o familie de dulciuri făcute cu zahăr sau miere, nuci prăjite (migdale, nuci, fistic, alune și nuci de macadamia), albușuri de ou bătute și fructe confiate uneori. Este folosit într-o varietate de bomboane și bomboane de ciocolată.</string>
+  <string name="help_text">Dacă aveți nevoie de ajutor, contactați departamentul nostru de asistență.</string>
+  <string name="language">Limba</string>
+  <string name="nougat">Pachet cu bomboane de nougat</string>
+</resources>
