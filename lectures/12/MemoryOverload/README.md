@@ -1,25 +1,29 @@
-SimpleAccessibility (Solution Code) 
-===============================
+MemoryOverload - Solution code
+==============================
 
-The SimpleAccessibility app demonstrates how to add accessible features 
-to your app's user interface.
+App for demonstrating the Android Profiler Memory tool in Android Studio.
 
-All the functionality for this app is in the layout; the app has no actual 
-behavior.   
+Introduction
+------------
+
+This app creates a row of many text views every time you tab the floating
+action button. Eventually, the app runs out of memory and crashes.
 
 Pre-requisites
 --------------
 
-For this app you should be familiar with: 
-* Creating, building, and running apps in Android Studio.
-* Creating views and layouts in both Android Studio's design editor and XML.
-
+You need to know:
+- How to open, build, and run apps with Android Studio.
+- Start Android Profiler to observe your app.
 
 Getting Started
 ---------------
 
-1. Download and open this sample in Android Studio.
-
+1. Download and run the app.
+2. Open Android Profiler and observe the Memory Profiler.
+3. Add rows by pressing the FAB. It can take many seconds for the next row
+   to appear on the screen.
+4. Eventually, the app runs out of memory and crashes.
 
 License
 -------

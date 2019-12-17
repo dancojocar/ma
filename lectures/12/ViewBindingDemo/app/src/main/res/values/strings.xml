@@ -1,0 +1,5 @@
+<resources>
+  <string name="app_name">ViewBindingDemo</string>
+    <string name="mainTitle">This is my main title</string>
+  <string name="subTitle">This is my subTitle</string>
+</resources>

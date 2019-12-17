@@ -1,25 +1,24 @@
-SimpleAccessibility (Solution Code) 
-===============================
+LargeImages - Solution code
+=============================
 
-The SimpleAccessibility app demonstrates how to add accessible features 
-to your app's user interface.
+Demo that swaps between a small and large image
+for testing with Profile GPU Rendering.
 
-All the functionality for this app is in the layout; the app has no actual 
-behavior.   
+Introduction
+------------
+
+Toggles between two images when tapped.
 
 Pre-requisites
 --------------
 
-For this app you should be familiar with: 
-* Creating, building, and running apps in Android Studio.
-* Creating views and layouts in both Android Studio's design editor and XML.
-
+You need to know:
+- How to open, build, and run apps with Android Studio.
 
 Getting Started
 ---------------
 
-1. Download and open this sample in Android Studio.
-
+1. Download and run the app.
 
 License
 -------
