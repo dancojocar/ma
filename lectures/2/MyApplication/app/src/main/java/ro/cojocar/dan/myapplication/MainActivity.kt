@@ -11,7 +11,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         button.setOnClickListener {
-            text.text = "From editText: ${editText.text.toString()}"
+            text.text = "From editText: ${editText.text}"
             button.text = "Update"
         }
         logd("onCreate called")
