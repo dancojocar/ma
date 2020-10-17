@@ -13,5 +13,16 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
         super.onCreate(savedInstanceState, persistentState)
+        logd("OnCreate was reached!")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        logd("onPause was reached!")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        logd("onRestart was reached!")
     }
 }
