@@ -1,0 +1,29 @@
+CREATE TABLE chessPlayer (
+  player_number INTEGER NOT NULL,
+  full_name TEXT NOT NULL,
+  quotes TEXT NOT NULL
+);
+
+CREATE INDEX chessPlayer_full_name ON chessPlayer(full_name);
+
+INSERT INTO chessPlayer (player_number, full_name, quotes)
+VALUES (15, 'Mikhail Tal',
+   'You must take your opponent into a deep dark forest where 2+2=5, and the path leading out is only wide enough for one!');
+
+selectAll:
+SELECT * FROM chessPlayer;
+
+selectById:
+SELECT * FROM chessPlayer WHERE player_number = ?;
+
+selectByName:
+SELECT * FROM chessPlayer WHERE full_name = ?;
+
+insertPlayer:
+INSERT INTO chessPlayer(player_number, full_name, quotes) VALUES (?, ?, ?);
+
+updatePlayer:
+INSERT OR REPLACE INTO chessPlayer(player_number, full_name, quotes) VALUES (?, ?, ?);
+
+deletePlayer:
+DELETE FROM chessPlayer WHERE player_number = ?;

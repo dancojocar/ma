@@ -23,9 +23,9 @@ class MainActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     lvNotes.onItemClickListener =
-        AdapterView.OnItemClickListener { _, _, position, _ ->
-          toast("Click on ${listNotes[position].title}")
-        }
+      AdapterView.OnItemClickListener { _, _, position, _ ->
+        toast("Click on ${listNotes[position].title}")
+      }
   }
 
   override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -33,16 +33,14 @@ class MainActivity : AppCompatActivity() {
     return super.onCreateOptionsMenu(menu)
   }
 
-  override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-    if (item != null) {
-      when (item.itemId) {
-        R.id.addNote -> {
-          val intent = Intent(this, NoteActivity::class.java)
-          startActivity(intent)
-        }
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+      R.id.addNote -> {
+        val intent = Intent(this, NoteActivity::class.java)
+        startActivity(intent)
       }
     }
-    return super.onOptionsItemSelected(item!!)
+    return super.onOptionsItemSelected(item)
   }
 
   override fun onResume() {
@@ -71,7 +69,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   inner class NotesAdapter(context: Context, private var notesList: ArrayList<Note>) :
-      BaseAdapter() {
+    BaseAdapter() {
     private var context: Context? = context
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
       val view: View?

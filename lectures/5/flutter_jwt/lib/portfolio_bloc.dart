@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:collection';
+import 'dart:core';
 
 import 'package:flutter_jwt/portfolio.dart';
 import 'package:flutter_jwt/service.dart';
@@ -12,8 +12,7 @@ class PortfolioBloc {
 
   final _portfoliosSubject = BehaviorSubject<List<Portfolio>>();
 
-  Stream<List<Portfolio>> get allPortfolios =>
-      _portfoliosSubject.stream;
+  Stream<List<Portfolio>> get allPortfolios => _portfoliosSubject.stream;
 
   getPortfolios(var token) async {
     List<Portfolio> portfolio = await service.fetchPost(token);

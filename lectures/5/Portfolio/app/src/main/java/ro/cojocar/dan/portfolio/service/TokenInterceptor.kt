@@ -12,14 +12,12 @@ class TokenInterceptor constructor() : Interceptor {
 
     val originalUrl = original.url()
     val encodedPath = originalUrl.encodedPath()
-    if (token == null ||
-      (original.method() == "post" && encodedPath.contains("/token-auth"))
-    ) {
+    if (token == null || (original.method() == "post" && encodedPath.contains("/token-auth"))) {
       return chain.proceed(original)
     }
 
     val requestBuilder = original.newBuilder()
-      .addHeader("Authorization", token)
+      .addHeader("Authorization", token!!)
       .url(originalUrl)
 
     val request = requestBuilder.build()

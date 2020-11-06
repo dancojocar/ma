@@ -5,8 +5,7 @@ import android.view.View.GONE
 import android.view.View.VISIBLE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_portfolio_list.*
@@ -51,7 +50,7 @@ class PortfolioListActivity : AppCompatActivity() {
     }
 
     setupRecyclerView(portfolio_list)
-    model = ViewModelProviders.of(this).get(MainModel::class.java)
+    model = ViewModelProvider(this).get(MainModel::class.java)
     model.fetchData()
     observeModel()
   }
@@ -81,7 +80,7 @@ class PortfolioListActivity : AppCompatActivity() {
   }
 
   private fun <T> LiveData<T>.observe(observe: (T?) -> Unit) =
-    observe(this@PortfolioListActivity, Observer { observe(it) })
+    observe(this@PortfolioListActivity, { observe(it) })
 
   private fun setupRecyclerView(recyclerView: RecyclerView) {
     adapter = SimpleItemRecyclerViewAdapter(this, twoPane)
