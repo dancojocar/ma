@@ -21,7 +21,6 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -67,7 +66,7 @@ class WordDaoTest {
 
     @Test
     @Throws(Exception::class)
-    fun insertAndGetWord() = runBlocking {
+    fun insertAndGetWord() {
         val word = Word("word")
         wordDao.insert(word)
         val allWords = wordDao.getAlphabetizedWords().waitForValue()
@@ -76,7 +75,7 @@ class WordDaoTest {
 
     @Test
     @Throws(Exception::class)
-    fun getAllWords() = runBlocking {
+    fun getAllWords() {
         val word = Word("aaa")
         wordDao.insert(word)
         val word2 = Word("bbb")
@@ -88,7 +87,7 @@ class WordDaoTest {
 
     @Test
     @Throws(Exception::class)
-    fun deleteAll() = runBlocking {
+    fun deleteAll() {
         val word = Word("word")
         wordDao.insert(word)
         val word2 = Word("word2")

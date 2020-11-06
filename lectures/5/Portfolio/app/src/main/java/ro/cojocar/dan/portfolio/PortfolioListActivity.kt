@@ -3,10 +3,9 @@ package ro.cojocar.dan.portfolio
 import android.os.Bundle
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_portfolio_list.*
 import kotlinx.android.synthetic.main.portfolio_list.*
@@ -27,7 +26,7 @@ import ro.cojocar.dan.portfolio.models.MainModel
  */
 class PortfolioListActivity : AppCompatActivity() {
 
-  private lateinit var model: MainModel
+  private val model: MainModel by viewModels()
   private lateinit var adapter: SimpleItemRecyclerViewAdapter
 
   /**
@@ -57,7 +56,6 @@ class PortfolioListActivity : AppCompatActivity() {
     }
 
     setupRecyclerView(portfolio_list)
-    model = ViewModelProviders.of(this).get(MainModel::class.java)
     observeModel()
   }
 
@@ -86,7 +84,7 @@ class PortfolioListActivity : AppCompatActivity() {
   }
 
   private fun <T> LiveData<T>.observe(observe: (T?) -> Unit) =
-    observe(this@PortfolioListActivity, Observer { observe(it) })
+    observe(this@PortfolioListActivity, { observe(it) })
 
   private fun setupRecyclerView(recyclerView: RecyclerView) {
     adapter = SimpleItemRecyclerViewAdapter(this, twoPane)

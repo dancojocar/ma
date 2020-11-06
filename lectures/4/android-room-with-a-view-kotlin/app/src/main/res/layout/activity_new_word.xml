@@ -15,28 +15,28 @@ See the License for the specific language governing permissions and
 limitations under the License. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-  android:layout_width="match_parent"
-  android:layout_height="match_parent"
-  android:orientation="vertical">
-
-  <EditText
-    android:id="@+id/edit_word"
+    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/big_padding"
-    android:layout_marginBottom="@dimen/big_padding"
-    android:fontFamily="sans-serif-light"
-    android:hint="@string/hint_word"
-    android:inputType="textAutoComplete"
-    android:padding="@dimen/small_padding"
-    android:textSize="18sp" />
+    android:layout_height="match_parent">
 
-  <Button
-    android:id="@+id/button_save"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/colorPrimary"
-    android:text="@string/button_save"
-    android:textColor="@color/buttonLabel" />
+    <EditText
+        android:id="@+id/edit_word"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/min_height"
+        android:fontFamily="sans-serif-light"
+        android:hint="@string/hint_word"
+        android:inputType="textAutoComplete"
+        android:layout_margin="@dimen/big_padding"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/button_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:text="@string/button_save"
+        android:layout_margin="@dimen/big_padding"
+        android:textColor="@color/buttonLabel" />
 
 </LinearLayout>
