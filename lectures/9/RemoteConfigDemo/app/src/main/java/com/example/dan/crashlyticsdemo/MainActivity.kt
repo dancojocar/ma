@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.crashlytics.android.Crashlytics
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -15,12 +17,12 @@ class MainActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    Crashlytics.log("app started")
-    remoteConfig = FirebaseRemoteConfig.getInstance()
+    FirebaseCrashlytics.getInstance().log("app started")
 
-    val configSettings = FirebaseRemoteConfigSettings.Builder()
-        .setMinimumFetchIntervalInSeconds(3600)
-        .build()
+    remoteConfig = Firebase.remoteConfig
+    val configSettings = remoteConfigSettings {
+      minimumFetchIntervalInSeconds = 60
+    }
     remoteConfig.setConfigSettingsAsync(configSettings)
 
     remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
@@ -28,14 +30,14 @@ class MainActivity : AppCompatActivity() {
     setContentView(R.layout.activity_main)
     crashButton.setOnClickListener {
       if (remoteConfig.getString(HIDE_CRASH_LOGIC) ==
-          remoteConfig.getString(HIDE_CRASH_LOGIC_VALUE)
+        remoteConfig.getString(HIDE_CRASH_LOGIC_VALUE)
       ) {
-        Crashlytics.getInstance().crash()
+        throw RuntimeException("Oppps!")
       } else {
         Snackbar.make(
-            parent_content,
-            remoteConfig.getString(HIDE_CRASH_NO_LOGIC),
-            Snackbar.LENGTH_LONG
+          parent_content,
+          remoteConfig.getString(HIDE_CRASH_NO_LOGIC),
+          Snackbar.LENGTH_LONG
         ).show()
       }
     }
@@ -46,18 +48,22 @@ class MainActivity : AppCompatActivity() {
     textView.text = remoteConfig.getString(HELLO_MESSAGE)
 
     remoteConfig.fetchAndActivate()
-        .addOnCompleteListener(this) { task ->
-          if (task.isSuccessful) {
-            val updated = task.result
-            Log.d(TAG, "Config params updated: $updated")
-            Toast.makeText(this, "Fetch and activate succeeded",
-                Toast.LENGTH_SHORT).show()
-          } else {
-            Toast.makeText(this, "Fetch failed",
-                Toast.LENGTH_SHORT).show()
-          }
-          displayWelcomeMessage()
+      .addOnCompleteListener(this) { task ->
+        if (task.isSuccessful) {
+          val updated = task.result
+          Log.d(TAG, "Config params updated: $updated")
+          Toast.makeText(
+            this, "Fetch and activate succeeded",
+            Toast.LENGTH_SHORT
+          ).show()
+        } else {
+          Toast.makeText(
+            this, "Fetch failed",
+            Toast.LENGTH_SHORT
+          ).show()
         }
+        displayWelcomeMessage()
+      }
   }
 
   private fun displayWelcomeMessage() {
