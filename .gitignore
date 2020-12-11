@@ -100,3 +100,6 @@ node_modules
 # Test generated files
 /ReactAndroid/src/androidTest/assets/AndroidTestBundle.js
 
+#Firebase & Google config files
+google-services.json
+

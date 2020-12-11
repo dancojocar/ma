@@ -139,11 +139,11 @@ class SignInActivity : BaseActivity(), View.OnClickListener {
     }
   }
 
-  fun showProgressDialog() {
+  private fun showProgressDialog() {
     progressBar?.visibility = View.VISIBLE
   }
 
-  fun hideProgressDialog() {
+  private fun hideProgressDialog() {
     progressBar?.visibility = View.GONE
   }
 }

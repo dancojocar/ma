@@ -47,8 +47,8 @@ class ChooserActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
   class MyArrayAdapter(
       private val ctx: Context,
       resource: Int,
-      private val classes: Array<Class<*>>
-  ) : ArrayAdapter<Class<*>>(ctx, resource, classes) {
+      private val classes: Array<out Class<out Any>>
+  ) : ArrayAdapter<Class<out Any>>(ctx, resource, classes) {
     private var descriptionIds: IntArray? = null
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
