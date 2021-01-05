@@ -1,0 +1,142 @@
+/*
+ * Copyright 2019 Google, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import com.example.crane.buildsrc.Libs
+
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
+}
+
+// Reads the Google maps key that is used in the AndroidManifest
+Properties properties = new Properties()
+if (rootProject.file("local.properties").exists()) {
+    properties.load(rootProject.file("local.properties").newDataInputStream())
+}
+
+android {
+    compileSdkVersion 30
+    defaultConfig {
+        applicationId "androidx.compose.samples.crane"
+        minSdkVersion 21
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "androidx.compose.samples.crane.CustomTestRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["dagger.hilt.disableModulesHaveInstallInCheck"] = "true"
+            }
+        }
+
+        manifestPlaceholders = [ googleMapsKey : properties.getProperty("google.maps.key", "") ]
+    }
+
+    signingConfigs {
+        // We use a bundled debug keystore, to allow debug builds from CI to be upgradable
+        debug {
+            storeFile rootProject.file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    buildFeatures {
+         compose true
+
+        // Disable unused AGP features
+        buildConfig false
+        aidl false
+        renderScript false
+        resValues false
+        shaders false
+    }
+
+    composeOptions {
+        kotlinCompilerVersion Libs.Kotlin.version
+        kotlinCompilerExtensionVersion Libs.AndroidX.Compose.version
+    }
+
+    packagingOptions {
+        // Multiple dependency bring these files in. Exclude them to enable
+        // our test APK to build (has no effect on our AARs)
+        excludes += "/META-INF/AL2.0"
+        excludes += "/META-INF/LGPL2.1"
+    }
+}
+
+dependencies {
+    implementation Libs.Kotlin.stdlib
+    implementation Libs.Kotlin.Coroutines.android
+    implementation Libs.GoogleMaps.maps
+    implementation Libs.GoogleMaps.mapsKtx
+
+    implementation Libs.AndroidX.Compose.runtime
+    implementation Libs.AndroidX.Compose.runtimeLivedata
+    implementation Libs.AndroidX.Compose.foundation
+    implementation Libs.AndroidX.Compose.material
+    implementation Libs.AndroidX.Compose.layout
+    implementation Libs.AndroidX.Compose.animation
+    implementation Libs.AndroidX.Compose.tooling
+    implementation Libs.Accompanist.coil
+
+    implementation Libs.AndroidX.Lifecycle.viewModelKtx
+    implementation Libs.Hilt.android
+    implementation Libs.Hilt.AndroidX.viewModel
+    compileOnly Libs.AssistedInjection.dagger
+    kapt Libs.Hilt.compiler
+    kapt Libs.Hilt.AndroidX.compiler
+    kapt Libs.AssistedInjection.processor
+
+    androidTestImplementation Libs.JUnit.junit
+    androidTestImplementation Libs.AndroidX.Test.runner
+    androidTestImplementation Libs.AndroidX.Test.espressoCore
+    androidTestImplementation Libs.AndroidX.Test.rules
+    androidTestImplementation Libs.AndroidX.Test.Ext.junit
+    androidTestImplementation Libs.Kotlin.Coroutines.test
+    androidTestImplementation Libs.AndroidX.Compose.uiTest
+    androidTestImplementation Libs.Hilt.android
+    androidTestImplementation Libs.Hilt.AndroidX.viewModel
+    androidTestImplementation Libs.Hilt.testing
+    kaptAndroidTest Libs.Hilt.compiler
+    kaptAndroidTest Libs.Hilt.AndroidX.compiler
+    kaptAndroidTest Libs.AssistedInjection.processor
+}
