@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="clicked">Apăsat! </string>
+  <string name="word">Cuvânt %1$d</string>
+  <string name="language" translatable="false">Limba</string>
+</resources>
