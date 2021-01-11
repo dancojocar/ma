@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+//apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 30
+    defaultConfig {
+        applicationId "ro.ubbcluj.cs.books"
+        minSdkVersion 24
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    packagingOptions{
+        exclude 'META-INF/rxjava.properties'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation "com.squareup.retrofit2:retrofit:2.6.0"
+    implementation 'com.squareup.retrofit2:adapter-rxjava2:2.6.0'
+    implementation "com.squareup.retrofit2:converter-gson:2.6.0"
+    implementation "com.squareup.retrofit2:converter-moshi:2.6.0"
+    implementation "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.4.0"
+    implementation 'com.squareup.okhttp3:logging-interceptor:3.6.0'
+    implementation 'androidx.room:room-runtime:2.2.6'
+    kapt 'androidx.room:room-compiler:2.2.6'
+    implementation "androidx.room:room-ktx:2.2.6"
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
+    testImplementation 'junit:junit:4.13.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+}
+repositories {
+    mavenCentral()
+}
