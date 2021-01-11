@@ -1,0 +1,29 @@
+{
+  "name": "demo2021",
+  "version": "1.0.0",
+  "description": "Demo Sample",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "backpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@koa/cors": "^3.1.0",
+    "backpack-core": "0.8.4",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-convert": "^2.0.0",
+    "koa-cors": "^0.0.16",
+    "koa-router": "^10.0.0",
+    "phaser": "^3.51.0",
+    "ws": "^7.4.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "@babel/register": "^7.12.10"
+  }
+}
