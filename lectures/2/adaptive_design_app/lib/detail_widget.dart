@@ -4,7 +4,7 @@ class DetailWidget extends StatefulWidget {
 
   final int data;
 
-  DetailWidget(this.data);
+  const DetailWidget(this.data, {Key? key}) : super(key: key);
 
   @override
   _DetailWidgetState createState() => _DetailWidgetState();

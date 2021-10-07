@@ -27,8 +27,8 @@ class ArticleReaderFragment : Fragment() {
     return rootView!!
   }
 
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
     val message = arguments?.getString(MESSAGE)
     if (message != null) {
       logd("received message: $message")

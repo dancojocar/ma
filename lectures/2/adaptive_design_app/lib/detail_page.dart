@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:adaptive_design_app/DetailWidget.dart';
+import 'package:adaptive_design_app/detail_widget.dart';
 class DetailPage extends StatefulWidget {
 
   final int data;
 
-  DetailPage(this.data);
+  const DetailPage(this.data, {Key? key}) : super(key: key);
 
   @override
   _DetailPageState createState() => _DetailPageState();

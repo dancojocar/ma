@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:adaptive_design_app/DetailPage.dart';
-import 'package:adaptive_design_app/DetailWidget.dart';
-import 'package:adaptive_design_app/ListWidget.dart';
+import 'package:adaptive_design_app/detail_page.dart';
+import 'package:adaptive_design_app/detail_widget.dart';
+import 'package:adaptive_design_app/list_widget.dart';
 
 class MasterDetailPage extends StatefulWidget {
+  const MasterDetailPage({Key? key}) : super(key: key);
+
   @override
   _MasterDetailPageState createState() => _MasterDetailPageState();
 }

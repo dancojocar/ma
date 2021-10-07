@@ -9,11 +9,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        logd("onCreate was reached!")
     }
 
-    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
-        super.onCreate(savedInstanceState, persistentState)
-        logd("OnCreate was reached!")
+    override fun onStart() {
+        super.onStart()
+        logd("onStart was reached!")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        logd("onResume was reached!")
     }
 
     override fun onPause() {

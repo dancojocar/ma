@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 
-typedef Null ItemSelectedCallback(int value);
+typedef ItemSelectedCallback = void Function(int value);
 
 class ListWidget extends StatefulWidget {
   final int count;
   final ItemSelectedCallback onItemSelected;
 
-  ListWidget(
+  const ListWidget(
     this.count,
-    this.onItemSelected,
-  );
+    this.onItemSelected, 
+    {Key? key}
+  ) : super(key: key);
 
   @override
   _ListWidgetState createState() => _ListWidgetState();
@@ -32,7 +33,7 @@ class _ListWidgetState extends State<ListWidget> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(position.toString(), style: TextStyle(fontSize: 22.0),),
+                    child: Text(position.toString(), style: const TextStyle(fontSize: 22.0),),
                   ),
                 ],
               ),

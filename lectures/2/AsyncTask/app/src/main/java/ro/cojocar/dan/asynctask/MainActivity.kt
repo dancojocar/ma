@@ -4,19 +4,16 @@ import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.AsyncTask
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.*
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.UnsupportedEncodingException
-import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -31,7 +28,7 @@ class MainActivity : AppCompatActivity() {
             showProgressIndicator()
             val urlString = inputText.text.toString()
             if (urlString.trim().isNotEmpty() && isNetworkAvailable(this)) {
-//                DownloadWebPageTask(this).execute(urlString)
+                DownloadWebPageTask(this).execute(urlString)
                 AnkoAsynkTaskAlternative(this).downloadData(urlString)
             } else {
                 Toast.makeText(
@@ -63,46 +60,20 @@ class MainActivity : AppCompatActivity() {
         inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-
-    @Suppress("unused")
-    private class DownloadWebPageTask(context: MainActivity) : AsyncTask<String, Void, String>() {
-        private val activityReference: WeakReference<MainActivity> = WeakReference(context)
-        override fun onPreExecute() {
-            super.onPreExecute()
-            activityReference.get()?.showProgressIndicator()
-        }
-
-        override fun doInBackground(vararg urls: String): String {
-            // params comes from the execute() call: params[0] is the url.
-            return try {
-                activityReference.get()?.downloadUrl(urls[0])!!
-            } catch (e: IOException) {
-                "Unable to retrieve web page. URL may be invalid. message: ${e.message}"
-            }
-        }
-
-        // onPostExecute displays the results of the AsyncTask.
-        override fun onPostExecute(result: String) {
-            activityReference.get()?.outputText?.text = result
-            activityReference.get()?.hideProgressIndicator()
-        }
-
-    }
-
-    private fun hideProgressIndicator() {
+    fun hideProgressIndicator() {
         outputText.visibility = View.VISIBLE
         progressIndicator.visibility = View.GONE
 
     }
 
-    private fun showProgressIndicator() {
+    fun showProgressIndicator() {
         outputText.visibility = View.GONE
         progressIndicator.visibility = View.VISIBLE
     }
 
 
     @Throws(IOException::class)
-    private fun downloadUrl(myUrl: String): String {
+    fun downloadUrl(myUrl: String): String {
         var inputStream: InputStream? = null
         // Only display the first 500 characters of the retrieved
         // web page content.
@@ -140,31 +111,6 @@ class MainActivity : AppCompatActivity() {
         return String(buffer)
     }
 
-    @Suppress("unused")
-    private class AnkoAsynkTaskAlternative(context: MainActivity) {
-        private val activityReference: WeakReference<MainActivity> = WeakReference(context)
 
-        fun downloadData(url: String) {
-            val activity = activityReference.get()
-            activity?.showProgressIndicator()
-            doAsync {
-                //Execute all the long running tasks here
-                val output: String = activity?.downloadUrl(url)!!
-                uiThread {
-                    activity.apply {
-                        outputText?.text = output
-                        hideProgressIndicator()
-                        alert(
-                            "Downloaded data successfully",
-                            "Hi I'm an alert"
-                        ) {
-                            yesButton { toast("Yay !") }
-                            noButton { toast(":( !") }
-                        }.show()
-                    }
-                }
-            }
-        }
-    }
 }
 
