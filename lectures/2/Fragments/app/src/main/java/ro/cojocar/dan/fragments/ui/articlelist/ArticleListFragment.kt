@@ -42,8 +42,8 @@ class ArticleListFragment : Fragment() {
     return inflater.inflate(R.layout.article_list_fragment, container, false)
   }
 
-  override fun onActivityCreated(savedInstanceState: Bundle?) {
-    super.onActivityCreated(savedInstanceState)
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    super.onViewCreated(view, savedInstanceState)
     for (i in 0..10) {
       val horizontalLayout = LinearLayout(activity)
       horizontalLayout.orientation = LinearLayout.HORIZONTAL

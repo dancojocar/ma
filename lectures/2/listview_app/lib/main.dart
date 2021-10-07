@@ -5,6 +5,8 @@
 import 'package:flutter/material.dart';
 
 class ExpansionTileSample extends StatelessWidget {
+  const ExpansionTileSample({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,8 +16,8 @@ class ExpansionTileSample extends StatelessWidget {
         ),
         body: ListView.builder(
           itemBuilder: (BuildContext context, int index) =>
-              EntryItem(data[index]),
-          itemCount: data.length,
+              EntryItem(_data[index]),
+          itemCount: _data.length,
         ),
       ),
     );
@@ -31,7 +33,7 @@ class Entry {
 }
 
 // The entire multilevel list displayed by this app.
-final List<Entry> data = <Entry>[
+final List<Entry> _data = <Entry>[
   Entry(
     'First Year',
     <Entry>[
@@ -130,7 +132,7 @@ final List<Entry> data = <Entry>[
 // Displays one Entry. If the entry has children then it's displayed
 // with an ExpansionTile.
 class EntryItem extends StatelessWidget {
-  const EntryItem(this.entry);
+  const EntryItem(this.entry, {Key? key}): super(key: key);
 
   final Entry entry;
 
@@ -150,5 +152,5 @@ class EntryItem extends StatelessWidget {
 }
 
 void main() {
-  runApp(ExpansionTileSample());
+  runApp(const ExpansionTileSample());
 }

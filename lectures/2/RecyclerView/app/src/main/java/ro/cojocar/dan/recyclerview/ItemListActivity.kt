@@ -39,16 +39,12 @@ class ItemListActivity : AppCompatActivity() {
       private val values: List<DummyContent.DummyItem>
   ) : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
-    private val onClickListener: View.OnClickListener
-
-    init {
-      onClickListener = View.OnClickListener { v ->
-        val item = v.tag as DummyContent.DummyItem
-        val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
-          putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)
-        }
-        v.context.startActivity(intent)
+    private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
+      val item = v.tag as DummyContent.DummyItem
+      val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
+        putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)
       }
+      v.context.startActivity(intent)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
