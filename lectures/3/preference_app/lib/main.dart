@@ -4,13 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'SharedPreferences Demo',
       home: SharedPreferencesDemo(),
     );
@@ -18,15 +20,15 @@ class MyApp extends StatelessWidget {
 }
 
 class SharedPreferencesDemo extends StatefulWidget {
-  SharedPreferencesDemo({Key key}) : super(key: key);
+  const SharedPreferencesDemo({Key key= const Key("any")}) : super(key: key);
 
   @override
   SharedPreferencesDemoState createState() => SharedPreferencesDemoState();
 }
 
 class SharedPreferencesDemoState extends State<SharedPreferencesDemo> {
-  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  Future<int> _counter;
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late Future<int> _counter;
 
   Future<void> _incrementCounter() async {
     final SharedPreferences prefs = await _prefs;
@@ -61,13 +63,14 @@ class SharedPreferencesDemoState extends State<SharedPreferencesDemo> {
                   case ConnectionState.waiting:
                     return const CircularProgressIndicator();
                   default:
-                    if (snapshot.hasError)
+                    if (snapshot.hasError) {
                       return Text('Error: ${snapshot.error}');
-                    else
+                    } else {
                       return Text(
                         'Button tapped ${snapshot.data} time${snapshot.data == 1 ? '' : 's'}.\n\n'
                         'This should persist across restarts.',
                       );
+                    }
                 }
               })),
       floatingActionButton: FloatingActionButton(
