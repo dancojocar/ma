@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     logd("file uri: $uri")
 
     // Create a intent
-    val intentBuilder = ShareCompat.IntentBuilder.from(this)
+    val intentBuilder = ShareCompat.IntentBuilder(this)
         .setType("image/*")
         .addStream(uri)
 

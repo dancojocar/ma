@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
   final appTitle = 'Drawer Demo';
+
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,7 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   final String title;
 
-  MyHomePage({Key key, this.title}) : super(key: key);
+  const MyHomePage({Key key=const Key("any"), required this.title}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,7 @@ class MyHomePage extends StatelessWidget {
       body: Center(child: 
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
+                children: const <Widget>[
                   Text('My Demo Page!'),
                 ],
               )
@@ -35,14 +37,14 @@ class MyHomePage extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            const DrawerHeader(
               child: Text('Drawer Header'),
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
             ),
             ListTile(
-              title: Text('Item 1'),
+              title: const Text('Item 1'),
               onTap: () {
                 // Update the state of the app
                 // ...
@@ -51,7 +53,7 @@ class MyHomePage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: Text('Item 2'),
+              title: const Text('Item 2'),
               onTap: () {
                 // Update the state of the app
                 // ...
@@ -60,7 +62,7 @@ class MyHomePage extends StatelessWidget {
               },
             ),
             ListTile(
-              title: Text('Item 3'),
+              title: const Text('Item 3'),
               onTap: () {
                 // Update the state of the app
                 // ...

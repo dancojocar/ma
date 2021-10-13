@@ -7,19 +7,19 @@
 
     <fragment
         android:id="@+id/nav_home"
-        android:name="ro.cojocar.navigationdrawer.ui.home.HomeFragment"
+        android:name="com.example.navigationdrawerdemo.ui.home.HomeFragment"
         android:label="@string/menu_home"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/nav_gallery"
-        android:name="ro.cojocar.navigationdrawer.ui.gallery.GalleryFragment"
+        android:name="com.example.navigationdrawerdemo.ui.gallery.GalleryFragment"
         android:label="@string/menu_gallery"
         tools:layout="@layout/fragment_gallery" />
 
     <fragment
         android:id="@+id/nav_slideshow"
-        android:name="ro.cojocar.navigationdrawer.ui.slideshow.SlideshowFragment"
+        android:name="com.example.navigationdrawerdemo.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
 </navigation>
