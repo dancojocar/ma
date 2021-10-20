@@ -1,49 +1,67 @@
 package com.example.dan.sqlite
 
+import android.app.Activity
 import android.content.ContentValues
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_note.*
-import org.jetbrains.anko.toast
+import com.example.dan.sqlite.databinding.ActivityNoteBinding
 
 class NoteActivity : AppCompatActivity() {
-  var id = 0
+
+  companion object {
+    const val NOTE_ACTIVITY_ID = "MainActId"
+    const val NOTE_ACTIVITY_TITLE = "MainActTitle"
+    const val NOTE_ACTIVITY_CONTENT = "MainActContent"
+  }
+
+  private lateinit var binding: ActivityNoteBinding
+  private var id = 0
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_note)
+    binding = ActivityNoteBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     val bundle: Bundle? = intent.extras
     if (bundle != null) {
-      id = bundle.getInt("MainActId", 0)
+      id = bundle.getInt(NOTE_ACTIVITY_ID, 0)
       if (id != 0) {
-        edtTitle.setText(bundle.getString("MainActTitle"))
-        edtContent.setText(bundle.getString("MainActContent"))
+        binding.edtTitle.setText(bundle.getString(NOTE_ACTIVITY_TITLE))
+        binding.edtContent.setText(bundle.getString(NOTE_ACTIVITY_CONTENT))
+        binding.btAdd.text = getString(R.string.noteUpdate)
       }
     }
 
-    btAdd.setOnClickListener {
+    binding.btAdd.setOnClickListener {
       val dbManager = NoteDbManager(this)
       val values = ContentValues()
-      values.put("Title", edtTitle.text.toString())
-      values.put("Content", edtContent.text.toString())
+      val title = binding.edtTitle.text.toString()
+      values.put(NoteContract.NoteEntry.COLUMN_TITLE, title)
+      val content = binding.edtContent.text.toString()
+      values.put(NoteContract.NoteEntry.COLUMN_CONTENT, content)
+      val mId: Long
       if (id == 0) {
-        val mID = dbManager.insert(values)
-        if (mID > 0) {
-          toast("Add note successfully!")
-          finish()
-        } else {
-          toast("Fail to add note!")
-        }
+        id = dbManager.insert(values).toInt()
+        mId = id.toLong()
       } else {
         val selectionArs = arrayOf(id.toString())
-        val mID = dbManager.update(values, "Id=?", selectionArs)
-
-        if (mID > 0) {
-          toast("Add note successfully!")
-          finish()
-        } else {
-          toast("Fail to add note!")
-        }
+        mId = dbManager.update(
+          values,
+          "${NoteContract.NoteEntry.COLUMN_ID}=?", selectionArs
+        ).toLong()
+      }
+      if (mId > 0) {
+        toast("Add note successfully!")
+        val response = Intent()
+        val note = Note(id, title, content)
+        response.putExtra(NOTE_ACTIVITY_ID, note.id)
+        response.putExtra(NOTE_ACTIVITY_TITLE, note.title)
+        response.putExtra(NOTE_ACTIVITY_CONTENT, note.content)
+        setResult(Activity.RESULT_OK, response)
+        finish()
+      } else {
+        toast("Fail to add/update the note!")
       }
     }
   }

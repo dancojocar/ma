@@ -8,7 +8,14 @@ CREATE INDEX chessPlayer_full_name ON chessPlayer(full_name);
 
 INSERT INTO chessPlayer (player_number, full_name, quotes)
 VALUES (15, 'Mikhail Tal',
-   'You must take your opponent into a deep dark forest where 2+2=5, and the path leading out is only wide enough for one!');
+   'You must take your opponent into a deep dark forest where 2+2=5, and the path leading out is only wide enough for one!'),
+   (16, 'Garry Kasparov', 'I used to attack because it was the only thing I knew. Now I attack because I know it works best.'),
+   (17, 'Emanuel Lasker', 'When you see a good move, look for a better one.'),
+   (18, 'H. G. Wells', 'There is no remorse like the remorse of chess.'),
+   (19, 'Garry Kasparov', 'Chess is life in miniature. Chess is a struggle, chess battles.'),
+   (20, 'Bill Hartston', 'Chess doesn’t drive people mad, it keeps mad people sane.'),
+   (21, 'José Raúl Capablanca', 'You may learn much more from a game you lose than from a game you win.'),
+   (22, 'Mikhail Chigorin', 'Even a poor plan is better than no plan at all.');
 
 selectAll:
 SELECT * FROM chessPlayer;

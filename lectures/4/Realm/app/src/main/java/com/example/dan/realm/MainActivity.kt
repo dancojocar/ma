@@ -1,34 +1,43 @@
 package com.example.dan.realm
 
 import android.app.Activity
+import android.content.Context
 import android.os.Bundle
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.example.dan.realm.databinding.ActivityMainBinding
 import com.example.dan.realm.model.Cat
 import com.example.dan.realm.model.Dog
 import com.example.dan.realm.model.Person
 import io.realm.Realm
+import io.realm.RealmConfiguration
 import io.realm.Sort
 import io.realm.kotlin.createObject
+import io.realm.kotlin.executeTransactionAwait
 import io.realm.kotlin.where
-import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
+import kotlinx.coroutines.*
 
-class MainActivity : Activity() {
+class MainActivity : Activity(), CoroutineScope by MainScope() {
+  private lateinit var binding: ActivityMainBinding
 
   private lateinit var rootLayout: LinearLayout
   private lateinit var realm: Realm
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
-    rootLayout = container
+    rootLayout = binding.container
     rootLayout.removeAllViews()
 
+    val config = RealmConfiguration.Builder()
+      .allowWritesOnUiThread(true)
+      .build()
+
     // Open the realm for the UI thread.
-    realm = Realm.getDefaultInstance()
+    realm = Realm.getInstance(config)
 
     // Delete all persons
     // Using executeTransaction with a lambda reduces code size and makes it impossible
@@ -43,22 +52,26 @@ class MainActivity : Activity() {
     basicQuery(realm)
     basicLinkQuery(realm)
 
-    // More complex operations can be executed on another thread, for example using
-    // Anko's doAsync extension method.
-    doAsync {
-      var info = ""
+// More complex operations can be executed on another thread
+    val uiScope = CoroutineScope(Dispatchers.Main + Job())
+    uiScope.launch {
+      withContext(Dispatchers.IO) {
+        var info = ""
 
-      // Open the default realm. All threads must use its own reference to the realm.
-      // Those can not be transferred across threads.
+        // Open the default realm. All threads must use its own reference to the realm.
+        // Those can not be transferred across threads.
 
-      // Realm implements the Closable interface, therefore
-      // we can make use of Kotlin's built-in extension method 'use' (pun intended).
-      Realm.getDefaultInstance().use { realm ->
-        info += complexReadWrite(realm)
-        info += complexQuery(realm)
-      }
-      uiThread {
-        showStatus(info)
+        // Realm implements the Closable interface, therefore
+        // we can make use of Kotlin's built-in extension method 'use' (pun intended).
+        Realm.getDefaultInstance().use { realm ->
+          info += complexReadWrite(realm)
+          info += complexQuery(realm)
+        }
+        //Do background tasks...
+        withContext(Dispatchers.Main) {
+          //Update UI
+          showStatus(info)
+        }
       }
     }
   }
@@ -95,8 +108,8 @@ class MainActivity : Activity() {
     realm.executeTransaction { _ ->
       person.name = "Senior Person"
       person.age = 99
-      showStatus("id: ${person.id} name: ${person.name} got older: ${person.age}")
     }
+    showStatus("id: ${person.id} name: ${person.name} got older: ${person.age}")
 
     val age = 22
     // Create another person
@@ -191,7 +204,9 @@ class MainActivity : Activity() {
 
     // Sorting
     val sortedPersons = realm.where<Person>().sort(Person::age.name, Sort.DESCENDING).findAll()
-    status += "\nSorting ${sortedPersons.last()?.name} == ${realm.where<Person>().findAll().first()?.name}"
+    status += "\nSorting ${sortedPersons.last()?.name} == ${
+      realm.where<Person>().findAll().first()?.name
+    }"
 
     return status
   }

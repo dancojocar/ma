@@ -1,74 +1,59 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-
-android {
-    compileSdkVersion 30
-    buildToolsVersion '30.0.2'
-    defaultConfig {
-        applicationId "com.example.android.roomwordssample"
-        minSdkVersion 20
-        targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    packagingOptions {
-        exclude 'META-INF/atomicfu.kotlin_module'
-    }
-
-    compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
-    }
+plugins {
+  id 'com.android.application'
+  id 'kotlin-android'
+  id 'kotlin-kapt'
 }
 
-repositories {
-    mavenCentral()
+android {
+  compileSdkVersion 31
+  defaultConfig {
+    applicationId "com.example.android.roomwordssample"
+    minSdkVersion 20
+    targetSdkVersion 31
+    versionCode 1
+    versionName "1.0"
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    }
+  }
+
+  packagingOptions {
+    exclude 'META-INF/atomicfu.kotlin_module'
+  }
+
+  compileOptions {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+  }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.2'
-    implementation 'com.google.android.material:material:1.2.1'
+  implementation 'androidx.core:core-ktx:1.6.0'
+  implementation 'androidx.appcompat:appcompat:1.3.1'
+  implementation 'com.google.android.material:material:1.4.0'
+  implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
+  testImplementation 'junit:junit:4.13.2'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    // Dependencies for working with Architecture components
-    // You'll probably have to update the version numbers in build.gradle (Project)
+  // Dependencies for working with Architecture components
+  // You'll probably have to update the version numbers in build.gradle (Project)
 
-    // Room components
-    implementation "androidx.room:room-runtime:$rootProject.roomVersion"
-    kapt "androidx.room:room-compiler:$rootProject.roomVersion"
-    androidTestImplementation "androidx.room:room-testing:$rootProject.roomVersion"
+  // Room components
+  implementation "androidx.room:room-runtime:2.3.0"
+  kapt "androidx.room:room-compiler:2.3.0"
+  androidTestImplementation "androidx.room:room-testing:2.3.0"
 
-    // Lifecycle components
-    implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.archLifecycleVersion"
-    //kapt "androidx.lifecycle:lifecycle-compiler:$rootProject.archLifecycleVersion"
-    // alternately - if using Java8, use the following instead of lifecycle-compiler
-    implementation "androidx.lifecycle:lifecycle-common-java8:$rootProject.archLifecycleVersion"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$rootProject.archLifecycleVersion"
+  // Lifecycle components
+  implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+  //kapt "androidx.lifecycle:lifecycle-compiler:+"
+  // alternately - if using Java8, use the following instead of lifecycle-compiler
+  implementation "androidx.lifecycle:lifecycle-common-java8:2.3.1"
+  implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"
 
-    // Kotlin components
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.coroutines"
-    api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.coroutines"
-
-    // UI
-    implementation "com.google.android.material:material:$rootProject.materialVersion"
-
-    // Testing
-    testImplementation 'junit:junit:4.13.1'
-    androidTestImplementation "androidx.arch.core:core-testing:$rootProject.coreTestingVersion"
-    androidTestImplementation ('androidx.test.espresso:espresso-core:3.1.0', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
 }
 
