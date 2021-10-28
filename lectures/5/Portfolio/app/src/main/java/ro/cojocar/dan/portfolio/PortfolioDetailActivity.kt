@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_portfolio_detail.*
+import ro.cojocar.dan.portfolio.databinding.ActivityPortfolioDetailBinding
 
 /**
  * An activity representing a single Portfolio detail screen. This
@@ -13,13 +13,16 @@ import kotlinx.android.synthetic.main.activity_portfolio_detail.*
  * in a [PortfolioListActivity].
  */
 class PortfolioDetailActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityPortfolioDetailBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_portfolio_detail)
-    setSupportActionBar(detail_toolbar)
+    binding = ActivityPortfolioDetailBinding.inflate(layoutInflater)
+    val rootView = binding.root
+    setContentView(rootView)
+    setSupportActionBar(binding.detailToolbar)
 
-    fab.setOnClickListener { view ->
+    binding.fab.setOnClickListener { view ->
       Snackbar.make(view, "Replace with your own detail action", Snackbar.LENGTH_LONG)
         .setAction("Action", null).show()
     }

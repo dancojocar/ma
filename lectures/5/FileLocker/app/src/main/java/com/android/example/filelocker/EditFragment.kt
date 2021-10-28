@@ -43,7 +43,7 @@ class EditFragment : Fragment(), Toolbar.OnMenuItemClickListener {
       inflater: LayoutInflater,
       container: ViewGroup?,
       savedInstanceState: Bundle?
-  ): View? {
+  ): View {
     binding = FragmentEditBinding.inflate(inflater, container, false)
     return binding.root
   }

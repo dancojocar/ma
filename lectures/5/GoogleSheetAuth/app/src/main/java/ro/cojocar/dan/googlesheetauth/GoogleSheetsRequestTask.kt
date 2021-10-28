@@ -21,7 +21,7 @@ class GoogleSheetsRequestTask(credentials: GoogleAccountCredential) {
     service = Sheets.Builder(
         transport, jsonFactory, credentials
     )
-        .setApplicationName("PortfolioApp")
+        .setApplicationName("GoogleSheetsRequestTask")
         .build()
   }
 

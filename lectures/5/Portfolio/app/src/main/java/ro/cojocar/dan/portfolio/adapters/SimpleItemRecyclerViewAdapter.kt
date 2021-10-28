@@ -2,12 +2,13 @@ package ro.cojocar.dan.portfolio.adapters
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.portfolio_list_content.view.*
 import ro.cojocar.dan.portfolio.*
+import ro.cojocar.dan.portfolio.databinding.PortfolioListContentBinding
 import ro.cojocar.dan.portfolio.domain.Portfolio
 
 class SimpleItemRecyclerViewAdapter(
@@ -45,8 +46,11 @@ class SimpleItemRecyclerViewAdapter(
     }
   }
 
-  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-    ViewHolder(parent.inflate(R.layout.portfolio_list_content))
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    val binding = PortfolioListContentBinding
+      .inflate(LayoutInflater.from(parent.context), parent, false)
+    return ViewHolder(binding)
+  }
 
 
   override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -61,7 +65,8 @@ class SimpleItemRecyclerViewAdapter(
 
   override fun getItemCount() = portfolios.size
 
-  inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    val contentView: TextView = view.content
+  inner class ViewHolder(binding: PortfolioListContentBinding) :
+    RecyclerView.ViewHolder(binding.root) {
+    val contentView: TextView = binding.content
   }
 }

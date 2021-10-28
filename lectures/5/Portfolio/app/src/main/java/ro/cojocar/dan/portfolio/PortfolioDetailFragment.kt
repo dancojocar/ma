@@ -5,8 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.activity_portfolio_detail.*
-import kotlinx.android.synthetic.main.portfolio_detail.view.*
+import ro.cojocar.dan.portfolio.databinding.PortfolioDetailBinding
 
 /**
  * A fragment representing a single Portfolio detail screen.
@@ -17,6 +16,8 @@ import kotlinx.android.synthetic.main.portfolio_detail.view.*
 class PortfolioDetailFragment : Fragment() {
 
   private var itemName: String? = null
+  private var _binding: PortfolioDetailBinding? = null
+  private val binding get() = _binding!!
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -24,7 +25,6 @@ class PortfolioDetailFragment : Fragment() {
     arguments?.let {
       if (it.containsKey(ARG_ITEM_NAME)) {
         itemName = it.getString(ARG_ITEM_NAME)
-        activity?.toolbar_layout?.title = itemName
       }
     }
   }
@@ -32,14 +32,13 @@ class PortfolioDetailFragment : Fragment() {
   override fun onCreateView(
     inflater: LayoutInflater, container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? {
-    val rootView = inflater.inflate(R.layout.portfolio_detail, container, false)
-
+  ): View {
+    _binding = PortfolioDetailBinding.inflate(inflater, container, false)
+    val view = binding.root
     itemName.let {
-      rootView.portfolio_detail.text = it
+      binding.portfolioDetail.text = it
     }
-
-    return rootView
+    return view
   }
 
   companion object {
