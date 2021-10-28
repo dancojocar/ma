@@ -93,6 +93,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/use_biometrics"
-        tools:text="@string/desc_biometrics_authorization" />
+        tools:text="@string/already_signedin" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

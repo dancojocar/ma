@@ -7,12 +7,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.LiveData
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_portfolio_list.*
-import kotlinx.android.synthetic.main.portfolio_list.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ro.cojocar.dan.portfolio.adapters.SimpleItemRecyclerViewAdapter
+import ro.cojocar.dan.portfolio.databinding.ActivityPortfolioListBinding
 import ro.cojocar.dan.portfolio.domain.Portfolio
 import ro.cojocar.dan.portfolio.models.MainModel
 
@@ -26,6 +25,7 @@ import ro.cojocar.dan.portfolio.models.MainModel
  */
 class PortfolioListActivity : AppCompatActivity() {
 
+  private lateinit var binding: ActivityPortfolioListBinding
   private val model: MainModel by viewModels()
   private lateinit var adapter: SimpleItemRecyclerViewAdapter
 
@@ -37,31 +37,33 @@ class PortfolioListActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_portfolio_list)
+    binding = ActivityPortfolioListBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
-    setSupportActionBar(toolbar)
-    toolbar.title = title
+    setSupportActionBar(binding.toolbar)
+    binding.toolbar.title = title
 
-    fab.setOnClickListener {
+    binding.fab.setOnClickListener {
       GlobalScope.launch(Dispatchers.IO) {
         if (model.auth()) {
           model.fetchData()
-          fab.setImageResource(android.R.drawable.ic_input_get)
+          binding.fab.setImageResource(android.R.drawable.ic_input_get)
         }
       }
     }
 
-    if (portfolio_detail_container != null) {
+    if (binding.portfolioListId.portfolioDetailContainer != null) {
       twoPane = true
     }
 
-    setupRecyclerView(portfolio_list)
+    setupRecyclerView(binding.portfolioListId.portfolioList)
     observeModel()
   }
 
   private fun displayLoading(loading: Boolean) {
     logd("displayLoading: $loading")
-    progress.visibility = if (loading) VISIBLE else GONE
+    binding.progress.visibility = if (loading) VISIBLE else GONE
   }
 
   private fun displayPortfolios(portfolios: List<Portfolio>) {

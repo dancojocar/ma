@@ -16,7 +16,6 @@ object NetworkRepository {
     return tokenHolder.token
   }
 
-
   private suspend fun getPortfoliosFromNetwork(): List<Portfolio> =
     PortfolioApi.service.getPortfolios()
 

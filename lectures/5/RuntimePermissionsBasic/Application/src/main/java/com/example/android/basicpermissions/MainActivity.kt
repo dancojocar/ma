@@ -33,25 +33,6 @@ import com.google.android.material.snackbar.Snackbar
 
 const val PERMISSION_REQUEST_CAMERA = 0
 
-/**
- * Launcher Activity that demonstrates the use of runtime permissions for Android M.
- * This Activity requests permissions to access the camera
- * ([android.Manifest.permission.CAMERA])
- * when the 'Show Camera Preview' button is clicked to start  [CameraPreviewActivity] once
- * the permission has been granted.
- *
- * <p>First, the status of the Camera permission is checked using [ActivityCompat.checkSelfPermission]
- * If it has not been granted ([PackageManager.PERMISSION_GRANTED]), it is requested by
- * calling [ActivityCompat.requestPermissions]. The result of the request is
- * returned to the
- * [android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback], which starts
- * if the permission has been granted.
- *
- * <p>Note that there is no need to check the API level, the support library
- * already takes care of this. Similar helper methods for permissions are also available in
- * ([ActivityCompat],
- * [android.support.v4.content.ContextCompat] and [android.support.v4.app.Fragment]).
- */
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
 
   private lateinit var layout: View
@@ -70,6 +51,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
       permissions: Array<String>,
       grantResults: IntArray
   ) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     if (requestCode == PERMISSION_REQUEST_CAMERA) {
       // Request for camera permission.
       if (grantResults.size == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

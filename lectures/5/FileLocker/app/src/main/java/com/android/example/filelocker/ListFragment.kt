@@ -57,7 +57,7 @@ class ListFragment : Fragment(), FileAdapter.FileAdapterListener {
       inflater: LayoutInflater,
       container: ViewGroup?,
       savedInstanceState: Bundle?
-  ): View? {
+  ): View {
     binding = FragmentListBinding.inflate(inflater, container, false)
     return binding.root
   }

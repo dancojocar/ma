@@ -4,7 +4,7 @@ class Portfolio {
   final String name;
   final int lastModified;
 
-  Portfolio({this.id, this.name, this.lastModified});
+  Portfolio({required this.id, required this.name, required this.lastModified});
 
   factory Portfolio.fromJson(Map<String, dynamic> json) {
     return Portfolio(
@@ -15,7 +15,7 @@ class Portfolio {
   }
 
   static List<Portfolio> fromJsonList(List<dynamic> json) {
-    List<Portfolio> portfolios = List();
+    List<Portfolio> portfolios = [];
     json.forEach((item) => portfolios.add(Portfolio.fromJson(item)));
     return portfolios;
   }

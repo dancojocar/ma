@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter_jwt/portfolio.dart';
 
 class PortfolioService {
-  final serverUrl = 'http://10.0.2.2:8080';
+  final serverUrl = 'http://127.0.0.1:8080';
 
   Future<String> auth() async {
     var data = json.encode({
@@ -12,31 +12,28 @@ class PortfolioService {
       "Password": "test1", 
     });
     var response = await http.post(
-      '$serverUrl/token-auth',
+      Uri.parse('$serverUrl/token-auth'),
       body: data,
       headers: {
         HttpHeaders.acceptHeader: "application/json",
       },
     );
-    if (response!=null) {
-      if (response.statusCode == 200) {
-        // If the call to the server was successful, parse the JSON
-        var token = json.decode(response.body.toString())['token'];
-        print('token: $token');
-        return token;
-      } else {
-        print('response: ${response.statusCode}');
-        // If that call was not successful, throw an error.
-        throw Exception('Failed to authenticate!');
-      }
+    if (response.statusCode == 200) {
+      // If the call to the server was successful, parse the JSON
+      var token = json.decode(response.body.toString())['token'];
+      print('token: $token');
+      return token;
+    } else {
+      print('response: ${response.statusCode}');
+      // If that call was not successful, throw an error.
+      throw Exception('Failed to authenticate!');
     }
-    return null;
   }
 
   Future<List<Portfolio>> fetchPost(var token) async {
     print('sending with token: $token');
     final response = await http.get(
-      '$serverUrl/p',
+      Uri.parse('$serverUrl/p'),
       // Send authorization headers to your backend
       headers: {
         HttpHeaders.acceptHeader: "application/json",
