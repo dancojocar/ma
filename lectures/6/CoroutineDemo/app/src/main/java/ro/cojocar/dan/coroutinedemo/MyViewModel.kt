@@ -23,7 +23,7 @@ class MyNewViewModel : ViewModel() {
 }
 
 
-private suspend fun doComputation(): String? {
+private suspend fun doComputation(): String {
   TODO("not implemented")
 }
 

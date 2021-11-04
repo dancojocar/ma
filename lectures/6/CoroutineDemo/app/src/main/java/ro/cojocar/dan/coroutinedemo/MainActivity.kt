@@ -4,27 +4,31 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.*
+import ro.cojocar.dan.coroutinedemo.databinding.ActivityMainBinding
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
+  private lateinit var binding: ActivityMainBinding
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
     var numberOfWorkers = 1_000
     var delayArray = initDelay(numberOfWorkers)
-    workers.text = "$numberOfWorkers"
-    seekBar.min = numberOfWorkers
-    seekBar.max = 1_000_000
-    seekBar.progress = numberOfWorkers
-    seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+    binding.workers.text = "$numberOfWorkers"
+    binding.seekBar.min = numberOfWorkers
+    binding.seekBar.max = 10_000
+    binding.seekBar.progress = numberOfWorkers
+    binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
       override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
         numberOfWorkers = progress
-        workers.text = "$numberOfWorkers"
+        binding.workers.text = "$numberOfWorkers"
       }
 
       override fun onStartTrackingTouch(seekBar: SeekBar?) {
@@ -37,8 +41,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
 //    logd(delayArray.contentToString())
 
-    buttonCoroutines.setOnClickListener {
-      myProgress.visibility = View.VISIBLE
+    binding.buttonCoroutines.setOnClickListener {
+      binding.myProgress.visibility = View.VISIBLE
       launch {
         captureRunningTimes("coroutines") {
           runBlocking {
@@ -47,8 +51,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         }
       }
     }
-    buttonThreads.setOnClickListener {
-      myProgress.visibility = View.VISIBLE
+    binding.buttonThreads.setOnClickListener {
+      binding.myProgress.visibility = View.VISIBLE
       captureRunningTimes("threads") {
         createThreads(delayArray)
       }
@@ -67,9 +71,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     }
 
     val iterator = fibonacci.iterator()
-    buttonFibonacci.setOnClickListener {
-      textView.text = "${textView.text}\nFib: ${iterator.next()}"
-      scrollView.fullScroll(View.FOCUS_DOWN)
+    binding.buttonFibonacci.setOnClickListener {
+      binding.textView.text = "${binding.textView.text}\nFib: ${iterator.next()}"
+      binding.scrollView.fullScroll(View.FOCUS_DOWN)
     }
 
   }
@@ -86,12 +90,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
   private fun captureRunningTimes(name: String, block: () -> Unit) {
     val start = System.currentTimeMillis() / 1000
-    textView.text = "${textView.text}\n\n${name}\nStart: $start"
+    binding.textView.text = "${binding.textView.text}\n\n${name}\nStart: $start"
     block()
     val end = System.currentTimeMillis() / 1000
-    textView.text = "${textView.text}\n  End: $end"
-    textView.text = "${textView.text}\nDiff: ${end - start}"
-    scrollView.fullScroll(View.FOCUS_DOWN)
+    binding.textView.text = "${binding.textView.text}\n  End: $end"
+    binding.textView.text = "${binding.textView.text}\nDiff: ${end - start}"
+    binding.scrollView.fullScroll(View.FOCUS_DOWN)
   }
 
   private suspend fun createCoroutines(delayArray: LongArray) {
@@ -100,7 +104,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
         logd("Started")
         val jobs = List(delayArray.size) {
           launch {
-            delay(delayArray[it])
+            withContext(Dispatchers.IO) {
+              delay(delayArray[it])
+            }
           }
         }
         jobs.forEach { it.join() }
@@ -109,7 +115,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     } catch (e: Exception) {
       loge("Error while executing the workers", e)
     } finally {
-      myProgress.visibility = View.GONE
+      binding.myProgress.visibility = View.GONE
     }
   }
 
@@ -126,7 +132,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
     } catch (e: Exception) {
       loge("Error while executing the workers", e)
     } finally {
-      myProgress.visibility = View.GONE
+      binding.myProgress.visibility = View.GONE
     }
   }
 }
