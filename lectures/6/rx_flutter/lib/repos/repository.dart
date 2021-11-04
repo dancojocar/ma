@@ -8,7 +8,7 @@ class Repository {
   Repository._private();
   factory Repository() => _repository;
 
-  ImageProvider _imageProvider = ImageProvider();
+  final ImageProvider _imageProvider = ImageProvider();
 
   Future<State> imageData(query) => _imageProvider.getImagesByName(query);
 

@@ -6,26 +6,26 @@ class Photos {
   List<Result> results;
 
   Photos({
-    this.total,
-    this.totalPages,
-    this.results,
+    required this.total,
+    required this.totalPages,
+    required this.results,
   });
 
   factory Photos.fromRawJson(String str) => Photos.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory Photos.fromJson(Map<String, dynamic> json) => new Photos(
+  factory Photos.fromJson(Map<String, dynamic> json) => Photos(
         total: json["total"],
         totalPages: json["total_pages"],
-        results: new List<Result>.from(
+        results: List<Result>.from(
             json["results"].map((x) => Result.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
         "total": total,
         "total_pages": totalPages,
-        "results": new List<dynamic>.from(results.map((x) => x.toJson())),
+        "results": List<dynamic>.from(results.map((x) => x.toJson())),
       };
 }
 
@@ -51,52 +51,52 @@ class Result {
   List<Tag> tags;
 
   Result({
-    this.id,
-    this.createdAt,
-    this.updatedAt,
-    this.width,
-    this.height,
-    this.color,
-    this.description,
-    this.altDescription,
-    this.urls,
-    this.links,
-    this.categories,
-    this.sponsored,
+    required this.id,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.width,
+    required this.height,
+    required this.color,
+    required this.description,
+    required this.altDescription,
+    required this.urls,
+    required this.links,
+    required this.categories,
+    required this.sponsored,
     this.sponsoredBy,
     this.sponsoredImpressionsId,
-    this.likes,
-    this.likedByUser,
-    this.currentUserCollections,
-    this.user,
-    this.tags,
+    required this.likes,
+    required this.likedByUser,
+    required this.currentUserCollections,
+    required this.user,
+    required this.tags,
   });
 
   factory Result.fromRawJson(String str) => Result.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory Result.fromJson(Map<String, dynamic> json) => new Result(
+  factory Result.fromJson(Map<String, dynamic> json) => Result(
         id: json["id"],
         createdAt: DateTime.parse(json["created_at"]),
         updatedAt: DateTime.parse(json["updated_at"]),
         width: json["width"],
         height: json["height"],
         color: json["color"],
-        description: json["description"] == null ? null : json["description"],
-        altDescription: json["alt_description"],
+        description: json["description"]??"",
+        altDescription: json["alt_description"]??"",
         urls: Urls.fromJson(json["urls"]),
         links: ResultLinks.fromJson(json["links"]),
-        categories: new List<dynamic>.from(json["categories"].map((x) => x)),
-        sponsored: json["sponsored"],
+        categories: List<dynamic>.from(json["categories"].map((x) => x)),
+        sponsored: json["sponsored"]??false,
         sponsoredBy: json["sponsored_by"],
         sponsoredImpressionsId: json["sponsored_impressions_id"],
         likes: json["likes"],
         likedByUser: json["liked_by_user"],
-        currentUserCollections: new List<dynamic>.from(
+        currentUserCollections: List<dynamic>.from(
             json["current_user_collections"].map((x) => x)),
         user: User.fromJson(json["user"]),
-        tags: new List<Tag>.from(json["tags"].map((x) => Tag.fromJson(x))),
+        tags: List<Tag>.from(json["tags"].map((x) => Tag.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -106,20 +106,20 @@ class Result {
         "width": width,
         "height": height,
         "color": color,
-        "description": description == null ? null : description,
+        "description": description??"empty",
         "alt_description": altDescription,
         "urls": urls.toJson(),
         "links": links.toJson(),
-        "categories": new List<dynamic>.from(categories.map((x) => x)),
+        "categories": List<dynamic>.from(categories.map((x) => x)),
         "sponsored": sponsored,
         "sponsored_by": sponsoredBy,
         "sponsored_impressions_id": sponsoredImpressionsId,
         "likes": likes,
         "liked_by_user": likedByUser,
         "current_user_collections":
-            new List<dynamic>.from(currentUserCollections.map((x) => x)),
+            List<dynamic>.from(currentUserCollections.map((x) => x)),
         "user": user.toJson(),
-        "tags": new List<dynamic>.from(tags.map((x) => x.toJson())),
+        "tags": List<dynamic>.from(tags.map((x) => x.toJson())),
       };
 }
 
@@ -130,10 +130,10 @@ class ResultLinks {
   String downloadLocation;
 
   ResultLinks({
-    this.self,
-    this.html,
-    this.download,
-    this.downloadLocation,
+    required this.self,
+    required this.html,
+    required this.download,
+    required this.downloadLocation,
   });
 
   factory ResultLinks.fromRawJson(String str) =>
@@ -141,7 +141,7 @@ class ResultLinks {
 
   String toRawJson() => json.encode(toJson());
 
-  factory ResultLinks.fromJson(Map<String, dynamic> json) => new ResultLinks(
+  factory ResultLinks.fromJson(Map<String, dynamic> json) => ResultLinks(
         self: json["self"],
         html: json["html"],
         download: json["download"],
@@ -160,14 +160,14 @@ class Tag {
   String title;
 
   Tag({
-    this.title,
+    required this.title,
   });
 
   factory Tag.fromRawJson(String str) => Tag.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory Tag.fromJson(Map<String, dynamic> json) => new Tag(
+  factory Tag.fromJson(Map<String, dynamic> json) => Tag(
         title: json["title"],
       );
 
@@ -184,18 +184,18 @@ class Urls {
   String thumb;
 
   Urls({
-    this.raw,
-    this.full,
-    this.regular,
-    this.small,
-    this.thumb,
+    required this.raw,
+    required this.full,
+    required this.regular,
+    required this.small,
+    required this.thumb,
   });
 
   factory Urls.fromRawJson(String str) => Urls.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory Urls.fromJson(Map<String, dynamic> json) => new Urls(
+  factory Urls.fromJson(Map<String, dynamic> json) => Urls(
         raw: json["raw"],
         full: json["full"],
         regular: json["regular"],
@@ -232,47 +232,45 @@ class User {
   bool acceptedTos;
 
   User({
-    this.id,
-    this.updatedAt,
-    this.username,
-    this.name,
-    this.firstName,
-    this.lastName,
-    this.twitterUsername,
-    this.portfolioUrl,
-    this.bio,
-    this.location,
-    this.links,
-    this.profileImage,
-    this.instagramUsername,
-    this.totalCollections,
-    this.totalLikes,
-    this.totalPhotos,
-    this.acceptedTos,
+    required this.id,
+    required this.updatedAt,
+    required this.username,
+    required this.name,
+    required this.firstName,
+    required this.lastName,
+    required this.twitterUsername,
+    required this.portfolioUrl,
+    required this.bio,
+    required this.location,
+    required this.links,
+    required this.profileImage,
+    required this.instagramUsername,
+    required this.totalCollections,
+    required this.totalLikes,
+    required this.totalPhotos,
+    required this.acceptedTos,
   });
 
   factory User.fromRawJson(String str) => User.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory User.fromJson(Map<String, dynamic> json) => new User(
+  factory User.fromJson(Map<String, dynamic> json) => User(
         id: json["id"],
         updatedAt: DateTime.parse(json["updated_at"]),
         username: json["username"],
         name: json["name"],
         firstName: json["first_name"],
-        lastName: json["last_name"],
+        lastName: json["last_name"]??"",
         twitterUsername:
-            json["twitter_username"] == null ? null : json["twitter_username"],
+            json["twitter_username"]??"",
         portfolioUrl:
-            json["portfolio_url"] == null ? null : json["portfolio_url"],
-        bio: json["bio"],
-        location: json["location"] == null ? null : json["location"],
+            json["portfolio_url"]??"",
+        bio: json["bio"]??"",
+        location: json["location"]??"",
         links: UserLinks.fromJson(json["links"]),
         profileImage: ProfileImage.fromJson(json["profile_image"]),
-        instagramUsername: json["instagram_username"] == null
-            ? null
-            : json["instagram_username"],
+        instagramUsername: json["instagram_username"]??"",
         totalCollections: json["total_collections"],
         totalLikes: json["total_likes"],
         totalPhotos: json["total_photos"],
@@ -286,14 +284,14 @@ class User {
         "name": name,
         "first_name": firstName,
         "last_name": lastName,
-        "twitter_username": twitterUsername == null ? null : twitterUsername,
-        "portfolio_url": portfolioUrl == null ? null : portfolioUrl,
+        "twitter_username": twitterUsername??"",
+        "portfolio_url": portfolioUrl??"",
         "bio": bio,
-        "location": location == null ? null : location,
+        "location": location??"",
         "links": links.toJson(),
         "profile_image": profileImage.toJson(),
         "instagram_username":
-            instagramUsername == null ? null : instagramUsername,
+            instagramUsername??"",
         "total_collections": totalCollections,
         "total_likes": totalLikes,
         "total_photos": totalPhotos,
@@ -311,13 +309,13 @@ class UserLinks {
   String followers;
 
   UserLinks({
-    this.self,
-    this.html,
-    this.photos,
-    this.likes,
-    this.portfolio,
-    this.following,
-    this.followers,
+    required this.self,
+    required this.html,
+    required this.photos,
+    required this.likes,
+    required this.portfolio,
+    required this.following,
+    required this.followers,
   });
 
   factory UserLinks.fromRawJson(String str) =>
@@ -325,7 +323,7 @@ class UserLinks {
 
   String toRawJson() => json.encode(toJson());
 
-  factory UserLinks.fromJson(Map<String, dynamic> json) => new UserLinks(
+  factory UserLinks.fromJson(Map<String, dynamic> json) => UserLinks(
         self: json["self"],
         html: json["html"],
         photos: json["photos"],
@@ -352,9 +350,9 @@ class ProfileImage {
   String large;
 
   ProfileImage({
-    this.small,
-    this.medium,
-    this.large,
+    required this.small,
+    required this.medium,
+    required this.large,
   });
 
   factory ProfileImage.fromRawJson(String str) =>
@@ -362,7 +360,7 @@ class ProfileImage {
 
   String toRawJson() => json.encode(toJson());
 
-  factory ProfileImage.fromJson(Map<String, dynamic> json) => new ProfileImage(
+  factory ProfileImage.fromJson(Map<String, dynamic> json) => ProfileImage(
         small: json["small"],
         medium: json["medium"],
         large: json["large"],

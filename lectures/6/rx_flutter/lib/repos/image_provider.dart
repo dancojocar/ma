@@ -10,7 +10,7 @@ class ImageProvider {
   ImageProvider._private();
   factory ImageProvider() => _imageProvider;
 
-  Client _client = Client();
+  final Client _client = Client();
 
   static const String _apiKey =
       "d6904559e557b57caf1ec6f199915f2c13643da2f6def4f35f3b1684cb3ceba7";
@@ -23,16 +23,17 @@ class ImageProvider {
     if (_apiKey == 'api-key') {
       return State<String>.error("Please enter your API Key");
     }
-    response = await _client
-        .get("$_baseUrl/search/photos?page=1&query=$query&client_id=$_apiKey");
-    if (response.statusCode == 200)
+    response = await _client.get(Uri.parse(
+        "$_baseUrl/search/photos?page=1&query=$query&client_id=$_apiKey"));
+    if (response.statusCode == 200) {
       return State<Photos>.success(Photos.fromJson(json.decode(response.body)));
-    else
+    } else {
       return State<String>.error(response.statusCode.toString());
+    }
   }
 
   Future<Uint8List> getImageFromUrl(String url) async {
-    var response = await _client.get(url);
+    var response = await _client.get(Uri.parse(url));
     Uint8List bytes = response.bodyBytes;
     return bytes;
   }
