@@ -25,7 +25,7 @@ import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import android.view.MenuItem
 import com.example.android.common.logd
-import org.jetbrains.anko.support.v4.toast
+import com.example.android.common.toast
 
 
 class RepeatingAlarmFragment : Fragment() {
@@ -50,8 +50,10 @@ class RepeatingAlarmFragment : Fragment() {
     // application has created.
     // Also, this code creates a PendingIntent to start an Activity.  To create a
     // BroadcastIntent instead, simply call getBroadcast instead of getIntent.
-    val pendingIntent = PendingIntent.getActivity(activity,
-        REQUEST_CODE, intent, 0)
+    val pendingIntent = PendingIntent.getActivity(
+      activity,
+      REQUEST_CODE, intent, 0
+    )
 
     // There are two clock types for alarms, ELAPSED_REALTIME and RTC.
     // ELAPSED_REALTIME uses time since system boot as a reference, and RTC uses UTC (wall
@@ -68,31 +70,33 @@ class RepeatingAlarmFragment : Fragment() {
 
     // The AlarmManager, like most system services, isn't created by application code, but
     // requested from the system.
-    val alarmManager = activity!!.getSystemService(ALARM_SERVICE) as AlarmManager
+    val alarmManager = requireActivity().getSystemService(ALARM_SERVICE) as AlarmManager
     when (item.itemId) {
       R.id.oneTime -> {
         alarmManager.set(
-            alarmType,
-            SystemClock.elapsedRealtime() + 60 * 1000,
-            pendingIntent)
+          alarmType,
+          SystemClock.elapsedRealtime() + 60 * 1000,
+          pendingIntent
+        )
         logd("One time alarm set.")
-        toast("A one time alarm was set.")
+        toast(context, "A one time alarm was set.")
       }
       R.id.repeating -> {
         // setRepeating takes a start delay and period between alarms as arguments.
         // The below code fires after 15 minutes, and repeats every 15 minutes.
         alarmManager.setRepeating(
-            alarmType,
-            SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_FIFTEEN_MINUTES,
-            AlarmManager.INTERVAL_FIFTEEN_MINUTES,
-            pendingIntent)
+          alarmType,
+          SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_FIFTEEN_MINUTES,
+          AlarmManager.INTERVAL_FIFTEEN_MINUTES,
+          pendingIntent
+        )
         logd("Repeating alarm set.")
-        toast("A repeating alarm was set.")
+        toast(context,"A repeating alarm was set.")
       }
       R.id.cancel_action -> {
         alarmManager.cancel(pendingIntent)
         logd("Alarm canceled.")
-        toast("The alarm was canceled.")
+        toast(context,"The alarm was canceled.")
       }
     }
 
