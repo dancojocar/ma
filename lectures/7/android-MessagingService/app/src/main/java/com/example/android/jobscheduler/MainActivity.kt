@@ -25,10 +25,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Messenger
 import android.os.PersistableBundle
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.RadioButton
+import com.example.android.jobscheduler.databinding.SampleMainBinding
 import java.util.concurrent.TimeUnit
 
 /**
@@ -38,14 +35,7 @@ import java.util.concurrent.TimeUnit
  * that is sent in the Intent that starts the Service.
  */
 class MainActivity : Activity() {
-
-  private lateinit var anyConnectivityRadioButton: RadioButton
-  private lateinit var deadlineEditText: EditText
-  private lateinit var delayEditText: EditText
-  private lateinit var durationTimeEditText: EditText
-  private lateinit var requiresChargingCheckBox: CheckBox
-  private lateinit var requiresIdleCheckbox: CheckBox
-  private lateinit var wiFiConnectivityRadioButton: RadioButton
+  private lateinit var binding: SampleMainBinding
 
   // Handler for incoming messages from the service.
   private lateinit var handler: IncomingMessageHandler
@@ -54,22 +44,16 @@ class MainActivity : Activity() {
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.sample_main)
-
-    anyConnectivityRadioButton = findViewById(R.id.checkbox_any)
-    deadlineEditText = findViewById(R.id.deadline_time)
-    delayEditText = findViewById(R.id.delay_time)
-    durationTimeEditText = findViewById(R.id.duration_time)
-    requiresChargingCheckBox = findViewById(R.id.checkbox_charging)
-    requiresIdleCheckbox = findViewById(R.id.checkbox_idle)
-    wiFiConnectivityRadioButton = findViewById(R.id.checkbox_unmetered)
+    binding = SampleMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     handler = IncomingMessageHandler(this)
     serviceComponent = ComponentName(this, MyJobService::class.java)
 
-    findViewById<Button>(R.id.cancel_button).setOnClickListener { cancelAllJobs() }
-    findViewById<Button>(R.id.finished_button).setOnClickListener { finishJob() }
-    findViewById<Button>(R.id.schedule_button).setOnClickListener { scheduleJob() }
+    binding.cancelButton.setOnClickListener { cancelAllJobs() }
+    binding.finishedButton.setOnClickListener { finishJob() }
+    binding.scheduleButton.setOnClickListener { scheduleJob() }
   }
 
   override fun onStop() {
@@ -96,32 +80,32 @@ class MainActivity : Activity() {
   private fun scheduleJob() {
     val builder = JobInfo.Builder(jobId++, serviceComponent)
 
-    val delay = delayEditText.text.toString()
+    val delay = binding.delayTime.text.toString()
     if (delay.isNotEmpty()) {
       builder.setMinimumLatency(delay.toLong() * TimeUnit.SECONDS.toMillis(1))
     }
 
-    val deadline = deadlineEditText.text.toString()
+    val deadline = binding.deadlineTime.text.toString()
     if (deadline.isNotEmpty()) {
       builder.setOverrideDeadline(deadline.toLong() * TimeUnit.SECONDS.toMillis(1))
     }
 
-    if (wiFiConnectivityRadioButton.isChecked) {
+    if (binding.checkboxUnmetered.isChecked) {
       builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-    } else if (anyConnectivityRadioButton.isChecked) {
+    } else if (binding.checkboxAny.isChecked) {
       builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
     }
 
     // Extras, work duration.
     val extras = PersistableBundle()
-    var workDuration = durationTimeEditText.text.toString()
+    var workDuration = binding.durationTime.text.toString()
     if (workDuration.isEmpty()) workDuration = "1"
     extras.putLong(WORK_DURATION_KEY, workDuration.toLong() * TimeUnit.SECONDS.toMillis(1))
 
     // Finish configuring the builder
     builder.run {
-      setRequiresDeviceIdle(requiresIdleCheckbox.isChecked)
-      setRequiresCharging(requiresChargingCheckBox.isChecked)
+      setRequiresDeviceIdle(binding.checkboxIdle.isChecked)
+      setRequiresCharging(binding.checkboxCharging.isChecked)
       setExtras(extras)
     }
 

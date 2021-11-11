@@ -20,10 +20,7 @@ import android.app.Service
 import android.app.job.JobParameters
 import android.app.job.JobService
 import android.content.Intent
-import android.os.Handler
-import android.os.Message
-import android.os.Messenger
-import android.os.RemoteException
+import android.os.*
 
 /**
  * Service to handle callbacks from the JobScheduler. Requests scheduled with the JobScheduler
@@ -50,7 +47,7 @@ class MyJobService : JobService() {
 
     // Uses a Handler to delay the execution of jobFinished().
     val duration = params.extras.getLong(WORK_DURATION_KEY)
-    Handler().postDelayed({
+    Handler(Looper.getMainLooper()).postDelayed({
       sendMessage(MSG_COLOR_STOP, params.jobId)
       jobFinished(params, false)
     }, duration)

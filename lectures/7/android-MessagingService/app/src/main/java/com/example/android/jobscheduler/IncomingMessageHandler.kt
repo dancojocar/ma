@@ -17,6 +17,7 @@
 package com.example.android.jobscheduler
 
 import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.os.Messenger
 import androidx.core.content.ContextCompat.getColor
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit
  * uses this handler to communicate from [MyJobService]. It's also used to make
  * the start and stop views blink for a short period of time.
  */
-internal class IncomingMessageHandler(activity: MainActivity) : Handler() {
+internal class IncomingMessageHandler(activity: MainActivity) : Handler(Looper.getMainLooper()) {
 
   // Prevent possible leaks with a weak reference.
   private val mainActivity: WeakReference<MainActivity> = WeakReference(activity)
@@ -49,8 +50,10 @@ internal class IncomingMessageHandler(activity: MainActivity) : Handler() {
         // Start received, turn on the indicator and show text.
         showStartView.setBackgroundColor(getColor(mainActivity, R.color.start_received))
         updateParamsTextView(msg.obj, "started")
-        sendMessageDelayed(Message.obtain(this, MSG_UNCOLOR_START),
-            TimeUnit.SECONDS.toMillis(1))
+        sendMessageDelayed(
+          Message.obtain(this, MSG_UNCOLOR_START),
+          TimeUnit.SECONDS.toMillis(1)
+        )
       }
       /*
        * Receives callback from the service when a job that previously landed on the

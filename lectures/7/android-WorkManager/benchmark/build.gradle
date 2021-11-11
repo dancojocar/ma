@@ -21,19 +21,17 @@ apply plugin: 'androidx.benchmark'
 
 android {
     compileSdkVersion build_versions.compile_sdk
-    buildToolsVersion build_versions.build_tools
 
     defaultConfig {
-        vectorDrawables {
+        testInstrumentationRunnerArguments
+      vectorDrawables {
             useSupportLibrary true
         }
         // Switching to Renderscript support provided by framework.
         minSdkVersion 18
         targetSdkVersion build_versions.target_sdk
-        versionCode 1
-        versionName "1.0"
 
-        // Set this argument to capture profiling information, instead of measuring performance.
+      // Set this argument to capture profiling information, instead of measuring performance.
         // Can be one of:
         //   * None
         //   * Sampled

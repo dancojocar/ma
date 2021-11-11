@@ -41,7 +41,8 @@
                 tools:node="remove"
                 tools:targetApi="n" />
 
-        <activity android:name=".SelectImageActivity">
+        <activity android:name=".SelectImageActivity"
+          android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
