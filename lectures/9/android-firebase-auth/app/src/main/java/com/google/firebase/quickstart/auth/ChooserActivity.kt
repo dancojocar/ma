@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_chooser.*
+import com.google.firebase.quickstart.auth.databinding.ActivityChooserBinding
 
 /**
  * Simple list-based Activity to redirect to one of the other Activities. This Activity does not
@@ -26,17 +26,20 @@ import kotlinx.android.synthetic.main.activity_chooser.*
  *     {@link CustomAuthActivity}
  */
 class ChooserActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
+  private lateinit var binding: ActivityChooserBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_chooser)
+    binding = ActivityChooserBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Set up Adapter
     val adapter = MyArrayAdapter(this, android.R.layout.simple_list_item_2, CLASSES)
     adapter.setDescriptionIds(DESCRIPTION_IDS)
 
-    listView.adapter = adapter
-    listView.onItemClickListener = this
+    binding.listView.adapter = adapter
+    binding.listView.onItemClickListener = this
   }
 
   override fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
@@ -45,9 +48,9 @@ class ChooserActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
   }
 
   class MyArrayAdapter(
-      private val ctx: Context,
-      resource: Int,
-      private val classes: Array<out Class<out Any>>
+    private val ctx: Context,
+    resource: Int,
+    private val classes: Array<out Class<out Any>>
   ) : ArrayAdapter<Class<out Any>>(ctx, resource, classes) {
     private var descriptionIds: IntArray? = null
 
@@ -55,7 +58,8 @@ class ChooserActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
       var view = convertView
 
       if (convertView == null) {
-        val inflater = ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val inflater =
+          ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         view = inflater.inflate(android.R.layout.simple_list_item_2, null)
       }
 
@@ -72,15 +76,23 @@ class ChooserActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
   }
 
   companion object {
-    private val CLASSES = arrayOf(GoogleSignInActivity::class.java,
-        FacebookLoginActivity::class.java, TwitterLoginActivity::class.java,
-        EmailPasswordActivity::class.java, PasswordlessActivity::class.java,
-        PhoneAuthActivity::class.java, AnonymousAuthActivity::class.java,
-        FirebaseUIActivity::class.java, CustomAuthActivity::class.java)
-    private val DESCRIPTION_IDS = intArrayOf(R.string.desc_google_sign_in,
-        R.string.desc_facebook_login, R.string.desc_twitter_login,
-        R.string.desc_emailpassword, R.string.desc_passwordless,
-        R.string.desc_phone_auth, R.string.desc_anonymous_auth,
-        R.string.desc_firebase_ui, R.string.desc_custom_auth)
+    private val CLASSES = arrayOf(
+      GoogleSignInActivity::class.java,
+//      FacebookLoginActivity::class.java,
+      TwitterLoginActivity::class.java,
+      EmailPasswordActivity::class.java,
+      PasswordlessActivity::class.java,
+      PhoneAuthActivity::class.java,
+      AnonymousAuthActivity::class.java,
+      FirebaseUIActivity::class.java,
+      CustomAuthActivity::class.java
+    )
+    private val DESCRIPTION_IDS = intArrayOf(
+      R.string.desc_google_sign_in,
+      R.string.desc_facebook_login, R.string.desc_twitter_login,
+      R.string.desc_emailpassword, R.string.desc_passwordless,
+      R.string.desc_phone_auth, R.string.desc_anonymous_auth,
+      R.string.desc_firebase_ui, R.string.desc_custom_auth
+    )
   }
 }
