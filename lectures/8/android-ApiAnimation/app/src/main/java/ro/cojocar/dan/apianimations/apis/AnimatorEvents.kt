@@ -30,17 +30,15 @@ import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateInterpolator
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimatorEventsBinding
 
 /**
  * This demo shows how the AnimatorListener events work.
  */
 class AnimatorEvents : Activity() {
+  private lateinit var binding: AnimatorEventsBinding
 
   lateinit var startText: TextView
   lateinit var repeatText: TextView
@@ -53,36 +51,38 @@ class AnimatorEvents : Activity() {
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animator_events)
-    val container = findViewById<LinearLayout>(R.id.container)
+    binding = AnimatorEventsBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val container = binding.container
     val animView = MyAnimationView(this)
     container.addView(animView)
-    startText = findViewById(R.id.startText)
+    startText = binding.startText
     startText.alpha = .5f
-    repeatText = findViewById(R.id.repeatText)
+    repeatText = binding.repeatText
     repeatText.alpha = .5f
-    cancelText = findViewById(R.id.cancelText)
+    cancelText = binding.cancelText
     cancelText.alpha = .5f
-    endText = findViewById(R.id.endText)
+    endText = binding.endText
     endText.alpha = .5f
-    startTextAnimator = findViewById(R.id.startTextAnimator)
+    startTextAnimator = binding.startTextAnimator
     startTextAnimator.alpha = .5f
-    repeatTextAnimator = findViewById(R.id.repeatTextAnimator)
+    repeatTextAnimator = binding.repeatTextAnimator
     repeatTextAnimator.alpha = .5f
-    cancelTextAnimator = findViewById(R.id.cancelTextAnimator)
+    cancelTextAnimator = binding.cancelTextAnimator
     cancelTextAnimator.alpha = .5f
-    endTextAnimator = findViewById(R.id.endTextAnimator)
+    endTextAnimator = binding.endTextAnimator
     endTextAnimator.alpha = .5f
-    val endCB = findViewById<CheckBox>(R.id.endCB)
+    val endCB = binding.endCB
 
 
-    val starter = findViewById<Button>(R.id.startButton)
+    val starter = binding.startButton
     starter.setOnClickListener { animView.startAnimation(endCB.isChecked) }
 
-    val canceler = findViewById<Button>(R.id.cancelButton)
+    val canceler = binding.cancelButton
     canceler.setOnClickListener { animView.cancelAnimation() }
 
-    val ender = findViewById<Button>(R.id.endButton)
+    val ender = binding.endButton
     ender.setOnClickListener { animView.endAnimation() }
 
   }

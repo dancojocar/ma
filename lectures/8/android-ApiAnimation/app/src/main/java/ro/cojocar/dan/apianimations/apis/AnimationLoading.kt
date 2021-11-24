@@ -27,9 +27,8 @@ import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
 import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimationLoadingBinding
 import java.util.*
 
 /**
@@ -37,18 +36,21 @@ import java.util.*
  * XML resources.
  */
 class AnimationLoading : Activity() {
+  private lateinit var binding: AnimationLoadingBinding
 
   /**
    * Called when the activity is first created.
    */
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animation_loading)
-    val container = findViewById<LinearLayout>(R.id.container)
+    binding = AnimationLoadingBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val container = binding.container
     val animView = MyAnimationView(this)
     container.addView(animView)
 
-    val starter = findViewById<Button>(R.id.startButton)
+    val starter = binding.startButton
     starter.setOnClickListener { animView.startAnimation() }
   }
 

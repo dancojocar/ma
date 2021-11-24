@@ -16,14 +16,11 @@
 
 package ro.cojocar.dan.apianimations.apis
 
-// Need the following import to get access to the app resources,
-// since this class is in a sub-package.
-
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Button
-import android.widget.GridLayout
 import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.LayoutAnimationsByDefaultBinding
 import kotlin.math.min
 
 /**
@@ -32,15 +29,17 @@ import kotlin.math.min
  * added to a container.
  */
 class LayoutAnimationsByDefault : Activity() {
+  private lateinit var binding: LayoutAnimationsByDefaultBinding
 
   private var numButtons = 1
 
   public override fun onCreate(savedInstanceState: Bundle?) {
 
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.layout_animations_by_default)
-
-    val gridContainer = findViewById<GridLayout>(R.id.gridContainer)
+    binding = LayoutAnimationsByDefaultBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val gridContainer = binding.gridContainer
 
     val addButton = findViewById<Button>(R.id.addNewButton)
     addButton.setOnClickListener {

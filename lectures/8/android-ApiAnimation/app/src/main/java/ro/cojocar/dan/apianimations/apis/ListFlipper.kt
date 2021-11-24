@@ -25,11 +25,11 @@ import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.widget.ArrayAdapter
-import android.widget.Button
 import android.widget.ListView
-import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.RotatingListBinding
 
 class ListFlipper : Activity() {
+  private lateinit var binding: RotatingListBinding
 
   private lateinit var mEnglishList: ListView
   private lateinit var mRomanianList: ListView
@@ -41,9 +41,11 @@ class ListFlipper : Activity() {
    */
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.rotating_list)
-    mEnglishList = findViewById(R.id.list_en)
-    mRomanianList = findViewById(R.id.list_ro)
+    binding = RotatingListBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    mEnglishList = binding.listEn
+    mRomanianList = binding.listRo
 
     // Prepare the ListView
     val adapterEn = ArrayAdapter(
@@ -60,7 +62,7 @@ class ListFlipper : Activity() {
     mRomanianList.adapter = adapterRo
     mRomanianList.rotationY = -90f
 
-    val starter = findViewById<Button>(R.id.button)
+    val starter = binding.button
     starter.setOnClickListener { flip() }
   }
 

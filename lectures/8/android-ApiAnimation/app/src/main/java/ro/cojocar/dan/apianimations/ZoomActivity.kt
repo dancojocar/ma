@@ -30,6 +30,8 @@ import android.view.MenuItem
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
+import ro.cojocar.dan.apianimations.databinding.ActivityZoomBinding
+import ro.cojocar.dan.apianimations.databinding.LayoutAnimationsHideshowBinding
 
 /**
  * A sample showing how to zoom an image thumbnail to full-screen,
@@ -43,6 +45,7 @@ import android.widget.ImageView
  * content area. Touching the zoomed-in image hides it.
  */
 class ZoomActivity : FragmentActivity() {
+  private lateinit var binding: ActivityZoomBinding
   /**
    * Hold a reference to the current animator, so that it
    * can be canceled mid-way.
@@ -58,14 +61,16 @@ class ZoomActivity : FragmentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_zoom)
+    binding = ActivityZoomBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Hook up clicks on the thumbnail views.
 
-    val thumb1View = findViewById<View>(R.id.thumb_button_1)
+    val thumb1View = binding.thumbButton1
     thumb1View.setOnClickListener { zoomImageFromThumb(thumb1View, R.drawable.image1) }
 
-    val thumb2View = findViewById<View>(R.id.thumb_button_2)
+    val thumb2View = binding.thumbButton2
     thumb2View.setOnClickListener { zoomImageFromThumb(thumb2View, R.drawable.image2) }
 
     // Retrieve and cache the system's default "short" animation time.
@@ -115,7 +120,7 @@ class ZoomActivity : FragmentActivity() {
     }
 
     // Load the high-resolution "zoomed-in" image.
-    val expandedImageView = findViewById<ImageView>(R.id.expanded_image)
+    val expandedImageView = binding.expandedImage
     expandedImageView.setImageResource(imageResId)
 
     // Calculate the starting and ending bounds for the
@@ -130,7 +135,7 @@ class ZoomActivity : FragmentActivity() {
     // view's offset as the origin for the bounds, since that's
     // the origin for the positioning animation properties (X, Y).
     thumbView.getGlobalVisibleRect(startBounds)
-    findViewById<View>(R.id.container).getGlobalVisibleRect(finalBounds, globalOffset)
+    binding.container.getGlobalVisibleRect(finalBounds, globalOffset)
     startBounds.offset(-globalOffset.x, -globalOffset.y)
     finalBounds.offset(-globalOffset.x, -globalOffset.y)
 

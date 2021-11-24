@@ -25,6 +25,7 @@ import androidx.core.app.NavUtils
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import ro.cojocar.dan.apianimations.databinding.ActivityCrossfadeBinding
 
 /**
  * This sample demonstrates cross-fading between two overlapping views.
@@ -39,6 +40,7 @@ import android.view.View
  * presented and there should be no animation.
  */
 class CrossfadeActivity : Activity() {
+  private lateinit var binding: ActivityCrossfadeBinding
   /**
    * The flag indicating whether content is loaded
    * (text is shown) or not (loading spinner is
@@ -68,10 +70,12 @@ class CrossfadeActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_crossfade)
+    binding = ActivityCrossfadeBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
-    mContentView = findViewById(R.id.content)
-    mLoadingView = findViewById(R.id.loading_spinner)
+    mContentView = binding.excerptContent.content
+    mLoadingView = binding.loadingSpinner
 
     // Initially hide the content view.
     mContentView!!.visibility = View.GONE
@@ -92,8 +96,8 @@ class CrossfadeActivity : Activity() {
         // Navigate "up" the demo structure to the launchpad activity.
         // See http://developer.android.com/design/patterns/navigation.html for more.
         NavUtils.navigateUpTo(
-            this,
-            Intent(this, AnimationsActivity::class.java)
+          this,
+          Intent(this, AnimationsActivity::class.java)
         )
         return true
       }
@@ -130,20 +134,20 @@ class CrossfadeActivity : Activity() {
     // ViewPropertyAnimator object for the view, which persists across
     // several animations.
     showView.animate()
-        .alpha(1f)
-        .setDuration(2000)
-        .setListener(null)
+      .alpha(1f)
+      .setDuration(2000)
+      .setListener(null)
 
     // Animate the "hide" view to 0% opacity. After the animation ends,
     // set its visibility to GONE as an optimization step
     // (it won't participate in layout passes, etc.)
     hideView!!.animate()
-        .alpha(0f)
-        .setDuration(mShortAnimationDuration.toLong())
-        .setListener(object : AnimatorListenerAdapter() {
-          override fun onAnimationEnd(animation: Animator) {
-            hideView.visibility = View.GONE
-          }
-        })
+      .alpha(0f)
+      .setDuration(mShortAnimationDuration.toLong())
+      .setListener(object : AnimatorListenerAdapter() {
+        override fun onAnimationEnd(animation: Animator) {
+          hideView.visibility = View.GONE
+        }
+      })
   }
 }

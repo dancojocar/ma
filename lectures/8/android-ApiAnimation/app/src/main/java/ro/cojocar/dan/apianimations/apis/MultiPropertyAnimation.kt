@@ -28,9 +28,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.BounceInterpolator
-import android.widget.Button
-import android.widget.LinearLayout
-import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimationMultiPropertyBinding
 import java.util.*
 
 /**
@@ -40,15 +38,18 @@ import java.util.*
  * animation.
  */
 class MultiPropertyAnimation : Activity() {
+  private lateinit var binding: AnimationMultiPropertyBinding
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animation_multi_property)
-    val container = findViewById<LinearLayout>(R.id.container)
+    binding = AnimationMultiPropertyBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val container = binding.container
     val animView = MyAnimationView(this)
     container.addView(animView)
 
-    val starter = findViewById<Button>(R.id.startButton)
+    val starter = binding.startButton
     starter.setOnClickListener { animView.startAnimation() }
 
   }

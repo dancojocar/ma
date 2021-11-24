@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import ro.cojocar.dan.apianimations.databinding.AnimationMainBinding
 
 
 /**
@@ -31,6 +32,7 @@ import android.widget.ListView
  * demonstrate implementations of common animations.
  */
 class AnimationsActivity : ListActivity() {
+  private lateinit var binding: AnimationMainBinding
   /**
    * The collection of all samples in the app.
    * This gets instantiated in [ ][.onCreate] because the [Sample]
@@ -40,7 +42,9 @@ class AnimationsActivity : ListActivity() {
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animation_main)
+    binding = AnimationMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Instantiate the list of samples.
     mSamples = arrayOf(

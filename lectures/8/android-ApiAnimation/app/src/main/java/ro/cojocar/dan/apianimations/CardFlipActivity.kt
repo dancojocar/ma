@@ -24,6 +24,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.core.app.NavUtils
 import androidx.appcompat.app.AppCompatActivity
 import android.view.*
+import ro.cojocar.dan.apianimations.databinding.ActivityCardFlipBinding
 
 /**
  * Demonstrates a "card-flip" animation using custom fragment transactions
@@ -37,6 +38,7 @@ import android.view.*
  * system Back button or the "photo" action bar button.
  */
 class CardFlipActivity : AppCompatActivity(), FragmentManager.OnBackStackChangedListener {
+  private lateinit var binding: ActivityCardFlipBinding
   /**
    * A handler object, used for deferring UI operations.
    */
@@ -50,7 +52,9 @@ class CardFlipActivity : AppCompatActivity(), FragmentManager.OnBackStackChanged
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_card_flip)
+    binding = ActivityCardFlipBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     if (savedInstanceState == null) {
       // If there is no saved instance state, add a fragment

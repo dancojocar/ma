@@ -19,7 +19,9 @@
   android:layout_height="match_parent">
 
   <!-- Contains the "content" view and its children. -->
-  <include layout="@layout/excerpt_content" />
+  <include
+    android:id="@+id/excerpt_content"
+    layout="@layout/excerpt_content" />
 
   <!-- The "loading indicator" view. This view overlaps with
        the content, so the visibility of these two views

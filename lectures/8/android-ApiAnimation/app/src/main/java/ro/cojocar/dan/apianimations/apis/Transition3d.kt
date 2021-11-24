@@ -8,9 +8,9 @@ import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import kotlinx.android.synthetic.main.animations_main_screen.*
 
 import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimationsMainScreenBinding
 
 /**
  * This sample application shows how to use layout animation and various
@@ -23,11 +23,14 @@ import ro.cojocar.dan.apianimations.R
  * list is made invisible and the picture is set visible.
  */
 class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickListener {
+  private lateinit var binding: AnimationsMainScreenBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    setContentView(R.layout.animations_main_screen)
+    binding = AnimationsMainScreenBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Prepare the ListView
     val adapter = ArrayAdapter(
@@ -35,13 +38,13 @@ class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickLi
       android.R.layout.simple_list_item_1, PHOTOS_NAMES
     )
 
-    mPhotosList.adapter = adapter
-    mPhotosList.onItemClickListener = this
+    binding.mPhotosList.adapter = adapter
+    binding.mPhotosList.onItemClickListener = this
 
     // Prepare the ImageView
-    mImageView.isClickable = true
-    mImageView.isFocusable = true
-    mImageView.setOnClickListener(this)
+    binding.mImageView.isClickable = true
+    binding.mImageView.isFocusable = true
+    binding.mImageView.setOnClickListener(this)
   }
 
   /**
@@ -53,8 +56,8 @@ class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickLi
    */
   private fun applyRotation(position: Int, start: Float, end: Float) {
     // Find the center of the container
-    val centerX = mContainer.width / 2.0f
-    val centerY = mContainer.height / 2.0f
+    val centerX = binding.mContainer.width / 2.0f
+    val centerY = binding.mContainer.height / 2.0f
 
     // Create a new 3D rotation with the supplied parameter
     // The animation listener is used to trigger the next animation
@@ -64,12 +67,12 @@ class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickLi
     rotation.interpolator = AccelerateInterpolator()
     rotation.setAnimationListener(DisplayNextView(position))
 
-    mContainer.startAnimation(rotation)
+    binding.mContainer.startAnimation(rotation)
   }
 
   override fun onItemClick(parent: AdapterView<*>, v: View, position: Int, id: Long) {
     // Pre-load the image then start the animation
-    mImageView.setImageResource(PHOTOS_RESOURCES[position])
+    binding.mImageView.setImageResource(PHOTOS_RESOURCES[position])
     applyRotation(position, 0f, 90f)
   }
 
@@ -88,7 +91,7 @@ class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickLi
     override fun onAnimationStart(animation: Animation) {}
 
     override fun onAnimationEnd(animation: Animation) {
-      mContainer!!.post(SwapViews(mPosition))
+      binding.mContainer.post(SwapViews(mPosition))
     }
 
     override fun onAnimationRepeat(animation: Animation) {}
@@ -101,20 +104,20 @@ class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickLi
   private inner class SwapViews(private val mPosition: Int) : Runnable {
 
     override fun run() {
-      val centerX = mContainer.width / 2.0f
-      val centerY = mContainer.height / 2.0f
+      val centerX = binding.mContainer.width / 2.0f
+      val centerY = binding.mContainer.height / 2.0f
       val rotation: Rotate3dAnimation
 
       if (mPosition > -1) {
-        mPhotosList.visibility = View.GONE
-        mImageView.visibility = View.VISIBLE
-        mImageView.requestFocus()
+        binding.mPhotosList.visibility = View.GONE
+        binding.mImageView.visibility = View.VISIBLE
+        binding.mImageView.requestFocus()
 
         rotation = Rotate3dAnimation(90f, 180f, centerX, centerY, 310.0f, false)
       } else {
-        mImageView.visibility = View.GONE
-        mPhotosList.visibility = View.VISIBLE
-        mPhotosList.requestFocus()
+        binding.mImageView.visibility = View.GONE
+        binding.mPhotosList.visibility = View.VISIBLE
+        binding.mPhotosList.requestFocus()
 
         rotation = Rotate3dAnimation(90f, 0f, centerX, centerY, 310.0f, false)
       }
@@ -123,7 +126,7 @@ class Transition3d : Activity(), AdapterView.OnItemClickListener, View.OnClickLi
       rotation.fillAfter = true
       rotation.interpolator = DecelerateInterpolator()
 
-      mContainer.startAnimation(rotation)
+      binding.mContainer.startAnimation(rotation)
     }
   }
 

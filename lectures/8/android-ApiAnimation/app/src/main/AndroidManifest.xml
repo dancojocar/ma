@@ -9,7 +9,8 @@
     android:roundIcon="@mipmap/ic_launcher_round"
     android:supportsRtl="true"
     android:theme="@style/AppTheme">
-    <activity android:name=".MainActivity">
+    <activity android:name=".MainActivity"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
 
@@ -26,7 +27,8 @@
     <activity
       android:name=".apis.AnimationLoading"
       android:hardwareAccelerated="false"
-      android:label="6. Loading">
+      android:label="6. Loading"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -36,7 +38,8 @@
     <activity
       android:name=".apis.AnimationCloning"
       android:hardwareAccelerated="false"
-      android:label="3. Cloning">
+      android:label="3. Cloning"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -46,7 +49,8 @@
     <activity
       android:name=".apis.AnimationSeeking"
       android:hardwareAccelerated="false"
-      android:label="4. Seeking">
+      android:label="4. Seeking"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -56,7 +60,8 @@
     <activity
       android:name=".apis.AnimatorEvents"
       android:hardwareAccelerated="false"
-      android:label="5. Events">
+      android:label="5. Events"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -66,7 +71,8 @@
     <activity
       android:name=".apis.BouncingBalls"
       android:hardwareAccelerated="false"
-      android:label="11. Bouncing Balls">
+      android:label="11. Bouncing Balls"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -76,7 +82,8 @@
     <activity
       android:name=".apis.CustomEvaluator"
       android:hardwareAccelerated="false"
-      android:label="7. Custom Evaluator">
+      android:label="7. Custom Evaluator"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -85,7 +92,8 @@
 
     <activity
       android:name=".apis.ListFlipper"
-      android:label="10. View Flip">
+      android:label="10. View Flip"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -95,7 +103,8 @@
     <activity
       android:name=".apis.ReversingAnimation"
       android:hardwareAccelerated="false"
-      android:label="2. Reversing">
+      android:label="2. Reversing"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -105,7 +114,8 @@
     <activity
       android:name=".apis.MultiPropertyAnimation"
       android:hardwareAccelerated="false"
-      android:label="8. Multiple Properties">
+      android:label="8. Multiple Properties"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -114,7 +124,8 @@
 
     <activity
       android:name=".apis.LayoutAnimationsHideShow"
-      android:label="9. Hide-Show Animations">
+      android:label="9. Hide-Show Animations"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -123,7 +134,8 @@
 
     <activity
       android:name=".apis.LayoutAnimationsByDefault"
-      android:label="1. Default Layout Animations">
+      android:label="1. Default Layout Animations"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />
@@ -132,7 +144,8 @@
 
     <activity
       android:name=".apis.Transition3d"
-      android:label="12. Transition3D">
+      android:label="12. Transition3D"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.SAMPLE_CODE" />

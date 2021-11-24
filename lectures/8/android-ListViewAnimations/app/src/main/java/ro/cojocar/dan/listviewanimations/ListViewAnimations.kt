@@ -26,7 +26,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import kotlinx.android.synthetic.main.activity_list_view_animations.*
+import ro.cojocar.dan.listviewanimations.databinding.ActivityListViewAnimationsBinding
 import java.util.*
 
 /**
@@ -34,10 +34,13 @@ import java.util.*
  * and how to perform these types of animations correctly with new API added in Jellybean.
  */
 class ListViewAnimations : Activity() {
+  private lateinit var binding: ActivityListViewAnimationsBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_list_view_animations)
+    binding = ActivityListViewAnimationsBinding.inflate(layoutInflater)
+    val rootView = binding.root
+    setContentView(rootView)
 
     val cheeseList = ArrayList<String>()
     for (i in Cheeses.sCheeseStrings.indices) {
@@ -47,14 +50,14 @@ class ListViewAnimations : Activity() {
         this,
         android.R.layout.simple_list_item_1, cheeseList
     )
-    listview.adapter = adapter
+    binding.listview.adapter = adapter
 
     val duration = 5000L
-    listview.onItemClickListener =
+    binding.listview.onItemClickListener =
         AdapterView.OnItemClickListener { parent, view, position, _ ->
           view.setBackgroundColor(Color.RED)
           val item = parent.getItemAtPosition(position) as String
-          if (vpaCB.isChecked) {
+          if (binding.vpaCB.isChecked) {
             view.animate().setDuration(duration).alpha(0f).withEndAction {
               removeElement(cheeseList, item, adapter)
               view.setBackgroundColor(Color.WHITE)
@@ -67,7 +70,7 @@ class ListViewAnimations : Activity() {
             // content.
             val anim = ObjectAnimator.ofFloat(view, View.ALPHA, 0f)
             anim.duration = duration
-            if (setTransientStateCB.isChecked) {
+            if (binding.setTransientStateCB.isChecked) {
               // Here's the correct way to do this: if you tell a view that it has
               // transientState, then ListView will avoid recycling it until the
               // transientState flag is reset.
@@ -80,7 +83,7 @@ class ListViewAnimations : Activity() {
                 removeElement(cheeseList, item, adapter)
                 view.alpha = 1f
                 view.setBackgroundColor(Color.WHITE)
-                if (setTransientStateCB.isChecked) {
+                if (binding.setTransientStateCB.isChecked) {
                   view.setHasTransientState(false)
                 }
               }

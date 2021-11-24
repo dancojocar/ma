@@ -25,8 +25,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.fragment.app.Fragment
+import com.example.android.basictransition.databinding.FragmentBasicTransitionBinding
 
 class BasicTransitionFragment : Fragment(), RadioGroup.OnCheckedChangeListener {
+  private var _binding: FragmentBasicTransitionBinding? = null
+  private val binding get() = _binding!!
 
   // We transition between these Scenes
   private var mScene1: Scene? = null
@@ -41,10 +44,11 @@ class BasicTransitionFragment : Fragment(), RadioGroup.OnCheckedChangeListener {
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                             savedInstanceState: Bundle?): View? {
-    val view = inflater.inflate(R.layout.fragment_basic_transition, container, false)!!
-    val radioGroup = view.findViewById<View>(R.id.select_scene) as RadioGroup
+    _binding = FragmentBasicTransitionBinding.inflate(inflater, container, false)
+    val view = binding.root
+    val radioGroup = binding.selectScene
     radioGroup.setOnCheckedChangeListener(this)
-    mSceneRoot = view.findViewById<View>(R.id.mSceneRoot) as ViewGroup
+    mSceneRoot = binding.mSceneRoot
 
     // A Scene can be instantiated from a live view hierarchy.
     mScene1 = Scene(mSceneRoot, mSceneRoot?.findViewById<View>(R.id.container) as View)

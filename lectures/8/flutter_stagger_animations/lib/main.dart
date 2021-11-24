@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show timeDilation;
 
 class StaggerAnimation extends StatelessWidget {
-  StaggerAnimation({ Key key, this.controller }) :
+  StaggerAnimation({ Key key=const Key("any"), required this.controller }) :
 
     // Each animation defined here transforms its value during the subset
     // of the controller's duration defined by the animation's interval.
@@ -21,7 +21,7 @@ class StaggerAnimation extends StatelessWidget {
     ).animate(
       CurvedAnimation(
         parent: controller,
-        curve: Interval(
+        curve: const Interval(
           0.0, 0.100,
           curve: Curves.ease,
         ),
@@ -34,7 +34,7 @@ class StaggerAnimation extends StatelessWidget {
     ).animate(
       CurvedAnimation(
         parent: controller,
-        curve: Interval(
+        curve: const Interval(
           0.125, 0.250,
           curve: Curves.ease,
         ),
@@ -47,7 +47,7 @@ class StaggerAnimation extends StatelessWidget {
     ).animate(
       CurvedAnimation(
         parent: controller,
-        curve: Interval(
+        curve: const Interval(
           0.250, 0.375,
           curve: Curves.ease,
         ),
@@ -60,7 +60,7 @@ class StaggerAnimation extends StatelessWidget {
     ).animate(
       CurvedAnimation(
         parent: controller,
-        curve: Interval(
+        curve: const Interval(
           0.250, 0.375,
           curve: Curves.ease,
         ),
@@ -73,7 +73,7 @@ class StaggerAnimation extends StatelessWidget {
     ).animate(
       CurvedAnimation(
         parent: controller,
-        curve: Interval(
+        curve: const Interval(
           0.375, 0.500,
           curve: Curves.ease,
         ),
@@ -86,7 +86,7 @@ class StaggerAnimation extends StatelessWidget {
     ).animate(
       CurvedAnimation(
         parent: controller,
-        curve: Interval(
+        curve: const Interval(
           0.500, 0.750,
           curve: Curves.ease,
         ),
@@ -100,13 +100,13 @@ class StaggerAnimation extends StatelessWidget {
   final Animation<double> width;
   final Animation<double> height;
   final Animation<EdgeInsets> padding;
-  final Animation<BorderRadius> borderRadius;
-  final Animation<Color> color;
+  final Animation<BorderRadius?> borderRadius;
+  final Animation<Color?> color;
 
   // This function is called each time the controller "ticks" a new frame.
   // When it runs, all of the animation's values will have been
   // updated to reflect the controller's current value.
-  Widget _buildAnimation(BuildContext context, Widget child) {
+  Widget _buildAnimation(BuildContext context, Widget? child) {
     return Container(
       padding: padding.value,
       alignment: Alignment.bottomCenter,
@@ -118,7 +118,7 @@ class StaggerAnimation extends StatelessWidget {
           decoration: BoxDecoration(
             color: color.value,
             border: Border.all(
-              color: Colors.indigo[300],
+              color: Colors.indigo,
               width: 3.0,
             ),
             borderRadius: borderRadius.value,
@@ -138,12 +138,14 @@ class StaggerAnimation extends StatelessWidget {
 }
 
 class StaggerDemo extends StatefulWidget {
+  const StaggerDemo({Key? key}) : super(key: key);
+
   @override
   _StaggerDemoState createState() => _StaggerDemoState();
 }
 
 class _StaggerDemoState extends State<StaggerDemo> with TickerProviderStateMixin {
-  AnimationController _controller;
+  late AnimationController _controller;
 
   @override
   void initState() {
@@ -203,5 +205,5 @@ class _StaggerDemoState extends State<StaggerDemo> with TickerProviderStateMixin
 }
 
 void main() {
-  runApp(MaterialApp(home: StaggerDemo()));
+  runApp(const MaterialApp(home: StaggerDemo()));
 }
