@@ -6,13 +6,14 @@ import android.view.View
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.android.synthetic.main.activity_custom.*
+import com.google.firebase.quickstart.auth.databinding.ActivityCustomBinding
 
 /**
  * Demonstrate Firebase Authentication using a custom minted token. For more information, see:
  * https://firebase.google.com/docs/auth/android/custom-auth
  */
 class CustomAuthActivity : AppCompatActivity(), View.OnClickListener {
+  private lateinit var binding: ActivityCustomBinding
 
   private lateinit var auth: FirebaseAuth
 
@@ -21,10 +22,12 @@ class CustomAuthActivity : AppCompatActivity(), View.OnClickListener {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_custom)
+    binding = ActivityCustomBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Button click listeners
-    buttonSignIn.setOnClickListener(this)
+    binding.buttonSignIn.setOnClickListener(this)
 
     // Create token receiver (for demo purposes only)
     tokenReceiver = object : TokenBroadcastReceiver() {
@@ -78,9 +81,9 @@ class CustomAuthActivity : AppCompatActivity(), View.OnClickListener {
 
   private fun updateUI(user: FirebaseUser?) {
     if (user != null) {
-      textSignInStatus.text = "User ID: $user.uid"
+      binding.textSignInStatus.text = "User ID: $user.uid"
     } else {
-      textSignInStatus.text = "Error: sign in failed"
+      binding.textSignInStatus.text = "Error: sign in failed"
     }
   }
 
@@ -90,8 +93,8 @@ class CustomAuthActivity : AppCompatActivity(), View.OnClickListener {
     val status = "Token:$customToken"
 
     // Enable/disable sign-in button and show the token
-    buttonSignIn.isEnabled = true
-    textTokenStatus.text = status
+    binding.buttonSignIn.isEnabled = true
+    binding.textTokenStatus.text = status
   }
 
   override fun onClick(v: View) {
