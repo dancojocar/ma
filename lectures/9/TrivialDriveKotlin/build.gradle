@@ -40,7 +40,7 @@ buildscript {
         releaseKeyAlias = keystoreProperties['keyAlias']
         releaseKeyPassword = keystoreProperties['keyPassword']
 
-        version_kotlin = '1.4.10'
+        version_kotlin = '1.6.0'
         version_billing = '2.0.1'
         version_lifecycle = '1.1.1'
         version_coroutines = '1.3.4'
@@ -58,7 +58,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.android.tools.build:gradle:7.0.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$version_kotlin"
 
         // NOTE: Do not place your application dependencies here; they belong

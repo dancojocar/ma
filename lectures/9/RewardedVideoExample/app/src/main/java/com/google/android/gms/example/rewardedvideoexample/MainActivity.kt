@@ -4,48 +4,48 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
-import android.widget.Toast
-import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.rewarded.RewardItem
 import com.google.android.gms.ads.rewarded.RewardedAd
-import com.google.android.gms.ads.rewarded.RewardedAdCallback
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
-import kotlinx.android.synthetic.main.activity_main.*
+import com.google.android.gms.example.rewardedvideoexample.databinding.ActivityMainBinding
 
 const val AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
 const val COUNTER_TIME = 10L
 const val GAME_OVER_REWARD = 1
 
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
 
   private var mCoinCount: Int = 0
   private var mCountDownTimer: CountDownTimer? = null
   private var mGameOver = false
   private var mGamePaused = false
   private var mIsLoading = false
-  private lateinit var mRewardedAd: RewardedAd
+  private var mRewardedAd: RewardedAd? = null
   private var mTimeRemaining: Long = 0L
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
     MobileAds.initialize(this) {}
 
     loadRewardedAd()
 
     // Create the "retry" button, which tries to show a rewarded video ad between game plays.
-    retry_button.visibility = View.INVISIBLE
-    retry_button.setOnClickListener { startGame() }
+    binding.retryButton.visibility = View.INVISIBLE
+    binding.retryButton.setOnClickListener { startGame() }
 
     // Create the "show" button, which shows a rewarded video if one is loaded.
-    show_video_button.visibility = View.INVISIBLE
-    show_video_button.setOnClickListener { showRewardedVideo() }
+    binding.showVideoButton.visibility = View.INVISIBLE
+    binding.showVideoButton.setOnClickListener { showRewardedVideo() }
 
     // Display current coin count to user.
-    coin_count_text.text = "Coins: $mCoinCount"
+    binding.coinCountText.text = "Coins: $mCoinCount"
 
     startGame()
   }
@@ -73,36 +73,32 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun loadRewardedAd() {
-    if (!(::mRewardedAd.isInitialized) || !mRewardedAd.isLoaded) {
-      mIsLoading = true
-      mRewardedAd = RewardedAd(this, AD_UNIT_ID)
-      mRewardedAd.loadAd(
-        AdRequest.Builder().build(),
-        object : RewardedAdLoadCallback() {
-          override fun onRewardedAdLoaded() {
-            mIsLoading = false
-            Toast.makeText(this@MainActivity, "onRewardedAdLoaded", Toast.LENGTH_LONG).show()
-          }
+    val adRequest = AdRequest.Builder().build()
 
-          override fun onRewardedAdFailedToLoad(loadAdError: LoadAdError) {
-            mIsLoading = false
-            Toast.makeText(this@MainActivity, "onRewardedAdFailedToLoad", Toast.LENGTH_LONG).show()
-          }
+    RewardedAd.load(this, AD_UNIT_ID,
+      adRequest, object : RewardedAdLoadCallback() {
+        override fun onAdFailedToLoad(adError: LoadAdError) {
+          logd(adError.message)
+          mRewardedAd = null
         }
-      )
-    }
+
+        override fun onAdLoaded(rewardedAd: RewardedAd) {
+          logd("Ad was loaded.")
+          mRewardedAd = rewardedAd
+        }
+      })
   }
 
   private fun addCoins(coins: Int) {
     mCoinCount += coins
-    coin_count_text.text = "Coins: $mCoinCount"
+    binding.coinCountText.text = "Coins: $mCoinCount"
   }
 
   private fun startGame() {
     // Hide the retry button, load the ad, and start the timer.
-    retry_button.visibility = View.INVISIBLE
-    show_video_button.visibility = View.INVISIBLE
-    if (!mRewardedAd.isLoaded && !mIsLoading) {
+    binding.retryButton.visibility = View.INVISIBLE
+    binding.showVideoButton.visibility = View.INVISIBLE
+    if (mRewardedAd == null && !mIsLoading) {
       loadRewardedAd()
     }
     createTimer(COUNTER_TIME)
@@ -118,16 +114,16 @@ class MainActivity : AppCompatActivity() {
     mCountDownTimer = object : CountDownTimer(time * 1000, 50) {
       override fun onTick(millisUnitFinished: Long) {
         mTimeRemaining = millisUnitFinished / 1000 + 1
-        timer.text = "seconds remaining: $mTimeRemaining"
+        binding.timer.text = "seconds remaining: $mTimeRemaining"
       }
 
       override fun onFinish() {
-        if (mRewardedAd.isLoaded) {
-          show_video_button.visibility = View.VISIBLE
+        if (mRewardedAd != null) {
+          binding.showVideoButton.visibility = View.VISIBLE
         }
-        timer.text = "The game has ended!"
+        binding.timer.text = "The game has ended!"
         addCoins(GAME_OVER_REWARD)
-        retry_button.visibility = View.VISIBLE
+        binding.retryButton.visibility = View.VISIBLE
         mGameOver = true
       }
     }
@@ -136,32 +132,17 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun showRewardedVideo() {
-    show_video_button.visibility = View.INVISIBLE
-    if (mRewardedAd.isLoaded) {
-      mRewardedAd.show(
-        this,
-        object : RewardedAdCallback() {
-          override fun onUserEarnedReward(
-            rewardItem: RewardItem
-          ) {
-            Toast.makeText(this@MainActivity, "onUserEarnedReward", Toast.LENGTH_LONG).show()
-            addCoins(rewardItem.amount)
-          }
-
-          override fun onRewardedAdClosed() {
-            Toast.makeText(this@MainActivity, "onRewardedAdClosed", Toast.LENGTH_LONG).show()
-            loadRewardedAd()
-          }
-
-          override fun onRewardedAdFailedToShow(adError: AdError) {
-            Toast.makeText(this@MainActivity, "onRewardedAdFailedToShow", Toast.LENGTH_LONG).show()
-          }
-
-          override fun onRewardedAdOpened() {
-            Toast.makeText(this@MainActivity, "onRewardedAdOpened", Toast.LENGTH_LONG).show()
-          }
-        }
-      )
+    binding.showVideoButton.visibility = View.INVISIBLE
+    if (mRewardedAd != null) {
+      mRewardedAd?.show(this) {
+        val rewardAmount = it.amount
+//          var rewardType = rewardItem.getType()
+        addCoins(rewardAmount)
+        logd("User earned the reward.")
+        mRewardedAd = null
+      }
+    } else {
+      logd("The rewarded ad wasn't ready yet.")
     }
   }
 }
