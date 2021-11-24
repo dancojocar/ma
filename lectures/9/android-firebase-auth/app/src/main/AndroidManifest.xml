@@ -27,9 +27,9 @@
     <activity
       android:name=".GoogleSignInActivity"
       android:label="@string/label_google_sign_in" />
-    <activity
-      android:name=".FacebookLoginActivity"
-      android:label="@string/label_facebook_login" />
+<!--    <activity-->
+<!--      android:name=".FacebookLoginActivity"-->
+<!--      android:label="@string/label_facebook_login" />-->
     <activity
       android:name=".EmailPasswordActivity"
       android:label="@string/label_emailpassword"
@@ -37,7 +37,8 @@
     <activity
       android:name=".PasswordlessActivity"
       android:label="@string/label_passwordless"
-      android:launchMode="singleTop">
+      android:launchMode="singleTop"
+      android:exported="true">
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
         <data

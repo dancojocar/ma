@@ -12,12 +12,13 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import kotlinx.android.synthetic.main.activity_google.*
+import com.google.firebase.quickstart.auth.databinding.ActivityGoogleBinding
 
 /**
  * Demonstrate Firebase Authentication using a Google ID Token.
  */
 class GoogleSignInActivity : BaseActivity(), View.OnClickListener {
+  private lateinit var binding: ActivityGoogleBinding
 
   private lateinit var auth: FirebaseAuth
 
@@ -25,18 +26,20 @@ class GoogleSignInActivity : BaseActivity(), View.OnClickListener {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_google)
+    binding = ActivityGoogleBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Button listeners
-    signInButton.setOnClickListener(this)
-    signOutButton.setOnClickListener(this)
-    disconnectButton.setOnClickListener(this)
+    binding.signInButton.setOnClickListener(this)
+    binding.signOutButton.setOnClickListener(this)
+    binding.disconnectButton.setOnClickListener(this)
 
     // Configure Google Sign In
     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
+      .requestIdToken(getString(R.string.default_web_client_id))
+      .requestEmail()
+      .build()
 
     googleSignInClient = GoogleSignIn.getClient(this, gso)
 
@@ -75,21 +78,21 @@ class GoogleSignInActivity : BaseActivity(), View.OnClickListener {
 
     val credential = GoogleAuthProvider.getCredential(acct.idToken, null)
     auth.signInWithCredential(credential)
-        .addOnCompleteListener(this) { task ->
-          if (task.isSuccessful) {
-            // Sign in success, update UI with the signed-in user's information
-            logd("signInWithCredential:success")
-            val user = auth.currentUser
-            updateUI(user)
-          } else {
-            // If sign in fails, display a message to the user.
-            logw("signInWithCredential:failure", task.exception)
-            Snackbar.make(main_layout, "Authentication Failed.", Snackbar.LENGTH_SHORT).show()
-            updateUI(null)
-          }
-
-          hideProgressDialog()
+      .addOnCompleteListener(this) { task ->
+        if (task.isSuccessful) {
+          // Sign in success, update UI with the signed-in user's information
+          logd("signInWithCredential:success")
+          val user = auth.currentUser
+          updateUI(user)
+        } else {
+          // If sign in fails, display a message to the user.
+          logw("signInWithCredential:failure", task.exception)
+          Snackbar.make(binding.root, "Authentication Failed.", Snackbar.LENGTH_SHORT).show()
+          updateUI(null)
         }
+
+        hideProgressDialog()
+      }
   }
 
   private fun signIn() {
@@ -120,17 +123,17 @@ class GoogleSignInActivity : BaseActivity(), View.OnClickListener {
   private fun updateUI(user: FirebaseUser?) {
     hideProgressDialog()
     if (user != null) {
-      status.text = getString(R.string.google_status_fmt, user.email)
-      detail.text = getString(R.string.firebase_status_fmt, user.uid)
+      binding.status.text = getString(R.string.google_status_fmt, user.email)
+      binding.detail.text = getString(R.string.firebase_status_fmt, user.uid)
 
-      signInButton.visibility = View.GONE
-      signOutAndDisconnect.visibility = View.VISIBLE
+      binding.signInButton.visibility = View.GONE
+      binding.signOutAndDisconnect.visibility = View.VISIBLE
     } else {
-      status.setText(R.string.signed_out)
-      detail.text = null
+      binding.status.setText(R.string.signed_out)
+      binding.detail.text = null
 
-      signInButton.visibility = View.VISIBLE
-      signOutAndDisconnect.visibility = View.GONE
+      binding.signInButton.visibility = View.VISIBLE
+      binding.signOutAndDisconnect.visibility = View.GONE
     }
   }
 

@@ -9,7 +9,7 @@ import android.widget.Toast
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import kotlinx.android.synthetic.main.activity_firebase_ui.*
+import com.google.firebase.quickstart.auth.databinding.ActivityFirebaseUiBinding
 
 /**
  * Demonstrate authentication using the FirebaseUI-Android library. This activity demonstrates
@@ -18,18 +18,21 @@ import kotlinx.android.synthetic.main.activity_firebase_ui.*
  * For more information, visit https://github.com/firebase/firebaseui-android
  */
 class FirebaseUIActivity : AppCompatActivity(), View.OnClickListener {
+  private lateinit var binding: ActivityFirebaseUiBinding
 
   private lateinit var auth: FirebaseAuth
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_firebase_ui)
+    binding = ActivityFirebaseUiBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Initialize Firebase Auth
     auth = FirebaseAuth.getInstance()
 
-    signInButton.setOnClickListener(this)
-    signOutButton.setOnClickListener(this)
+    binding.signInButton.setOnClickListener(this)
+    binding.signOutButton.setOnClickListener(this)
   }
 
   override fun onStart() {
@@ -56,10 +59,10 @@ class FirebaseUIActivity : AppCompatActivity(), View.OnClickListener {
     // Build FirebaseUI sign in intent. For documentation on this operation and all
     // possible customization see: https://github.com/firebase/firebaseui-android
     val intent = AuthUI.getInstance().createSignInIntentBuilder()
-        .setIsSmartLockEnabled(!BuildConfig.DEBUG)
-        .setAvailableProviders(listOf(AuthUI.IdpConfig.EmailBuilder().build()))
-        .setLogo(R.mipmap.ic_launcher)
-        .build()
+      .setIsSmartLockEnabled(!BuildConfig.DEBUG)
+      .setAvailableProviders(listOf(AuthUI.IdpConfig.EmailBuilder().build()))
+      .setLogo(R.mipmap.ic_launcher)
+      .build()
 
     startActivityForResult(intent, RC_SIGN_IN)
   }
@@ -67,18 +70,18 @@ class FirebaseUIActivity : AppCompatActivity(), View.OnClickListener {
   private fun updateUI(user: FirebaseUser?) {
     if (user != null) {
       // Signed in
-      status.text = getString(R.string.firebaseui_status_fmt, user.email)
-      detail.text = getString(R.string.id_fmt, user.uid)
+      binding.status.text = getString(R.string.firebaseui_status_fmt, user.email)
+      binding.detail.text = getString(R.string.id_fmt, user.uid)
 
-      signInButton.visibility = View.GONE
-      signOutButton.visibility = View.VISIBLE
+      binding.signInButton.visibility = View.GONE
+      binding.signOutButton.visibility = View.VISIBLE
     } else {
       // Signed out
-      status.setText(R.string.signed_out)
-      detail.text = null
+      binding.status.setText(R.string.signed_out)
+      binding.detail.text = null
 
-      signInButton.visibility = View.VISIBLE
-      signOutButton.visibility = View.GONE
+      binding.signInButton.visibility = View.VISIBLE
+      binding.signOutButton.visibility = View.GONE
     }
   }
 
