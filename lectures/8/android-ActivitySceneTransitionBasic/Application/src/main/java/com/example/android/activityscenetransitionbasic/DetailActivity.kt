@@ -17,26 +17,27 @@
 package com.example.android.activityscenetransitionbasic
 
 import android.app.Activity
-import android.os.Build
 import android.os.Bundle
 import android.transition.Transition
 import android.widget.ImageView
 import androidx.core.view.ViewCompat
+import com.example.android.activityscenetransitionbasic.databinding.DetailsBinding
 import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.details.*
 
 /**
  * Our secondary Activity which is launched from [MainActivity]. Has a simple detail UI
  * which has a large banner image, title and body text.
  */
 class DetailActivity : Activity() {
-
+  private lateinit var binding: DetailsBinding
 
   private var mItem: Item? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.details)
+    binding = DetailsBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Retrieve the correct Item instance, using the ID provided in the Intent
     mItem = Item.getItem(intent.getIntExtra(EXTRA_PARAM_ID, 0))
@@ -47,17 +48,23 @@ class DetailActivity : Activity() {
      * This could be done in the layout XML, but exposing it via static variables allows easy
      * querying from other Activities
      */
-    ViewCompat.setTransitionName(imageview_header, VIEW_NAME_HEADER_IMAGE)
-    ViewCompat.setTransitionName(textview_title, VIEW_NAME_HEADER_TITLE)
+    ViewCompat.setTransitionName(
+      binding.imageviewHeader,
+      VIEW_NAME_HEADER_IMAGE
+    )
+    ViewCompat.setTransitionName(
+      binding.textviewTitle,
+      VIEW_NAME_HEADER_TITLE
+    )
 
     loadItem()
   }
 
   private fun loadItem() {
     // Set the title TextView to the item's name and author
-    textview_title.text = getString(R.string.image_header, mItem!!.name, mItem!!.author)
+    binding.textviewTitle.text = getString(R.string.image_header, mItem!!.name, mItem!!.author)
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && addTransitionListener()) {
+    if (addTransitionListener()) {
       // If we're running on Lollipop and we have added a listener to the shared element
       // transition, load the thumbnail. The listener will load the full-size image when
       // the transition is complete.
@@ -72,21 +79,21 @@ class DetailActivity : Activity() {
    * Load the item's thumbnail image into our [ImageView].
    */
   private fun loadThumbnail() {
-    Picasso.with(imageview_header.context)
-        .load(mItem!!.thumbnailUrl)
-        .noFade()
-        .into(imageview_header)
+    Picasso.with(binding.imageviewHeader.context)
+      .load(mItem!!.thumbnailUrl)
+      .noFade()
+      .into(binding.imageviewHeader)
   }
 
   /**
    * Load the item's full-size image into our [ImageView].
    */
   private fun loadFullSizeImage() {
-    Picasso.with(imageview_header.context)
-        .load(mItem!!.photoUrl)
-        .noFade()
-        .noPlaceholder()
-        .into(imageview_header)
+    Picasso.with(binding.imageviewHeader.context)
+      .load(mItem!!.photoUrl)
+      .noFade()
+      .noPlaceholder()
+      .into(binding.imageviewHeader)
   }
 
   /**
@@ -137,8 +144,10 @@ class DetailActivity : Activity() {
   companion object {
     // Extra name for the ID parameter
     const val EXTRA_PARAM_ID = "detail:_id"
+
     // View name of the header image. Used for activity scene transitions
     const val VIEW_NAME_HEADER_IMAGE = "detail:header:image"
+
     // View name of the header title. Used for activity scene transitions
     const val VIEW_NAME_HEADER_TITLE = "detail:header:title"
   }

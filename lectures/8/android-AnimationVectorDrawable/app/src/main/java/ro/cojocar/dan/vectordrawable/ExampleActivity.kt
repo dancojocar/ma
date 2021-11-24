@@ -5,14 +5,18 @@ import android.graphics.drawable.Animatable
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
-import kotlinx.android.synthetic.main.activity_example.*
+import ro.cojocar.dan.vectordrawable.databinding.ActivityExampleBinding
 
 class ExampleActivity : Activity() {
+  private lateinit var binding: ActivityExampleBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_example)
+    binding = ActivityExampleBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
+    val container = binding.container
     container.setOnClickListener {
       for (i in 0 until container.childCount) {
         animateDrawables(container.getChildAt(i))

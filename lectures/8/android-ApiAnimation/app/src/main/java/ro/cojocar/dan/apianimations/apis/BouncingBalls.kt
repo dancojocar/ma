@@ -27,19 +27,21 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
-import android.widget.LinearLayout
-import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.BouncingBallsBinding
 import java.util.*
 
 
 class BouncingBalls : Activity() {
+  private lateinit var binding: BouncingBallsBinding
   /**
    * Called when the activity is first created.
    */
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.bouncing_balls)
-    val container = findViewById<LinearLayout>(R.id.container)
+    binding = BouncingBallsBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val container = binding.container
     container.addView(MyAnimationView(this))
   }
 

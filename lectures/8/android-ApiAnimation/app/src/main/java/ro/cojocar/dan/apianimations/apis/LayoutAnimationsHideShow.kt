@@ -26,8 +26,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
-import kotlinx.android.synthetic.main.layout_animations_hideshow.*
 import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.LayoutAnimationsHideshowBinding
 
 /**
  * This application demonstrates how to use LayoutTransition to
@@ -35,6 +35,7 @@ import ro.cojocar.dan.apianimations.R
  * in a container.
  */
 class LayoutAnimationsHideShow : Activity() {
+  private lateinit var binding: LayoutAnimationsHideshowBinding
 
   internal var container: ViewGroup? = null
   private var mTransitioner: LayoutTransition? = null
@@ -44,7 +45,9 @@ class LayoutAnimationsHideShow : Activity() {
    */
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.layout_animations_hideshow)
+    binding = LayoutAnimationsHideshowBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     container = LinearLayout(this)
     container!!.layoutParams = LinearLayout.LayoutParams(
@@ -61,7 +64,7 @@ class LayoutAnimationsHideShow : Activity() {
       newButton.text = i.toString()
       container!!.addView(newButton)
       newButton.setOnClickListener { v ->
-        v.visibility = if (hideGoneCB.isChecked)
+        v.visibility = if (binding.hideGoneCB.isChecked)
           View.GONE
         else
           View.INVISIBLE
@@ -73,14 +76,14 @@ class LayoutAnimationsHideShow : Activity() {
     val parent = findViewById<ViewGroup>(R.id.parent)
     parent.addView(container)
 
-    addNewButton.setOnClickListener {
+    binding.addNewButton.setOnClickListener {
       for (i in 0 until container!!.childCount) {
         val view = container!!.getChildAt(i)
         view.visibility = View.VISIBLE
       }
     }
 
-    customAnimCB.setOnCheckedChangeListener { _, isChecked ->
+    binding.customAnimCB.setOnCheckedChangeListener { _, isChecked ->
       val duration: Long = if (isChecked) {
         mTransitioner!!.setStagger(
             LayoutTransition.CHANGE_APPEARING,

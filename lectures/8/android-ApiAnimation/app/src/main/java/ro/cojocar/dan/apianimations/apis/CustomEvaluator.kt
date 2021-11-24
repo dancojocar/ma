@@ -29,19 +29,22 @@ import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.View
 import android.widget.LinearLayout
-import kotlinx.android.synthetic.main.animator_custom_evaluator.*
 import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimatorCustomEvaluatorBinding
 
 class CustomEvaluator : Activity() {
+  private lateinit var binding: AnimatorCustomEvaluatorBinding
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animator_custom_evaluator)
+    binding = AnimatorCustomEvaluatorBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
     val container = findViewById<LinearLayout>(R.id.container)
     val animView = MyAnimationView(this)
     container.addView(animView)
 
-    startButton.setOnClickListener { animView.startAnimation() }
+    binding.startButton.setOnClickListener { animView.startAnimation() }
   }
 
   inner class XYHolder internal constructor(var x: Float, var y: Float)

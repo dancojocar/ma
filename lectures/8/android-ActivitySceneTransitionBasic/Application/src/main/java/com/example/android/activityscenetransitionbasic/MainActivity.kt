@@ -19,12 +19,15 @@ package com.example.android.activityscenetransitionbasic
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
+import com.example.android.activityscenetransitionbasic.databinding.GridBinding
+import com.example.android.activityscenetransitionbasic.databinding.GridItemBinding
 import com.squareup.picasso.Picasso
 
 /**
@@ -33,19 +36,20 @@ import com.squareup.picasso.Picasso
  * framework to animatedly do so.
  */
 class MainActivity : Activity(), AdapterView.OnItemClickListener {
+  private lateinit var binding: GridBinding
 
-  private var mGridView: GridView? = null
   private var mAdapter: GridAdapter? = null
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.grid)
+    binding = GridBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
     // Setup the GridView and set the adapter
-    mGridView = findViewById<View>(R.id.grid) as GridView
-    mGridView!!.onItemClickListener = this
+    binding.grid.onItemClickListener = this
     mAdapter = GridAdapter()
-    mGridView!!.adapter = mAdapter
+    binding.grid.adapter = mAdapter
   }
 
   /**
@@ -65,14 +69,19 @@ class MainActivity : Activity(), AdapterView.OnItemClickListener {
      * method.
      */
     val activityOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(
-        this,
+      this,
 
-        // Now we provide a list of Pair items which contain the view we can transitioning
-        // from, and the name of the view it is transitioning to, in the launched activity
-        Pair(view.findViewById(R.id.imageview_item),
-            DetailActivity.VIEW_NAME_HEADER_IMAGE),
-        Pair(view.findViewById(R.id.textview_name),
-            DetailActivity.VIEW_NAME_HEADER_TITLE))
+      // Now we provide a list of Pair items which contain the view we can transitioning
+      // from, and the name of the view it is transitioning to, in the launched activity
+      Pair(
+        view.findViewById(R.id.imageview_item),
+        DetailActivity.VIEW_NAME_HEADER_IMAGE
+      ),
+      Pair(
+        view.findViewById(R.id.textview_name),
+        DetailActivity.VIEW_NAME_HEADER_TITLE
+      )
+    )
 
     // Now we can start the Activity, providing the activity options as a bundle
     ActivityCompat.startActivity(this, intent, activityOptions.toBundle())

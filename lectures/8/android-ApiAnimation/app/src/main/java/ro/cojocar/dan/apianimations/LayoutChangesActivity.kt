@@ -22,6 +22,8 @@ import android.os.Bundle
 import androidx.core.app.NavUtils
 import android.view.*
 import android.widget.TextView
+import ro.cojocar.dan.apianimations.databinding.ActivityCrossfadeBinding
+import ro.cojocar.dan.apianimations.databinding.ActivityLayoutChangesBinding
 
 /**
  * This sample demonstrates how to use system-provided, automatic
@@ -35,6 +37,7 @@ import android.widget.TextView
  * from a vertical [android.widget.LinearLayout].
  */
 class LayoutChangesActivity : Activity() {
+  private lateinit var binding: ActivityLayoutChangesBinding
   /**
    * The container view which has layout change animations turned on.
    * In this sample, this view is a [android.widget.LinearLayout].
@@ -43,8 +46,10 @@ class LayoutChangesActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_layout_changes)
-    mContainerView = findViewById(R.id.container)
+    binding = ActivityLayoutChangesBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    mContainerView = binding.container
   }
 
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -68,7 +73,7 @@ class LayoutChangesActivity : Activity() {
       R.id.action_add_item -> {
         // Hide the "empty" view since there is now at least one
         // item in the list.
-        findViewById<View>(android.R.id.empty).visibility = View.GONE
+        binding.empty.visibility = View.GONE
         addItem()
         return true
       }

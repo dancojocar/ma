@@ -30,10 +30,8 @@ import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.View
 import android.view.animation.BounceInterpolator
-import android.widget.Button
-import android.widget.LinearLayout
 import android.widget.SeekBar
-import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimationSeekingBinding
 
 /**
  * This application demonstrates the seeking capability of ValueAnimator.
@@ -42,24 +40,27 @@ import ro.cojocar.dan.apianimations.R
  * animation.
  */
 class AnimationSeeking : Activity() {
-  private var mSeekBar: SeekBar? = null
+  private lateinit var binding: AnimationSeekingBinding
+  private lateinit var mSeekBar: SeekBar
 
   /**
    * Called when the activity is first created.
    */
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animation_seeking)
-    val container = findViewById<LinearLayout>(R.id.container)
+    binding = AnimationSeekingBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val container = binding.container
     val animView = MyAnimationView(this)
     container.addView(animView)
 
-    val starter = findViewById<Button>(R.id.startButton)
+    val starter = binding.startButton
     starter.setOnClickListener { animView.startAnimation() }
 
-    mSeekBar = findViewById(R.id.seekBar)
-    mSeekBar!!.max = DURATION
-    mSeekBar!!.setOnSeekBarChangeListener(
+    mSeekBar = binding.seekBar
+    mSeekBar.max = DURATION
+    mSeekBar.setOnSeekBarChangeListener(
       object : SeekBar.OnSeekBarChangeListener {
         override fun onStopTrackingTouch(seekBar: SeekBar) {}
 
@@ -136,7 +137,7 @@ class AnimationSeeking : Activity() {
     override fun onAnimationUpdate(animation: ValueAnimator) {
       invalidate()
       val playtime = bounceAnim!!.currentPlayTime
-      mSeekBar!!.progress = playtime.toInt()
+      mSeekBar.progress = playtime.toInt()
     }
 
     override fun onAnimationCancel(animation: Animator) {}

@@ -28,23 +28,24 @@ import android.graphics.drawable.shapes.OvalShape
 import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateInterpolator
-import android.widget.Button
-import android.widget.LinearLayout
-import ro.cojocar.dan.apianimations.R
+import ro.cojocar.dan.apianimations.databinding.AnimationReversingBinding
 
 class ReversingAnimation : Activity() {
+  private lateinit var binding: AnimationReversingBinding
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.animation_reversing)
-    val container = findViewById<LinearLayout>(R.id.container)
+    binding = AnimationReversingBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    val container = binding.container
     val animView = MyAnimationView(this)
     container.addView(animView)
 
-    val starter = findViewById<Button>(R.id.startButton)
+    val starter = binding.startButton
     starter.setOnClickListener { animView.startAnimation() }
 
-    val reverser = findViewById<Button>(R.id.reverseButton)
+    val reverser = binding.reverseButton
     reverser.setOnClickListener { animView.reverseAnimation() }
 
   }
@@ -59,7 +60,7 @@ class ReversingAnimation : Activity() {
       if (bounceAnim == null) {
         bounceAnim = ObjectAnimator.ofFloat(
           ball,
-          "y", ball.y, height - 50f
+          "y", ball.y, height - 250f
         ).setDuration(1500)
         bounceAnim!!.interpolator = AccelerateInterpolator(2f)
         bounceAnim!!.addUpdateListener(this)
@@ -78,7 +79,7 @@ class ReversingAnimation : Activity() {
 
     private fun createBall(): ShapeHolder {
       val circle = OvalShape()
-      circle.resize(50f, 50f)
+      circle.resize(250f, 250f)
       val drawable = ShapeDrawable(circle)
       val shapeHolder = ShapeHolder(drawable)
       shapeHolder.x = 0f

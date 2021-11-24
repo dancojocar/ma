@@ -49,13 +49,13 @@ class FixedGridLayout(context: Context) : ViewGroup(context) {
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-    val cellWidthSpec = View.MeasureSpec.makeMeasureSpec(
+    val cellWidthSpec = MeasureSpec.makeMeasureSpec(
         mCellWidth,
-        View.MeasureSpec.AT_MOST
+        MeasureSpec.AT_MOST
     )
-    val cellHeightSpec = View.MeasureSpec.makeMeasureSpec(
+    val cellHeightSpec = MeasureSpec.makeMeasureSpec(
         mCellHeight,
-        View.MeasureSpec.AT_MOST
+        MeasureSpec.AT_MOST
     )
 
     val count = childCount
