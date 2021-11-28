@@ -85,7 +85,7 @@ abstract class PostListFragment : Fragment() {
         viewHolder.setLikedState(model.stars.containsKey(uid))
 
         // Bind Post to ViewHolder, setting OnClickListener for the star button
-        viewHolder.bindToPost(model, View.OnClickListener {
+        viewHolder.bindToPost(model) {
           // Need to write to both places the post is stored
           val globalPostRef = database.child("posts").child(postRef.key!!)
           val userPostRef = database.child("user-posts").child(model.uid!!).child(postRef.key!!)
@@ -93,7 +93,7 @@ abstract class PostListFragment : Fragment() {
           // Run two transactions
           onStarClicked(globalPostRef)
           onStarClicked(userPostRef)
-        })
+        }
       }
     }
     recycler.adapter = adapter

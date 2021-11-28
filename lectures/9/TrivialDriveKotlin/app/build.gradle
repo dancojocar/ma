@@ -20,11 +20,11 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     defaultConfig {
-        applicationId APP_ID
+        applicationId "ro.ubbcluj.cs.ds"
         minSdkVersion 26
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 5
         versionName "0.05"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
