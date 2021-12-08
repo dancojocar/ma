@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.recyclerview.R.string
+import com.example.android.recyclerview.databinding.ActivityMainBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 
@@ -34,18 +35,21 @@ import java.util.*
  * - Clicking the fab button adds a new word to the list.
  */
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
   private var mRecyclerView: RecyclerView? = null
   private var mAdapter: WordListAdapter? = null
   private val mWordList = LinkedList<String>()
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
     // Put initial data into the word list.
     for (i in 0..19) { // Original code: mWordList.addLast("Word " + i)
       mWordList.addLast(String.format(resources.getString(string.word), i))
     }
     // Create recycler view.
-    mRecyclerView = findViewById<View>(R.id.recyclerview) as RecyclerView
+    mRecyclerView = binding.recyclerview
     // Create an adapter and supply the data to be displayed.
     mAdapter = WordListAdapter(this, mWordList)
     // Connect the adapter with the recycler view.
@@ -53,13 +57,13 @@ class MainActivity : AppCompatActivity() {
     // Give the recycler view a default layout manager.
     mRecyclerView!!.layoutManager = LinearLayoutManager(this)
     // Add a floating action click handler for adding new entries.
-    val fab = findViewById<View>(R.id.fab) as FloatingActionButton
-    fab.setOnClickListener {
+    binding.fab.setOnClickListener {
       val wordListSize = mWordList.size
       // Add a new word to the wordList.
       // Original code: mWordList.addLast("+ Word " + wordListSize)
-      mWordList.addLast("+ " +
-          resources.getString(string.word, wordListSize))
+      mWordList.addLast(
+        "+ " + resources.getString(string.word, wordListSize)
+      )
       // Notify the adapter, that the data has changed.
       mRecyclerView!!.adapter!!.notifyItemInserted(wordListSize)
       // Scroll to the bottom.

@@ -26,6 +26,7 @@ limitations under the License.
     an accuracy approximately equivalent to a city block.
     -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -36,7 +37,8 @@ limitations under the License.
             android:value="@integer/google_play_services_version" />
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+          android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

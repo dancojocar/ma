@@ -22,7 +22,15 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.example.android.memoryoverload.databinding.ActivityMainBinding
 import java.util.*
+import com.google.android.flexbox.FlexDirection
+
+import android.R
+import com.google.android.flexbox.FlexWrap
+
+import com.google.android.flexbox.FlexboxLayout
+
 
 /**
  * Demo app to fill up available memory.
@@ -31,36 +39,32 @@ import java.util.*
  * Used for demonstrating Android Profiler tools.
  */
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
-    val toolbar = findViewById<Toolbar>(R.id.toolbar)
-    setSupportActionBar(toolbar)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    setSupportActionBar(binding.toolbar)
   }
 
   /**
    * Adds a new row of text views when the floating action button is pressed.
    */
   fun addRowOfTextViews(view: View?) {
-    val root = findViewById<LinearLayout>(R.id.rootLinearLayout)
-    val linearLayout = LinearLayout(this)
-    linearLayout.orientation = LinearLayout.HORIZONTAL
-    val linearLayoutParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT)
-    linearLayout.layoutParams = linearLayoutParams
-    val textViewParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT)
-    val textViews = arrayOfNulls<TextView>(NO_OF_TEXTVIEWS_ADDED)
+    val root = binding.contentMain.rootLinearLayout
+    val flexboxLayout = FlexboxLayout(view?.context)
+    flexboxLayout.flexDirection = FlexDirection.ROW
+    flexboxLayout.flexWrap = FlexWrap.WRAP
+    val textViews = mutableListOf<TextView>()
     for (i in 0 until NO_OF_TEXTVIEWS_ADDED) {
-      textViews[i] = TextView(this)
-      textViews[i]!!.layoutParams = textViewParams
-      textViews[i]!!.text = i.toString()
-      textViews[i]!!.setBackgroundColor(randomColor)
-      linearLayout.addView(textViews[i])
+      val tv = TextView(this)
+      textViews.add(tv)
+      tv.text = i.toString()
+      tv.setBackgroundColor(randomColor)
+      flexboxLayout.addView(tv)
     }
-    root.addView(linearLayout)
+    root.addView(flexboxLayout)
   }
 
   /**

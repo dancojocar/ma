@@ -37,9 +37,11 @@ class NewAppWidget : AppWidgetProvider() {
    * @param appWidgetManager The app widget manager.
    * @param appWidgetId      The current app widget id.
    */
-  private fun updateAppWidget(context: Context,
-                              appWidgetManager: AppWidgetManager,
-                              appWidgetId: Int, appWidgetIds: IntArray) { // Get the count from prefs.
+  private fun updateAppWidget(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int, appWidgetIds: IntArray
+  ) { // Get the count from prefs.
     val prefs = context.getSharedPreferences(SHARED_PREF_FILE, 0)
     var count = prefs.getInt(COUNT_KEY, 0)
     count++
@@ -48,12 +50,17 @@ class NewAppWidget : AppWidgetProvider() {
     val dateString = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())
 
     // Construct the RemoteViews object.
-    val views = RemoteViews(context.packageName,
-        R.layout.new_app_widget)
+    val views = RemoteViews(
+      context.packageName,
+      R.layout.new_app_widget
+    )
     views.setTextViewText(R.id.appwidget_id, appWidgetId.toString())
-    views.setTextViewText(R.id.appwidget_update,
-        context.resources.getString(
-            R.string.date_count_format, count, dateString))
+    views.setTextViewText(
+      R.id.appwidget_update,
+      context.resources.getString(
+        R.string.date_count_format, count, dateString
+      )
+    )
 
     // Save count back to prefs.
     val prefEditor = prefs.edit()
@@ -73,8 +80,10 @@ class NewAppWidget : AppWidgetProvider() {
     // Wrap it all in a pending intent to send a broadcast.
     // Use the app widget ID as the request code (second argument) so that
     // each intent is unique.
-    val pendingUpdate = PendingIntent.getBroadcast(context,
-        appWidgetId, intentUpdate, PendingIntent.FLAG_UPDATE_CURRENT)
+    val pendingUpdate = PendingIntent.getBroadcast(
+      context,
+      appWidgetId, intentUpdate, PendingIntent.FLAG_UPDATE_CURRENT
+    )
 
     // Assign the pending intent to the button onClick handler
     views.setOnClickPendingIntent(R.id.button_update, pendingUpdate)
@@ -90,8 +99,10 @@ class NewAppWidget : AppWidgetProvider() {
    * @param appWidgetManager The app widget manager.
    * @param appWidgetIds     An array of the app widget IDs.
    */
-  override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager,
-                        appWidgetIds: IntArray) {
+  override fun onUpdate(
+    context: Context, appWidgetManager: AppWidgetManager,
+    appWidgetIds: IntArray
+  ) {
     // There may be multiple widgets active, so update all of them.
     for (appWidgetId in appWidgetIds) {
       updateAppWidget(context, appWidgetManager, appWidgetId, appWidgetIds)

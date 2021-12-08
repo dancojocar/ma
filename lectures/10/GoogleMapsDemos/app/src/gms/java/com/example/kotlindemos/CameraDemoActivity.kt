@@ -103,7 +103,7 @@ class CameraDemoActivity :
     }
     // [END_EXCLUDE]
 
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
         // return early if the map was not initialised properly
         map = googleMap ?: return
 
