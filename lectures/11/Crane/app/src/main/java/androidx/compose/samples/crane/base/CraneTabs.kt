@@ -20,11 +20,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.ExperimentalLayout
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Tab
@@ -36,8 +35,9 @@ import androidx.compose.samples.crane.home.CraneScreen
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.AmbientConfiguration
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.os.ConfigurationCompat
 
@@ -51,17 +51,26 @@ fun CraneTabBar(
         // Separate Row as the children shouldn't have the padding
         Row(Modifier.padding(top = 8.dp)) {
             Image(
-                modifier = Modifier.padding(top = 8.dp).clickable(onClick = onMenuClicked),
-                imageVector = vectorResource(id = R.drawable.ic_menu)
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .clickable(onClick = onMenuClicked),
+                painter = painterResource(id = R.drawable.ic_menu),
+                contentDescription = stringResource(id = R.string.cd_menu)
             )
-            Spacer(Modifier.preferredWidth(8.dp))
-            Image(imageVector = vectorResource(id = R.drawable.ic_crane_logo))
+            Spacer(Modifier.width(8.dp))
+            Image(
+                painter = painterResource(id = R.drawable.ic_crane_logo),
+                contentDescription = null
+            )
         }
-        children(Modifier.weight(1f).align(Alignment.CenterVertically))
+        children(
+            Modifier
+                .weight(1f)
+                .align(Alignment.CenterVertically)
+        )
     }
 }
 
-@OptIn(ExperimentalLayout::class)
 @Composable
 fun CraneTabs(
     modifier: Modifier = Modifier,
@@ -82,7 +91,8 @@ fun CraneTabs(
             var textModifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
             if (selected) {
                 textModifier =
-                    Modifier.border(BorderStroke(2.dp, Color.White), RoundedCornerShape(16.dp))
+                    Modifier
+                        .border(BorderStroke(2.dp, Color.White), RoundedCornerShape(16.dp))
                         .then(textModifier)
             }
 
@@ -92,8 +102,8 @@ fun CraneTabs(
             ) {
                 Text(
                     modifier = textModifier,
-                    text = title.toUpperCase(
-                        ConfigurationCompat.getLocales(AmbientConfiguration.current)[0]
+                    text = title.uppercase(
+                        ConfigurationCompat.getLocales(LocalConfiguration.current)[0]
                     )
                 )
             }

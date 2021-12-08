@@ -30,11 +30,11 @@ if (rootProject.file("local.properties").exists()) {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     defaultConfig {
         applicationId "androidx.compose.samples.crane"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 1
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
@@ -91,7 +91,6 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerVersion Libs.Kotlin.version
         kotlinCompilerExtensionVersion Libs.AndroidX.Compose.version
     }
 
@@ -108,7 +107,16 @@ dependencies {
     implementation Libs.Kotlin.Coroutines.android
     implementation Libs.GoogleMaps.maps
     implementation Libs.GoogleMaps.mapsKtx
+    constraints {
+        // Volley is a transitive dependency of maps
+        implementation(Libs.Volley.volley) {
+            because("Only volley 1.2.0 or newer are available on maven.google.com")
+        }
+    }
 
+    implementation Libs.Accompanist.insets
+    implementation Libs.AndroidX.Activity.activityCompose
+    implementation Libs.AndroidX.appcompat
     implementation Libs.AndroidX.Compose.runtime
     implementation Libs.AndroidX.Compose.runtimeLivedata
     implementation Libs.AndroidX.Compose.foundation
@@ -116,17 +124,18 @@ dependencies {
     implementation Libs.AndroidX.Compose.layout
     implementation Libs.AndroidX.Compose.animation
     implementation Libs.AndroidX.Compose.tooling
-    implementation Libs.Accompanist.coil
+    implementation Libs.AndroidX.Lifecycle.viewModelCompose
 
     implementation Libs.AndroidX.Lifecycle.viewModelKtx
     implementation Libs.Hilt.android
-    implementation Libs.Hilt.AndroidX.viewModel
-    compileOnly Libs.AssistedInjection.dagger
     kapt Libs.Hilt.compiler
-    kapt Libs.Hilt.AndroidX.compiler
-    kapt Libs.AssistedInjection.processor
+
+    implementation Libs.Coil.coilCompose
+
+    debugImplementation Libs.AndroidX.Compose.uiTestManifest
 
     androidTestImplementation Libs.JUnit.junit
+    androidTestImplementation Libs.AndroidX.Test.core
     androidTestImplementation Libs.AndroidX.Test.runner
     androidTestImplementation Libs.AndroidX.Test.espressoCore
     androidTestImplementation Libs.AndroidX.Test.rules
@@ -134,9 +143,6 @@ dependencies {
     androidTestImplementation Libs.Kotlin.Coroutines.test
     androidTestImplementation Libs.AndroidX.Compose.uiTest
     androidTestImplementation Libs.Hilt.android
-    androidTestImplementation Libs.Hilt.AndroidX.viewModel
     androidTestImplementation Libs.Hilt.testing
     kaptAndroidTest Libs.Hilt.compiler
-    kaptAndroidTest Libs.Hilt.AndroidX.compiler
-    kaptAndroidTest Libs.AssistedInjection.processor
 }

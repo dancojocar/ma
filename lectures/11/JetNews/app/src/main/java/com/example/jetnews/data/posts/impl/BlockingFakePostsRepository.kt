@@ -16,11 +16,10 @@
 
 package com.example.jetnews.data.posts.impl
 
-import android.content.Context
-import androidx.compose.ui.graphics.imageFromResource
 import com.example.jetnews.data.Result
 import com.example.jetnews.data.posts.PostsRepository
 import com.example.jetnews.model.Post
+import com.example.jetnews.model.PostsFeed
 import com.example.jetnews.utils.addOrRemove
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,23 +32,14 @@ import kotlinx.coroutines.withContext
  * posts with resources synchronously.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class BlockingFakePostsRepository(private val context: Context) : PostsRepository {
-
-    private val postsWithResources: List<Post> by lazy {
-        posts.map {
-            it.copy(
-                image = imageFromResource(context.resources, it.imageId),
-                imageThumb = imageFromResource(context.resources, it.imageThumbId)
-            )
-        }
-    }
+class BlockingFakePostsRepository : PostsRepository {
 
     // for now, keep the favorites in memory
     private val favorites = MutableStateFlow<Set<String>>(setOf())
 
-    override suspend fun getPost(postId: String): Result<Post> {
+    override suspend fun getPost(postId: String?): Result<Post> {
         return withContext(Dispatchers.IO) {
-            val post = postsWithResources.find { it.id == postId }
+            val post = posts.allPosts.find { it.id == postId }
             if (post == null) {
                 Result.Error(IllegalArgumentException("Unable to find post"))
             } else {
@@ -58,8 +48,8 @@ class BlockingFakePostsRepository(private val context: Context) : PostsRepositor
         }
     }
 
-    override suspend fun getPosts(): Result<List<Post>> {
-        return Result.Success(postsWithResources)
+    override suspend fun getPostsFeed(): Result<PostsFeed> {
+        return Result.Success(posts)
     }
 
     override fun observeFavorites(): Flow<Set<String>> = favorites

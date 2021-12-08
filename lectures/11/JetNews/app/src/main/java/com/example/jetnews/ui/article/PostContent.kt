@@ -16,24 +16,29 @@
 
 package com.example.jetnews.ui.article
 
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollableColumn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
-import androidx.compose.foundation.layout.preferredSize
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.AmbientContentAlpha
-import androidx.compose.material.AmbientContentColor
 import androidx.compose.material.Colors
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -41,14 +46,17 @@ import androidx.compose.material.Typography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Providers
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.FirstBaseline
-import androidx.compose.ui.platform.AmbientDensity
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
@@ -62,6 +70,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.jetnews.R
 import com.example.jetnews.data.posts.impl.post3
 import com.example.jetnews.model.Markup
 import com.example.jetnews.model.MarkupType
@@ -69,59 +78,87 @@ import com.example.jetnews.model.Metadata
 import com.example.jetnews.model.Paragraph
 import com.example.jetnews.model.ParagraphType
 import com.example.jetnews.model.Post
-import com.example.jetnews.ui.ThemedPreview
+import com.example.jetnews.ui.theme.JetnewsTheme
 
 private val defaultSpacerSize = 16.dp
 
 @Composable
-fun PostContent(post: Post, modifier: Modifier = Modifier) {
-    ScrollableColumn(
-        modifier = modifier.padding(horizontal = defaultSpacerSize)
+fun PostContent(
+    post: Post,
+    modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState()
+) {
+    LazyColumn(
+        modifier = modifier.padding(horizontal = defaultSpacerSize),
+        state = state,
     ) {
-        Spacer(Modifier.preferredHeight(defaultSpacerSize))
+        postContentItems(post)
+    }
+}
+
+fun LazyListScope.postContentItems(post: Post) {
+    item {
+        Spacer(Modifier.height(defaultSpacerSize))
         PostHeaderImage(post)
+    }
+    item {
         Text(text = post.title, style = MaterialTheme.typography.h4)
-        Spacer(Modifier.preferredHeight(8.dp))
-        post.subtitle?.let { subtitle ->
-            Providers(AmbientContentAlpha provides ContentAlpha.medium) {
+        Spacer(Modifier.height(8.dp))
+    }
+    post.subtitle?.let { subtitle ->
+        item {
+            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.body2,
                     lineHeight = 20.sp
                 )
             }
-            Spacer(Modifier.preferredHeight(defaultSpacerSize))
+            Spacer(Modifier.height(defaultSpacerSize))
         }
+    }
+    item {
         PostMetadata(post.metadata)
-        Spacer(Modifier.preferredHeight(24.dp))
-        PostContents(post.paragraphs)
-        Spacer(Modifier.preferredHeight(48.dp))
+        Spacer(Modifier.height(24.dp))
+    }
+    items(post.paragraphs) {
+        Paragraph(paragraph = it)
+    }
+    item {
+        Spacer(Modifier.height(48.dp))
     }
 }
 
 @Composable
 private fun PostHeaderImage(post: Post) {
-    post.image?.let { image ->
-        val imageModifier = Modifier
-            .heightIn(min = 180.dp)
-            .fillMaxWidth()
-            .clip(shape = MaterialTheme.shapes.medium)
-        Image(image, imageModifier, contentScale = ContentScale.Crop)
-        Spacer(Modifier.preferredHeight(defaultSpacerSize))
-    }
+    val imageModifier = Modifier
+        .heightIn(min = 180.dp)
+        .fillMaxWidth()
+        .clip(shape = MaterialTheme.shapes.medium)
+    Image(
+        painter = painterResource(post.imageId),
+        contentDescription = null, // decorative
+        modifier = imageModifier,
+        contentScale = ContentScale.Crop
+    )
+    Spacer(Modifier.height(defaultSpacerSize))
 }
 
 @Composable
 private fun PostMetadata(metadata: Metadata) {
     val typography = MaterialTheme.typography
-    Row {
+    Row(
+        // Merge semantics so accessibility services consider this row a single element
+        modifier = Modifier.semantics(mergeDescendants = true) {}
+    ) {
         Image(
             imageVector = Icons.Filled.AccountCircle,
-            modifier = Modifier.preferredSize(40.dp),
-            colorFilter = ColorFilter.tint(AmbientContentColor.current),
+            contentDescription = null, // decorative
+            modifier = Modifier.size(40.dp),
+            colorFilter = ColorFilter.tint(LocalContentColor.current),
             contentScale = ContentScale.Fit
         )
-        Spacer(Modifier.preferredWidth(8.dp))
+        Spacer(Modifier.width(8.dp))
         Column {
             Text(
                 text = metadata.author.name,
@@ -129,20 +166,19 @@ private fun PostMetadata(metadata: Metadata) {
                 modifier = Modifier.padding(top = 4.dp)
             )
 
-            Providers(AmbientContentAlpha provides ContentAlpha.medium) {
+            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
                 Text(
-                    text = "${metadata.date} • ${metadata.readTimeMinutes} min read",
+                    text = stringResource(
+                        id = R.string.article_post_min_read,
+                        formatArgs = arrayOf(
+                            metadata.date,
+                            metadata.readTimeMinutes
+                        )
+                    ),
                     style = typography.caption
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun PostContents(paragraphs: List<Paragraph>) {
-    paragraphs.forEach {
-        Paragraph(paragraph = it)
     }
 }
 
@@ -209,16 +245,16 @@ private fun BulletParagraph(
     paragraphStyle: ParagraphStyle
 ) {
     Row {
-        with(AmbientDensity.current) {
+        with(LocalDensity.current) {
             // this box is acting as a character, so it's sized with font scaling (sp)
             Box(
                 modifier = Modifier
-                    .preferredSize(8.sp.toDp(), 8.sp.toDp())
+                    .size(8.sp.toDp(), 8.sp.toDp())
                     .alignBy {
                         // Add an alignment "baseline" 1sp below the bottom of the circle
-                        9.sp.toIntPx()
+                        9.sp.roundToPx()
                     }
-                    .background(AmbientContentColor.current, CircleShape),
+                    .background(LocalContentColor.current, CircleShape),
             ) { /* no content */ }
         }
         Text(
@@ -252,7 +288,7 @@ private fun ParagraphType.getTextAndParagraphStyle(): ParagraphStyling {
             trailingPadding = 16.dp
         }
         ParagraphType.Text -> {
-            textStyle = typography.body1
+            textStyle = typography.body1.copy(lineHeight = 28.sp)
             paragraphStyle = paragraphStyle.copy(lineHeight = 28.sp)
         }
         ParagraphType.Header -> {
@@ -328,17 +364,12 @@ private val Colors.codeBlockBackground: Color
     get() = onSurface.copy(alpha = .15f)
 
 @Preview("Post content")
+@Preview("Post content (dark)", uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewPost() {
-    ThemedPreview {
-        PostContent(post = post3)
-    }
-}
-
-@Preview("Post content dark theme")
-@Composable
-fun PreviewPostDark() {
-    ThemedPreview(darkTheme = true) {
-        PostContent(post = post3)
+    JetnewsTheme {
+        Surface {
+            PostContent(post = post3)
+        }
     }
 }

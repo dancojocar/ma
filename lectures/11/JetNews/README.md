@@ -3,7 +3,8 @@ Jetnews is a sample news reading app, built with
 [Jetpack Compose](https://developer.android.com/jetpack/compose). The goal of the sample is to
 showcase the current UI capabilities of Compose.
 
-To try out this sample app, you need to use the latest Canary version of Android Studio 4.2.
+To try out this sample app, you need to use 
+[Android Studio Arctic Fox](https://developer.android.com/studio).
 You can clone this repository or import the
 project from Android Studio following the steps
 [here](https://developer.android.com/jetpack/compose/setup#sample).
@@ -22,11 +23,13 @@ screen uses a navigation drawer.
 
 Package [`com.example.jetnews.ui`][1]
 
-[`JetnewsApp.kt`][2] arranges the different screens in the `NavDrawerLayout`. It also implements a simple
-navigation pattern.
+[`JetnewsApp.kt`][2] arranges the different screens in the `NavDrawerLayout`. 
+
+[`JetnewsNavGraph.kt`][3] configures the navigation routes and actions in the app. 
 
 [1]: app/src/main/java/com/example/jetnews/ui
 [2]: app/src/main/java/com/example/jetnews/ui/JetnewsApp.kt
+[3]: app/src/main/java/com/example/jetnews/ui/JetnewsNavGraph.kt
 
 ### Main article list
 
@@ -73,14 +76,17 @@ on and off, light and dark version in the Android Studio Preview.
 
 The data in the sample is static, held in the `com.example.jetnews.data` package.
 
-### UI testing
+### Instrumented and Robolectric tests
 
-Run UI tests from Android Studio or with the `./gradlew connectedCheck` command.
+UI tests can be run on device/emulators or on JVM with Robolectric.
+
+* To run Instrumented tests use the "Instrumented tests" run configuration or run the `./gradlew connectedCheck` command.
+* To run tests with Robolectric use the "Robolectric tests" run configuration or run the `./gradlew testDebug` command.
 
 ## License
 
 ```
-Copyright 2020 The Android Open Source Project
+Copyright 2021 The Android Open Source Project
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

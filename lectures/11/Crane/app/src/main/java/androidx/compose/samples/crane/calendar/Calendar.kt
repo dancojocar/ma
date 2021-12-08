@@ -16,26 +16,27 @@
 
 package androidx.compose.samples.crane.calendar
 
-import androidx.compose.foundation.ScrollableColumn
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
-import androidx.compose.foundation.layout.preferredHeightIn
-import androidx.compose.foundation.layout.preferredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.Colors
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.samples.crane.R
 import androidx.compose.samples.crane.calendar.model.CalendarDay
 import androidx.compose.samples.crane.calendar.model.CalendarMonth
 import androidx.compose.samples.crane.calendar.model.DayOfWeek
@@ -48,12 +49,17 @@ import androidx.compose.samples.crane.util.SemiRect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.SemanticsPropertyKey
 import androidx.compose.ui.semantics.SemanticsPropertyReceiver
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.accompanist.insets.navigationBarsHeight
 
 typealias CalendarWeek = List<CalendarDay>
 
@@ -63,48 +69,21 @@ fun Calendar(
     onDayClicked: (CalendarDay, CalendarMonth) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ScrollableColumn(modifier = modifier) {
-        Spacer(Modifier.preferredHeight(32.dp))
+    LazyColumn(modifier) {
+        item { Spacer(Modifier.height(32.dp)) }
         for (month in calendarYear) {
-            Month(month = month, onDayClicked = onDayClicked)
-            Spacer(Modifier.preferredHeight(32.dp))
+            itemsCalendarMonth(month = month, onDayClicked = onDayClicked)
+            item {
+                Spacer(Modifier.height(32.dp))
+            }
         }
-    }
-}
-
-@Composable
-private fun Month(
-    modifier: Modifier = Modifier,
-    month: CalendarMonth,
-    onDayClicked: (CalendarDay, CalendarMonth) -> Unit
-) {
-    Column(modifier = modifier) {
-        MonthHeader(
-            modifier = Modifier.padding(horizontal = 30.dp),
-            month = month.name,
-            year = month.year
-        )
-
-        // Expanding width and centering horizontally
-        val contentModifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.CenterHorizontally)
-        DaysOfWeek(modifier = contentModifier)
-        for (week in month.weeks.value) {
-            Week(
-                modifier = contentModifier,
-                week = week,
-                month = month,
-                onDayClicked = { day ->
-                    onDayClicked(day, month)
-                }
-            )
-            Spacer(Modifier.preferredHeight(8.dp))
-        }
+        item { Spacer(modifier = Modifier.navigationBarsHeight()) }
     }
 }
 
 @Composable
 private fun MonthHeader(modifier: Modifier = Modifier, month: String, year: String) {
-    Row(modifier = modifier) {
+    Row(modifier = modifier.clearAndSetSemantics { }) {
         Text(
             modifier = Modifier.weight(1f),
             text = month,
@@ -128,7 +107,9 @@ private fun Week(
     val (leftFillColor, rightFillColor) = getLeftRightWeekColors(week, month)
 
     Row(modifier = modifier) {
-        val spaceModifiers = Modifier.weight(1f).preferredHeightIn(max = CELL_SIZE)
+        val spaceModifiers = Modifier
+            .weight(1f)
+            .heightIn(max = CELL_SIZE)
         Surface(modifier = spaceModifiers, color = leftFillColor) {
             Spacer(Modifier.fillMaxHeight())
         }
@@ -136,10 +117,7 @@ private fun Week(
             Day(
                 day,
                 onDayClicked,
-                Modifier.semantics {
-                    contentDescription = "${month.name} ${day.value}"
-                    dayStatusProperty = day.status
-                }
+                month
             )
         }
         Surface(modifier = spaceModifiers, color = rightFillColor) {
@@ -150,7 +128,7 @@ private fun Week(
 
 @Composable
 private fun DaysOfWeek(modifier: Modifier = Modifier) {
-    Row(modifier = modifier) {
+    Row(modifier = modifier.clearAndSetSemantics { }) {
         for (day in DayOfWeek.values()) {
             Day(name = day.name.take(1))
         }
@@ -161,18 +139,28 @@ private fun DaysOfWeek(modifier: Modifier = Modifier) {
 private fun Day(
     day: CalendarDay,
     onDayClicked: (CalendarDay) -> Unit,
+    month: CalendarMonth,
     modifier: Modifier = Modifier
 ) {
     val enabled = day.status != DaySelectedStatus.NonClickable
     DayContainer(
-        modifier = modifier.clickable(enabled) {
-            if (day.status != DaySelectedStatus.NonClickable) onDayClicked(day)
+        modifier = modifier.semantics {
+            if (enabled) text = AnnotatedString("${month.name} ${day.value} ${month.year}")
+            dayStatusProperty = day.status
         },
-        backgroundColor = day.status.color(MaterialTheme.colors)
+        selected = day.status != DaySelectedStatus.NoSelected,
+        onClick = { onDayClicked(day) },
+        onClickEnabled = enabled,
+        backgroundColor = day.status.color(MaterialTheme.colors),
+        onClickLabel = stringResource(id = R.string.click_label_select)
     ) {
         DayStatusContainer(status = day.status) {
             Text(
-                modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize(Alignment.Center)
+                    // Parent will handle semantics
+                    .clearAndSetSemantics {},
                 text = day.value,
                 style = MaterialTheme.typography.body1.copy(color = Color.White)
             )
@@ -191,16 +179,37 @@ private fun Day(name: String) {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun DayContainer(
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    onClick: () -> Unit = { },
+    onClickEnabled: Boolean = true,
     backgroundColor: Color = Color.Transparent,
+    onClickLabel: String? = null,
     content: @Composable () -> Unit
 ) {
     // What if this doesn't fit the screen? - LayoutFlexible(1f) + LayoutAspectRatio(1f)
+    val stateDescriptionLabel = stringResource(
+        if (selected) R.string.state_descr_selected else R.string.state_descr_not_selected
+    )
     Surface(
-        modifier = modifier.preferredSize(width = CELL_SIZE, height = CELL_SIZE),
-        color = backgroundColor
+        modifier = modifier
+            .size(width = CELL_SIZE, height = CELL_SIZE)
+            .then(
+                if (onClickEnabled) {
+                    modifier.semantics {
+                        stateDescription = stateDescriptionLabel
+                    }
+                } else {
+                    modifier.clearAndSetSemantics { }
+                }
+            ),
+        onClick = onClick,
+        enabled = onClickEnabled,
+        color = backgroundColor,
+        onClickLabel = onClickLabel
     ) {
         content()
     }
@@ -224,6 +233,46 @@ private fun DayStatusContainer(
         }
     } else {
         content()
+    }
+}
+
+private fun LazyListScope.itemsCalendarMonth(
+    month: CalendarMonth,
+    onDayClicked: (CalendarDay, CalendarMonth) -> Unit
+) {
+    item {
+        MonthHeader(
+            modifier = Modifier.padding(horizontal = 32.dp),
+            month = month.name,
+            year = month.year
+        )
+    }
+
+    // Expanding width and centering horizontally
+    val contentModifier = Modifier
+        .fillMaxWidth()
+        .wrapContentWidth(Alignment.CenterHorizontally)
+    item {
+        DaysOfWeek(modifier = contentModifier)
+    }
+
+    month.weeks.value.forEachIndexed { index, week ->
+        // A custom key needs to be given to these items so that they can be found in tests that
+        // need scrolling. The format of the key is ${year/month/weekNumber}. Thus,
+        // the key for the fourth week of December 2020 is "2020/12/4"
+        item(key = "${month.year}/${month.monthNumber}/${index + 1}") {
+            Week(
+                modifier = contentModifier,
+                week = week,
+                month = month,
+                onDayClicked = { day ->
+                    onDayClicked(day, month)
+                }
+            )
+        }
+        item {
+            Spacer(Modifier.height(8.dp))
+        }
     }
 }
 

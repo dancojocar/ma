@@ -18,16 +18,16 @@ package androidx.compose.samples.crane.home
 
 import androidx.compose.material.BackdropScaffold
 import androidx.compose.material.BackdropValue
-import androidx.compose.material.DrawerValue
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ModalDrawerLayout
+import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberBackdropScaffoldState
-import androidx.compose.material.rememberDrawerState
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.samples.crane.base.CraneDrawer
 import androidx.compose.samples.crane.base.CraneTabBar
@@ -36,7 +36,9 @@ import androidx.compose.samples.crane.base.ExploreSection
 import androidx.compose.samples.crane.data.ExploreModel
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.viewinterop.viewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.insets.statusBarsPadding
+import kotlinx.coroutines.launch
 
 typealias OnExploreItemClicked = (ExploreModel) -> Unit
 
@@ -50,20 +52,26 @@ fun CraneHome(
     onDateSelectionClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    ModalDrawerLayout(
-        drawerState = drawerState,
-        gesturesEnabled = drawerState.isOpen,
-        drawerContent = { CraneDrawer() },
-        bodyContent = {
-            CraneHomeContent(
-                modifier = modifier,
-                onExploreItemClicked = onExploreItemClicked,
-                onDateSelectionClicked = onDateSelectionClicked,
-                openDrawer = { drawerState.open() }
-            )
+    val scaffoldState = rememberScaffoldState()
+    Scaffold(
+        scaffoldState = scaffoldState,
+        modifier = Modifier.statusBarsPadding(),
+        drawerContent = {
+            CraneDrawer()
         }
-    )
+    ) {
+        val scope = rememberCoroutineScope()
+        CraneHomeContent(
+            modifier = modifier,
+            onExploreItemClicked = onExploreItemClicked,
+            onDateSelectionClicked = onDateSelectionClicked,
+            openDrawer = {
+                scope.launch {
+                    scaffoldState.drawerState.open()
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -73,8 +81,8 @@ fun CraneHomeContent(
     onDateSelectionClicked: () -> Unit,
     openDrawer: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: MainViewModel = viewModel(),
 ) {
-    val viewModel: MainViewModel = viewModel()
     val suggestedDestinations by viewModel.suggestedDestinations.observeAsState()
 
     val onPeopleChanged: (Int) -> Unit = { viewModel.updatePeople(it) }
@@ -83,7 +91,7 @@ fun CraneHomeContent(
     BackdropScaffold(
         modifier = modifier,
         scaffoldState = rememberBackdropScaffoldState(BackdropValue.Revealed),
-        frontLayerScrimColor = Color.Transparent,
+        frontLayerScrimColor = Color.Unspecified,
         appBar = {
             HomeTabBar(openDrawer, tabSelected, onTabSelected = { tabSelected = it })
         },

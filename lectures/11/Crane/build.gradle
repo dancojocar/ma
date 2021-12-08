@@ -21,7 +21,6 @@ import com.example.crane.buildsrc.Versions
 buildscript {
     repositories {
         google()
-        jcenter()
     }
     dependencies {
         classpath Libs.androidGradlePlugin
@@ -31,17 +30,19 @@ buildscript {
 }
 
 plugins {
-    id 'com.diffplug.spotless' version '5.8.2'
+    id 'com.diffplug.spotless' version '6.0.0'
 }
 
 subprojects {
     repositories {
         google()
-        jcenter()
         mavenCentral()
 
         if (!Libs.AndroidX.Compose.snapshot.isEmpty()) {
             maven { url Urls.composeSnapshotRepo }
+        }
+
+        if (Libs.Accompanist.version.endsWith('SNAPSHOT')) {
             maven { url Urls.mavenCentralSnapshotRepo }
         }
     }
@@ -59,18 +60,19 @@ subprojects {
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         kotlinOptions {
-            // Treat all Kotlin warnings as errors
-            allWarningsAsErrors = true
+            // Treat all Kotlin warnings as errors (disabled by default)
+            allWarningsAsErrors = project.hasProperty("warningsAsErrors") ? project.warningsAsErrors : false
 
             jvmTarget = "1.8"
 
             // Use experimental APIs
             freeCompilerArgs += '-Xopt-in=kotlin.RequiresOptIn'
-            freeCompilerArgs += '-Xallow-jvm-ir-dependencies'
-            freeCompilerArgs += [
-                    '-P',
-                    'plugin:androidx.compose.compiler.plugins.kotlin:intrinsicRemember=true'
-            ]
+        }
+    }
+    // androidx.test and hilt are forcing JUnit, 4.12. This forces them to use 4.13
+    configurations.configureEach {
+        resolutionStrategy {
+            force Libs.JUnit.junit
         }
     }
 }

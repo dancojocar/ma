@@ -21,11 +21,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredSize
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.AmbientContentColor
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -35,11 +36,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.samples.crane.R
+import androidx.compose.samples.crane.ui.CraneTheme
 import androidx.compose.samples.crane.ui.captionTextStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,12 +64,14 @@ fun SimpleUserInput(
 fun CraneUserInput(
     text: String,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = { },
     caption: String? = null,
     @DrawableRes vectorImageId: Int? = null,
-    tint: Color = AmbientContentColor.current
+    tint: Color = LocalContentColor.current
 ) {
     CraneBaseUserInput(
         modifier = modifier,
+        onClick = onClick,
         caption = caption,
         vectorImageId = vectorImageId,
         tintIcon = { text.isNotEmpty() },
@@ -100,34 +105,41 @@ fun CraneEditableUserInput(
                 if (!isHint()) onInputChanged(textFieldState.text)
             },
             textStyle = if (isHint()) {
-                captionTextStyle.copy(color = AmbientContentColor.current)
+                captionTextStyle.copy(color = LocalContentColor.current)
             } else {
-                MaterialTheme.typography.body1
+                MaterialTheme.typography.body1.copy(color = LocalContentColor.current)
             },
-            cursorColor = AmbientContentColor.current
+            cursorBrush = SolidColor(LocalContentColor.current)
         )
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun CraneBaseUserInput(
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = { },
     caption: String? = null,
     @DrawableRes vectorImageId: Int? = null,
     showCaption: () -> Boolean = { true },
     tintIcon: () -> Boolean,
-    tint: Color = AmbientContentColor.current,
+    tint: Color = LocalContentColor.current,
     content: @Composable () -> Unit
 ) {
-    Surface(modifier = modifier, color = MaterialTheme.colors.primaryVariant) {
+    Surface(
+        modifier = modifier,
+        onClick = onClick,
+        color = MaterialTheme.colors.primaryVariant
+    ) {
         Row(Modifier.padding(all = 12.dp)) {
             if (vectorImageId != null) {
                 Icon(
-                    modifier = Modifier.preferredSize(24.dp, 24.dp),
-                    imageVector = vectorResource(id = vectorImageId),
-                    tint = if (tintIcon()) tint else Color(0x80FFFFFF)
+                    modifier = Modifier.size(24.dp, 24.dp),
+                    painter = painterResource(id = vectorImageId),
+                    tint = if (tintIcon()) tint else Color(0x80FFFFFF),
+                    contentDescription = null
                 )
-                Spacer(Modifier.preferredWidth(8.dp))
+                Spacer(Modifier.width(8.dp))
             }
             if (caption != null && showCaption()) {
                 Text(
@@ -135,9 +147,13 @@ private fun CraneBaseUserInput(
                     text = caption,
                     style = (captionTextStyle).copy(color = tint)
                 )
-                Spacer(Modifier.preferredWidth(8.dp))
+                Spacer(Modifier.width(8.dp))
             }
-            Row(Modifier.weight(1f).align(Alignment.CenterVertically)) {
+            Row(
+                Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically)
+            ) {
                 content()
             }
         }
@@ -147,14 +163,16 @@ private fun CraneBaseUserInput(
 @Preview
 @Composable
 fun PreviewInput() {
-    CraneScaffold {
-        CraneBaseUserInput(
-            tintIcon = { true },
-            vectorImageId = R.drawable.ic_plane,
-            caption = "Caption",
-            showCaption = { true }
-        ) {
-            Text(text = "text", style = MaterialTheme.typography.body1)
+    CraneTheme {
+        Surface {
+            CraneBaseUserInput(
+                tintIcon = { true },
+                vectorImageId = R.drawable.ic_plane,
+                caption = "Caption",
+                showCaption = { true }
+            ) {
+                Text(text = "text", style = MaterialTheme.typography.body1)
+            }
         }
     }
 }

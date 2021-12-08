@@ -17,27 +17,22 @@
 package com.example.jetnews.ui
 
 import android.os.Bundle
-import androidx.activity.viewModels
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.platform.setContent
+import androidx.core.view.WindowCompat
 import com.example.jetnews.JetnewsApplication
+import com.example.jetnews.utils.rememberWindowSizeClass
 
 class MainActivity : AppCompatActivity() {
 
-    private val navigationViewModel by viewModels<NavigationViewModel>()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val appContainer = (application as JetnewsApplication).container
         setContent {
-            JetnewsApp(appContainer, navigationViewModel)
-        }
-    }
-
-    override fun onBackPressed() {
-        if (!navigationViewModel.onBack()) {
-            super.onBackPressed()
+            val windowSizeClass = rememberWindowSizeClass()
+            JetnewsApp(appContainer, windowSizeClass)
         }
     }
 }
