@@ -23,11 +23,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.preferredHeight
-import androidx.compose.foundation.layout.preferredSize
-import androidx.compose.foundation.layout.preferredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
@@ -44,9 +45,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.accompanist.coil.CoilImage
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.ImagePainter.State.Loading
+import coil.compose.rememberImagePainter
+import com.google.accompanist.insets.navigationBarsHeight
 
 @Composable
 fun ExploreSection(
@@ -61,7 +65,7 @@ fun ExploreSection(
                 text = title,
                 style = MaterialTheme.typography.caption.copy(color = crane_caption)
             )
-            Spacer(Modifier.preferredHeight(8.dp))
+            Spacer(Modifier.height(8.dp))
             LazyColumn(
                 modifier = Modifier.weight(1f),
             ) {
@@ -75,11 +79,15 @@ fun ExploreSection(
                         Divider(color = crane_divider_color)
                     }
                 }
+                item {
+                    Spacer(modifier = Modifier.navigationBarsHeight())
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 private fun ExploreItem(
     modifier: Modifier = Modifier,
@@ -92,27 +100,38 @@ private fun ExploreItem(
             .padding(top = 12.dp, bottom = 12.dp)
     ) {
         ExploreImageContainer {
-            CoilImage(
-                data = item.imageUrl,
-                fadeIn = true,
-                contentScale = ContentScale.Crop,
-                loading = {
-                    Box(Modifier.fillMaxSize()) {
-                        Image(
-                            modifier = Modifier.preferredSize(36.dp).align(Alignment.Center),
-                            imageVector = vectorResource(id = R.drawable.ic_crane_logo)
-                        )
+            Box {
+                val painter = rememberImagePainter(
+                    data = item.imageUrl,
+                    builder = {
+                        crossfade(true)
                     }
+                )
+                Image(
+                    painter = painter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+
+                if (painter.state is Loading) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_crane_logo),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .align(Alignment.Center),
+                    )
                 }
-            )
+            }
         }
-        Spacer(Modifier.preferredWidth(24.dp))
+        Spacer(Modifier.width(24.dp))
         Column {
             Text(
                 text = item.city.nameToDisplay,
                 style = MaterialTheme.typography.h6
             )
-            Spacer(Modifier.preferredHeight(8.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = item.description,
                 style = MaterialTheme.typography.caption.copy(color = crane_caption)
@@ -123,7 +142,7 @@ private fun ExploreItem(
 
 @Composable
 private fun ExploreImageContainer(content: @Composable () -> Unit) {
-    Surface(Modifier.preferredSize(width = 60.dp, height = 60.dp), RoundedCornerShape(4.dp)) {
+    Surface(Modifier.size(width = 60.dp, height = 60.dp), RoundedCornerShape(4.dp)) {
         content()
     }
 }

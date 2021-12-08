@@ -20,23 +20,32 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
+import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.samples.crane.R
-import androidx.compose.samples.crane.base.CraneScaffold
 import androidx.compose.samples.crane.calendar.model.CalendarDay
 import androidx.compose.samples.crane.calendar.model.CalendarMonth
 import androidx.compose.samples.crane.calendar.model.DaySelected
 import androidx.compose.samples.crane.data.CalendarYear
-import androidx.compose.ui.platform.setContent
-import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.viewinterop.viewModel
+import androidx.compose.samples.crane.ui.CraneTheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.accompanist.insets.ProvideWindowInsets
+import com.google.accompanist.insets.statusBarsHeight
 import dagger.hilt.android.AndroidEntryPoint
 
 fun launchCalendarActivity(context: Context) {
@@ -50,9 +59,11 @@ class CalendarActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
-            CraneScaffold {
-                Surface {
+            ProvideWindowInsets {
+                CraneTheme {
                     CalendarScreen(onBackPressed = { finish() })
                 }
             }
@@ -61,8 +72,10 @@ class CalendarActivity : ComponentActivity() {
 }
 
 @Composable
-fun CalendarScreen(onBackPressed: () -> Unit) {
-    val calendarViewModel: CalendarViewModel = viewModel()
+fun CalendarScreen(
+    onBackPressed: () -> Unit,
+    calendarViewModel: CalendarViewModel = viewModel()
+) {
     val calendarYear = calendarViewModel.calendarYear
 
     CalendarContent(
@@ -84,25 +97,42 @@ private fun CalendarContent(
     onDayClicked: (CalendarDay, CalendarMonth) -> Unit,
     onBackPressed: () -> Unit
 ) {
-    CraneScaffold {
-        Column {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (selectedDates.isEmpty()) "Select Dates"
-                        else selectedDates
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { onBackPressed() }) {
-                        Image(imageVector = vectorResource(id = R.drawable.ic_back))
-                    }
-                },
-                backgroundColor = MaterialTheme.colors.primaryVariant
-            )
-            Surface {
-                Calendar(calendarYear, onDayClicked)
-            }
+    Scaffold(
+        backgroundColor = MaterialTheme.colors.primary,
+        topBar = {
+            CalendarTopAppBar(selectedDates, onBackPressed)
         }
+    ) {
+        Calendar(calendarYear, onDayClicked)
+    }
+}
+
+@Composable
+private fun CalendarTopAppBar(selectedDates: String, onBackPressed: () -> Unit) {
+    Column {
+        Spacer(
+            modifier = Modifier
+                .statusBarsHeight()
+                .fillMaxWidth()
+                .background(MaterialTheme.colors.primaryVariant)
+        )
+        TopAppBar(
+            title = {
+                Text(
+                    text = if (selectedDates.isEmpty()) "Select Dates"
+                    else selectedDates
+                )
+            },
+            navigationIcon = {
+                IconButton(onClick = { onBackPressed() }) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_back),
+                        contentDescription = stringResource(R.string.cd_back)
+                    )
+                }
+            },
+            backgroundColor = MaterialTheme.colors.primaryVariant,
+            elevation = 0.dp
+        )
     }
 }

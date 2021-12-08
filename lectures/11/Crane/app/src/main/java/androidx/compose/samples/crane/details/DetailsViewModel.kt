@@ -19,20 +19,18 @@ package androidx.compose.samples.crane.details
 import androidx.compose.samples.crane.base.Result
 import androidx.compose.samples.crane.data.DestinationsRepository
 import androidx.compose.samples.crane.data.ExploreModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import com.squareup.inject.assisted.Assisted
-import com.squareup.inject.assisted.AssistedInject
-import com.squareup.inject.assisted.dagger2.AssistedModule
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityRetainedComponent
-import java.lang.IllegalArgumentException
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class DetailsViewModel @AssistedInject constructor(
+@HiltViewModel
+class DetailsViewModel @Inject constructor(
     private val destinationsRepository: DestinationsRepository,
-    @Assisted private val cityName: String
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val cityName = savedStateHandle.get<String>(KEY_ARG_DETAILS_CITY_NAME)!!
 
     val cityDetails: Result<ExploreModel>
         get() {
@@ -43,26 +41,4 @@ class DetailsViewModel @AssistedInject constructor(
                 Result.Error(IllegalArgumentException("City doesn't exist"))
             }
         }
-
-    @AssistedInject.Factory
-    interface AssistedFactory {
-        fun create(cityName: String): DetailsViewModel
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    companion object {
-        fun provideFactory(
-            assistedFactory: AssistedFactory,
-            cityName: String
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                return assistedFactory.create(cityName) as T
-            }
-        }
-    }
 }
-
-@InstallIn(ActivityRetainedComponent::class)
-@AssistedModule
-@Module(includes = [AssistedInject_AssistedInjectModule::class])
-interface AssistedInjectModule

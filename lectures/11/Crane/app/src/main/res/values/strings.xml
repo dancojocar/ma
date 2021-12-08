@@ -1,5 +1,5 @@
 <!--
-  ~   Copyright 2019 Google LLC
+  ~   Copyright 2019 The Android Open Source Project
   ~
   ~   Licensed under the Apache License, Version 2.0 (the "License");
   ~   you may not use this file except in compliance with the License.
@@ -16,4 +16,12 @@
   -->
 <resources>
     <string name="app_name">Crane</string>
+
+    <string name="cd_menu">Menu</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_loading">Loading</string>
+    <string name="cd_drawer">Open drawer</string>
+    <string name="click_label_select">select</string>
+    <string name="state_descr_selected">Selected</string>
+    <string name="state_descr_not_selected">Not selected</string>
 </resources>

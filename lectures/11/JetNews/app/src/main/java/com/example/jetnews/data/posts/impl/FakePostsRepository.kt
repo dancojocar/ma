@@ -16,11 +16,10 @@
 
 package com.example.jetnews.data.posts.impl
 
-import android.content.res.Resources
-import androidx.compose.ui.graphics.imageFromResource
 import com.example.jetnews.data.Result
 import com.example.jetnews.data.posts.PostsRepository
 import com.example.jetnews.model.Post
+import com.example.jetnews.model.PostsFeed
 import com.example.jetnews.utils.addOrRemove
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,24 +35,7 @@ import kotlinx.coroutines.withContext
  * posts with resources after some delay in a background thread.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class FakePostsRepository(
-    private val resources: Resources
-) : PostsRepository {
-
-    /**
-     * Simulates preparing the data for each post.
-     *
-     * DISCLAIMER: Loading resources with the ApplicationContext isn't ideal as it isn't themed.
-     * This should be done from the UI layer.
-     */
-    private val postsWithResources: List<Post> by lazy {
-        posts.map {
-            it.copy(
-                image = imageFromResource(resources, it.imageId),
-                imageThumb = imageFromResource(resources, it.imageThumbId)
-            )
-        }
-    }
+class FakePostsRepository : PostsRepository {
 
     // for now, store these in memory
     private val favorites = MutableStateFlow<Set<String>>(setOf())
@@ -61,9 +43,9 @@ class FakePostsRepository(
     // Used to make suspend functions that read and update state safe to call from any thread
     private val mutex = Mutex()
 
-    override suspend fun getPost(postId: String): Result<Post> {
+    override suspend fun getPost(postId: String?): Result<Post> {
         return withContext(Dispatchers.IO) {
-            val post = postsWithResources.find { it.id == postId }
+            val post = posts.allPosts.find { it.id == postId }
             if (post == null) {
                 Result.Error(IllegalArgumentException("Post not found"))
             } else {
@@ -72,13 +54,13 @@ class FakePostsRepository(
         }
     }
 
-    override suspend fun getPosts(): Result<List<Post>> {
+    override suspend fun getPostsFeed(): Result<PostsFeed> {
         return withContext(Dispatchers.IO) {
             delay(800) // pretend we're on a slow network
             if (shouldRandomlyFail()) {
                 Result.Error(IllegalStateException())
             } else {
-                Result.Success(postsWithResources)
+                Result.Success(posts)
             }
         }
     }
