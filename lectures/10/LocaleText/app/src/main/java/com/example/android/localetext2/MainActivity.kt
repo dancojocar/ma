@@ -20,16 +20,15 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.example.android.localetext2.databinding.ActivityMainBinding
 
 /**
  * This app demonstrates how to localize an app with text, an image,
  * a floating action button, an options menu, and the app bar.
  */
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
   /**
    * Creates the view with a toolbar for the options menu
    * and a floating action button, and initialize the
@@ -39,11 +38,11 @@ class MainActivity : AppCompatActivity() {
    */
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
-    val toolbar = findViewById<View>(R.id.toolbar) as Toolbar
-    setSupportActionBar(toolbar)
-    val fab = findViewById<View>(R.id.fab) as FloatingActionButton
-    fab.setOnClickListener { showHelp() }
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    setSupportActionBar(binding.toolbar)
+    binding.fab.setOnClickListener { showHelp() }
   }
 
   /**

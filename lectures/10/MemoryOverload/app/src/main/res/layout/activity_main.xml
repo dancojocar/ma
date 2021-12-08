@@ -35,7 +35,9 @@
 
   </com.google.android.material.appbar.AppBarLayout>
 
-  <include layout="@layout/content_main" />
+  <include
+    android:id="@+id/contentMain"
+    layout="@layout/content_main" />
 
   <com.google.android.material.floatingactionbutton.FloatingActionButton
     android:id="@+id/fab"
@@ -43,9 +45,9 @@
     android:layout_height="wrap_content"
     android:layout_gravity="bottom|end"
     android:layout_margin="@dimen/fab_margin"
+    android:contentDescription="@string/adding_new_views"
     android:onClick="addRowOfTextViews"
     app:srcCompat="@drawable/ic_add_black_24dp"
-    tools:ignore="VectorDrawableCompat"
-    android:contentDescription="@string/adding_new_views" />
+    tools:ignore="VectorDrawableCompat" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

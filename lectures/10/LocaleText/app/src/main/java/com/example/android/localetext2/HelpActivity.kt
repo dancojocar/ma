@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.example.android.localetext2.databinding.ActivityHelpBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 /**
@@ -28,6 +29,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
  * to start dialing a phone number.
  */
 class HelpActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityHelpBinding
   /**
    * Creates the view with a floating action button and click listener.
    *
@@ -35,9 +37,10 @@ class HelpActivity : AppCompatActivity() {
    */
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_help)
-    val fab = findViewById<View>(R.id.fab) as FloatingActionButton
-    fab.setOnClickListener {
+    binding = ActivityHelpBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    binding.fab.setOnClickListener {
       val phoneNumber = getString(R.string.support_phone)
       callSupportCenter(phoneNumber)
     }

@@ -29,9 +29,10 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.viewbinding.BuildConfig
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.sample.basiclocationsample.BuildConfig.APPLICATION_ID
+import com.google.android.gms.location.sample.basiclocationsample.databinding.MainActivityBinding
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 
@@ -39,6 +40,7 @@ import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
  * Demonstrates use of the Location API to retrieve the last known location for a device.
  */
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: MainActivityBinding
 
   private val TAG = "MainActivity"
   private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
@@ -53,10 +55,12 @@ class MainActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.main_activity)
+    binding = MainActivityBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
-    latitudeText = findViewById(R.id.latitude_text)
-    longitudeText = findViewById(R.id.longitude_text)
+    latitudeText = binding.latitudeText
+    longitudeText = binding.longitudeText
 
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
   }
@@ -82,21 +86,21 @@ class MainActivity : AppCompatActivity() {
   @SuppressLint("MissingPermission")
   fun getLastLocation() {
     fusedLocationClient.lastLocation
-        .addOnCompleteListener { taskLocation ->
-          Log.w(TAG, "getLastLocation ${taskLocation.result}")
-          if (taskLocation.isSuccessful && taskLocation.result != null) {
+      .addOnCompleteListener { taskLocation ->
+        Log.w(TAG, "getLastLocation ${taskLocation.result}")
+        if (taskLocation.isSuccessful && taskLocation.result != null) {
 
-            val location = taskLocation.result
+          val location = taskLocation.result
 
-            latitudeText.text = resources
-                .getString(R.string.latitude_label, location?.latitude)
-            longitudeText.text = resources
-                .getString(R.string.longitude_label, location?.longitude)
-          } else {
-            Log.w(TAG, "getLastLocation:exception", taskLocation.exception)
-            showSnackbar(R.string.no_location_detected)
-          }
+          latitudeText.text = resources
+            .getString(R.string.latitude_label, location?.latitude)
+          longitudeText.text = resources
+            .getString(R.string.longitude_label, location?.longitude)
+        } else {
+          Log.w(TAG, "getLastLocation:exception", taskLocation.exception)
+          showSnackbar(R.string.no_location_detected)
         }
+      }
   }
 
   /**
@@ -107,12 +111,14 @@ class MainActivity : AppCompatActivity() {
    * @param listener The listener associated with the Snackbar action.
    */
   private fun showSnackbar(
-      snackStrId: Int,
-      actionStrId: Int = 0,
-      listener: View.OnClickListener? = null
+    snackStrId: Int,
+    actionStrId: Int = 0,
+    listener: View.OnClickListener? = null
   ) {
-    val snackbar = Snackbar.make(findViewById(android.R.id.content), getString(snackStrId),
-        LENGTH_INDEFINITE)
+    val snackbar = Snackbar.make(
+      binding.root, getString(snackStrId),
+      LENGTH_INDEFINITE
+    )
     if (actionStrId != 0 && listener != null) {
       snackbar.setAction(getString(actionStrId), listener)
     }
@@ -123,11 +129,13 @@ class MainActivity : AppCompatActivity() {
    * Return the current state of the permissions needed.
    */
   private fun checkPermissions() =
-      ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
+    ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
 
   private fun startLocationPermissionRequest() {
-    ActivityCompat.requestPermissions(this, arrayOf(ACCESS_COARSE_LOCATION),
-        REQUEST_PERMISSIONS_REQUEST_CODE)
+    ActivityCompat.requestPermissions(
+      this, arrayOf(ACCESS_COARSE_LOCATION),
+      REQUEST_PERMISSIONS_REQUEST_CODE
+    )
   }
 
   private fun requestPermissions() {
@@ -153,10 +161,11 @@ class MainActivity : AppCompatActivity() {
    * Callback received when a permissions request has been completed.
    */
   override fun onRequestPermissionsResult(
-      requestCode: Int,
-      permissions: Array<String>,
-      grantResults: IntArray
+    requestCode: Int,
+    permissions: Array<String>,
+    grantResults: IntArray
   ) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     Log.i(TAG, "onRequestPermissionResult")
     if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
       when {
@@ -180,15 +189,15 @@ class MainActivity : AppCompatActivity() {
         // touches or interactions which have required permissions.
         else -> {
           showSnackbar(R.string.permission_denied_explanation, R.string.settings,
-              View.OnClickListener {
-                // Build intent that displays the App settings screen.
-                val intent = Intent().apply {
-                  action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                  data = Uri.fromParts("package", APPLICATION_ID, null)
-                  flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                startActivity(intent)
-              })
+            View.OnClickListener {
+              // Build intent that displays the App settings screen.
+              val intent = Intent().apply {
+                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                data = Uri.fromParts("package", BuildConfig.LIBRARY_PACKAGE_NAME, null)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+              }
+              startActivity(intent)
+            })
         }
       }
     }

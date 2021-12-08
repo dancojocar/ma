@@ -24,8 +24,10 @@ import android.widget.TextView
 import android.widget.Toast
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.android.simplevideoview.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
   private lateinit var mVideoView: VideoView
   private lateinit var mBufferingTextView: TextView
 
@@ -33,9 +35,11 @@ class MainActivity : AppCompatActivity() {
   private var mCurrentPosition = 0
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
-    mVideoView = findViewById(R.id.videoview)
-    mBufferingTextView = findViewById(R.id.buffering_textview)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    mVideoView = binding.videoview
+    mBufferingTextView = binding.bufferingTextview
     if (savedInstanceState != null) {
       mCurrentPosition = savedInstanceState.getInt(PLAYBACK_TIME)
     }
@@ -112,9 +116,11 @@ class MainActivity : AppCompatActivity() {
     // Listener for onCompletion() event (runs after media has finished
     // playing).
     mVideoView.setOnCompletionListener {
-      Toast.makeText(this@MainActivity,
-          R.string.toast_message,
-          Toast.LENGTH_SHORT).show()
+      Toast.makeText(
+        this@MainActivity,
+        R.string.toast_message,
+        Toast.LENGTH_SHORT
+      ).show()
 
       // Return the video position to the start.
       mVideoView.seekTo(0)
@@ -135,15 +141,17 @@ class MainActivity : AppCompatActivity() {
       Uri.parse(mediaName)
     } else {
       // Media name is a raw resource embedded in the app.
-      Uri.parse("android.resource://" + packageName +
-          "/raw/" + mediaName)
+      Uri.parse(
+        "android.resource://" + packageName +
+            "/raw/" + mediaName
+      )
     }
   }
 
   companion object {
-//    private const val VIDEO_SAMPLE = "tacoma_narrows"
+    //    private const val VIDEO_SAMPLE = "tacoma_narrows"
     private const val VIDEO_SAMPLE =
-        "https://developers.google.com/training/images/tacoma_narrows.mp4";
+      "http://techslides.com/demos/sample-videos/small.mp4";
 
     // Tag for the instance state bundle.
     private const val PLAYBACK_TIME = "play_time"
