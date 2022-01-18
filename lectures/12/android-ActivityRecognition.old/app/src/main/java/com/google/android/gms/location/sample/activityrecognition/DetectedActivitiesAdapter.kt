@@ -30,27 +30,36 @@ import java.util.*
  * detected_activity layout and populates each element with data from a DetectedActivity
  * object.
  */
-internal class DetectedActivitiesAdapter(context: Context?,
-                                         detectedActivities: ArrayList<DetectedActivity?>?) : ArrayAdapter<DetectedActivity?>(context!!, 0, detectedActivities!!) {
+internal class DetectedActivitiesAdapter(
+  context: Context?,
+  detectedActivities: ArrayList<DetectedActivity?>?
+) : ArrayAdapter<DetectedActivity?>(context!!, 0, detectedActivities!!) {
   override fun getView(position: Int, view: View?, parent: ViewGroup): View {
     var viewCopy = view
     val detectedActivity = getItem(position)
     if (viewCopy == null) {
       viewCopy = LayoutInflater.from(context).inflate(
-          R.layout.detected_activity, parent, false)
+        R.layout.detected_activity, parent, false
+      )
     }
     // Find the UI widgets.
     val activityName = viewCopy!!.findViewById<View>(R.id.detected_activity_name) as TextView
     val activityConfidenceLevel = viewCopy.findViewById<View>(
-        R.id.detected_activity_confidence_level) as TextView
+      R.id.detected_activity_confidence_level
+    ) as TextView
     val progressBar = viewCopy.findViewById<View>(
-        R.id.detected_activity_progress_bar) as ProgressBar
+      R.id.detected_activity_progress_bar
+    ) as ProgressBar
     // Populate widgets with values.
     if (detectedActivity != null) {
-      activityName.text = Utils.getActivityString(context,
-          detectedActivity.type)
-      activityConfidenceLevel.text = context.getString(R.string.percent,
-          detectedActivity.confidence)
+      activityName.text = Utils.getActivityString(
+        context,
+        detectedActivity.type
+      )
+      activityConfidenceLevel.text = context.getString(
+        R.string.percent,
+        detectedActivity.confidence
+      )
       progressBar.progress = detectedActivity.confidence
     }
     return viewCopy
@@ -74,9 +83,14 @@ internal class DetectedActivitiesAdapter(context: Context?,
 // confidence level to zero.
     val tempList = ArrayList<DetectedActivity>()
     for (i in Constants.MONITORED_ACTIVITIES.indices) {
-      val confidence = if (detectedActivitiesMap.containsKey(Constants.MONITORED_ACTIVITIES[i])) detectedActivitiesMap[Constants.MONITORED_ACTIVITIES[i]]!! else 0
-      tempList.add(DetectedActivity(Constants.MONITORED_ACTIVITIES[i],
-          confidence))
+      val confidence =
+        if (detectedActivitiesMap.containsKey(Constants.MONITORED_ACTIVITIES[i])) detectedActivitiesMap[Constants.MONITORED_ACTIVITIES[i]]!! else 0
+      tempList.add(
+        DetectedActivity(
+          Constants.MONITORED_ACTIVITIES[i],
+          confidence
+        )
+      )
     }
     // Remove all items.
     this.clear()

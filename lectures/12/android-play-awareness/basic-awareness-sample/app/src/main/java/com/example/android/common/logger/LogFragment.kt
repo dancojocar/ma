@@ -60,7 +60,7 @@ class LogFragment : Fragment() {
     )
     mScrollView.layoutParams = scrollParams
 
-    logView = LogView(context!!)
+    logView = LogView(requireContext())
     val logParams = ViewGroup.LayoutParams(scrollParams)
     logParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
     logView.layoutParams = logParams
