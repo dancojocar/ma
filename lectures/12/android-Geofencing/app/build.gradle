@@ -1,16 +1,17 @@
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'kotlin-android'
+plugins {
+  id 'com.android.application'
+  id 'kotlin-android'
+}
 
 android {
-  compileSdkVersion 29
-
+  compileSdkVersion 31
   defaultConfig {
     applicationId "com.google.android.gms.location.sample.geofencing"
-    minSdkVersion 16
-    targetSdkVersion 29
+    minSdkVersion 29
+    targetSdkVersion 31
     versionCode 1
     versionName "1.0"
+    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
   }
   buildTypes {
     release {
@@ -18,21 +19,29 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
     }
   }
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+  kotlinOptions {
+    jvmTarget = '1.8'
+  }
+  buildFeatures {
+    viewBinding true
+  }
 }
 
 dependencies {
-  androidTestImplementation('androidx.test.espresso:espresso-core:3.1.1', {
-    exclude group: 'com.android.support', module: 'support-annotations'
-  })
-  implementation 'androidx.appcompat:appcompat:1.1.0'
-  testImplementation 'junit:junit:4.12'
+  implementation 'androidx.core:core-ktx:1.7.0'
+  implementation 'androidx.appcompat:appcompat:1.4.0'
+  implementation 'com.google.android.material:material:1.4.0'
+  implementation 'androidx.constraintlayout:constraintlayout:2.1.2'
+  testImplementation 'junit:junit:4.13.2'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-  implementation 'com.google.android.material:material:1.0.0'
-  implementation 'com.google.android.gms:play-services-location:17.0.0'
-  implementation 'com.google.android.gms:play-services-maps:17.0.0'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-  implementation "androidx.preference:preference-ktx:1.1.0"
-}
-repositories {
-  mavenCentral()
+
+  implementation 'com.google.android.gms:play-services-location:19.0.0'
+  implementation 'com.google.android.gms:play-services-maps:18.0.1'
+  implementation "androidx.preference:preference-ktx:1.1.1"
 }

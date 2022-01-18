@@ -12,13 +12,13 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.google.android.gms.nearby.messages.samples.nearbydevices.MainActivity">
 
-    <android.support.v7.widget.SwitchCompat
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/subscribe_switch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/discover_nearby_devices" />
 
-    <android.support.v7.widget.SwitchCompat
+    <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/publish_switch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -32,12 +32,12 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.viewbinding.BuildConfig
 import com.example.android.common.logger.LogFragment
+import com.google.android.example.basicawarenesssample.databinding.ActivityMainBinding
 import com.google.android.gms.awareness.Awareness
 import com.google.android.gms.awareness.fence.*
 import com.google.android.gms.awareness.state.HeadphoneState
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
 
 /**
  * Sample application which sets up a few context fences using the Awareness API, and takes
@@ -47,6 +47,7 @@ import kotlinx.android.synthetic.main.content_main.*
  * https://developers.google.com/awareness/android-api/get-a-key for instructions.
  */
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
 
   private var mPendingIntent: PendingIntent? = null
 
@@ -56,10 +57,11 @@ class MainActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
-    setSupportActionBar(toolbar)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
 
-    fab.setOnClickListener { printSnapshot() }
+    binding.fab.setOnClickListener { printSnapshot() }
 
     val intent = Intent(FENCE_RECEIVER_ACTION)
     mPendingIntent = PendingIntent.getBroadcast(this@MainActivity, 0, intent, 0)
@@ -67,7 +69,7 @@ class MainActivity : AppCompatActivity() {
     mFenceReceiver = FenceReceiver()
     registerReceiver(mFenceReceiver, IntentFilter(FENCE_RECEIVER_ACTION))
 
-    mLogFragment = log_fragment as LogFragment
+    mLogFragment = supportFragmentManager.findFragmentById(R.id.log_fragment) as LogFragment
   }
 
   override fun onResume() {
@@ -78,12 +80,12 @@ class MainActivity : AppCompatActivity() {
   override fun onPause() {
     // Unregister the fence:
     Awareness.getFenceClient(this).updateFences(
-        FenceUpdateRequest.Builder()
-            .removeFence(FENCE_KEY)
-            .build()
+      FenceUpdateRequest.Builder()
+        .removeFence(FENCE_KEY)
+        .build()
     )
-        .addOnSuccessListener { Log.i(TAG, "Fence was successfully unregistered.") }
-        .addOnFailureListener { e -> Log.e(TAG, "Fence could not be unregistered: $e") }
+      .addOnSuccessListener { Log.i(TAG, "Fence was successfully unregistered.") }
+      .addOnFailureListener { e -> Log.e(TAG, "Fence could not be unregistered: $e") }
 
     super.onPause()
   }
@@ -106,30 +108,30 @@ class MainActivity : AppCompatActivity() {
     // Each type of contextual information in the snapshot API has a corresponding "get" method.
     //  For instance, this is how to get the user's current Activity.
     Awareness.getSnapshotClient(this).detectedActivity
-        .addOnSuccessListener { dar ->
-          val arr = dar.activityRecognitionResult
-          // getMostProbableActivity() is good enough for basic Activity detection.
-          // To work within a threshold of confidence,
-          // use ActivityRecognitionResult.getProbableActivities() to get a list of
-          // potential current activities, and check the confidence of each one.
-          val probableActivity = arr.mostProbableActivity
+      .addOnSuccessListener { dar ->
+        val arr = dar.activityRecognitionResult
+        // getMostProbableActivity() is good enough for basic Activity detection.
+        // To work within a threshold of confidence,
+        // use ActivityRecognitionResult.getProbableActivities() to get a list of
+        // potential current activities, and check the confidence of each one.
+        val probableActivity = arr.mostProbableActivity
 
-          val confidence = probableActivity.confidence
-          val activityStr = probableActivity.toString()
-          mLogFragment.logView.println("Activity: $activityStr, Confidence: $confidence/100")
-        }
+        val confidence = probableActivity.confidence
+        val activityStr = probableActivity.toString()
+        mLogFragment.logView.println("Activity: $activityStr, Confidence: $confidence/100")
+      }
 
-        .addOnFailureListener { e -> Log.e(TAG, "Could not detect activity: $e") }
+      .addOnFailureListener { e -> Log.e(TAG, "Could not detect activity: $e") }
 
     // Pulling headphone state is similar, but doesn't involve analyzing confidence.
     Awareness.getSnapshotClient(this).headphoneState
-        .addOnSuccessListener { headphoneStateResponse ->
-          val headphoneState = headphoneStateResponse.headphoneState
-          val pluggedIn = headphoneState.state == HeadphoneState.PLUGGED_IN
-          val stateStr = "Headphones are ${if (pluggedIn) "plugged in" else "unplugged"}"
-          mLogFragment.logView.println(stateStr)
-        }
-        .addOnFailureListener { e -> Log.e(TAG, "Could not get headphone state: $e") }
+      .addOnSuccessListener { headphoneStateResponse ->
+        val headphoneState = headphoneStateResponse.headphoneState
+        val pluggedIn = headphoneState.state == HeadphoneState.PLUGGED_IN
+        val stateStr = "Headphones are ${if (pluggedIn) "plugged in" else "unplugged"}"
+        mLogFragment.logView.println(stateStr)
+      }
+      .addOnFailureListener { e -> Log.e(TAG, "Could not get headphone state: $e") }
 
     // Some of the data available via Snapshot API requires permissions that must be checked
     // at runtime.  Weather snapshots are a good example of this.  Since weather is protected
@@ -149,17 +151,17 @@ class MainActivity : AppCompatActivity() {
    */
   private fun getWeatherSnapshot() {
     if (ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        this,
+        Manifest.permission.ACCESS_FINE_LOCATION
+      ) == PackageManager.PERMISSION_GRANTED
     ) {
       Awareness.getSnapshotClient(this).weather
-          .addOnSuccessListener { weatherResponse ->
-            val weather = weatherResponse.weather
-            weather.conditions
-            mLogFragment.logView.println("Weather: $weather")
-          }
-          .addOnFailureListener { e -> Log.e(TAG, "Could not get weather: $e") }
+        .addOnSuccessListener { weatherResponse ->
+          val weather = weatherResponse.weather
+          weather.conditions
+          mLogFragment.logView.println("Weather: $weather")
+        }
+        .addOnFailureListener { e -> Log.e(TAG, "Could not get weather: $e") }
     }
   }
 
@@ -170,18 +172,25 @@ class MainActivity : AppCompatActivity() {
    */
   private fun checkAndRequestWeatherPermissions() {
     val checkSelfPermission = ContextCompat.checkSelfPermission(
-        this@MainActivity,
-        Manifest.permission.ACCESS_FINE_LOCATION
+      this@MainActivity,
+      Manifest.permission.ACCESS_FINE_LOCATION
     )
     if (checkSelfPermission != PackageManager.PERMISSION_GRANTED) {
 
-      if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
-        Log.i(TAG, "Permission previously denied and app shouldn't ask again.  Skipping weather snapshot.")
+      if (ActivityCompat.shouldShowRequestPermissionRationale(
+          this,
+          Manifest.permission.ACCESS_FINE_LOCATION
+        )
+      ) {
+        Log.i(
+          TAG,
+          "Permission previously denied and app shouldn't ask again.  Skipping weather snapshot."
+        )
       } else {
         ActivityCompat.requestPermissions(
-            this@MainActivity,
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            MY_PERMISSION_LOCATION
+          this@MainActivity,
+          arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+          MY_PERMISSION_LOCATION
         )
       }
     } else {
@@ -190,9 +199,10 @@ class MainActivity : AppCompatActivity() {
   }
 
   override fun onRequestPermissionsResult(
-      requestCode: Int, permissions: Array<String>,
-      grantResults: IntArray
+    requestCode: Int, permissions: Array<String>,
+    grantResults: IntArray
   ) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     when (requestCode) {
       MY_PERMISSION_LOCATION -> {
         // If request is cancelled, the result arrays are empty.
@@ -231,10 +241,10 @@ class MainActivity : AppCompatActivity() {
     // one form of exercise.
     // The below breaks down to "(headphones plugged in) AND (walking OR running OR bicycling)"
     val exercisingWithHeadphonesFence = AwarenessFence.or(
-        walkingFence,
-        DetectedActivityFence.during(DetectedActivityFence.RUNNING),
+      walkingFence,
+      DetectedActivityFence.during(DetectedActivityFence.RUNNING),
 //        DetectedActivityFence.during(DetectedActivityFence.STILL),
-        DetectedActivityFence.during(DetectedActivityFence.ON_BICYCLE)
+      DetectedActivityFence.during(DetectedActivityFence.ON_BICYCLE)
     )
 
 
@@ -243,12 +253,12 @@ class MainActivity : AppCompatActivity() {
 
     // Register the fence to receive callbacks.
     Awareness.getFenceClient(this).updateFences(
-        FenceUpdateRequest.Builder()
-            .addFence(FENCE_KEY, exercisingWithHeadphonesFence, mPendingIntent!!)
-            .build()
+      FenceUpdateRequest.Builder()
+        .addFence(FENCE_KEY, exercisingWithHeadphonesFence, mPendingIntent!!)
+        .build()
     )
-        .addOnSuccessListener { Log.i(TAG, "Fence was successfully registered.") }
-        .addOnFailureListener { e -> Log.e(TAG, "Fence could not be registered: $e") }
+      .addOnSuccessListener { Log.i(TAG, "Fence was successfully registered.") }
+      .addOnFailureListener { e -> Log.e(TAG, "Fence could not be registered: $e") }
   }
 
   /**
@@ -259,7 +269,7 @@ class MainActivity : AppCompatActivity() {
     override fun onReceive(context: Context, intent: Intent) {
       if (!TextUtils.equals(FENCE_RECEIVER_ACTION, intent.action)) {
         mLogFragment.logView
-            .println("Received an unsupported action in FenceReceiver: action=" + intent.action!!)
+          .println("Received an unsupported action in FenceReceiver: action=" + intent.action!!)
         return
       }
 
@@ -280,7 +290,8 @@ class MainActivity : AppCompatActivity() {
 
   companion object {
     // The intent action which will be fired when your fence is triggered.
-    private const val FENCE_RECEIVER_ACTION = "${BuildConfig.APPLICATION_ID} FENCE_RECEIVER_ACTION"
+    private const val FENCE_RECEIVER_ACTION =
+      "${BuildConfig.LIBRARY_PACKAGE_NAME} FENCE_RECEIVER_ACTION"
 
     private const val TAG = "MainActivity"
 

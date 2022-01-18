@@ -38,22 +38,27 @@ open class DetectedActivitiesIntentService : IntentService("DetectedActivitiesIS
    * is called.
    */
   override fun onHandleIntent(intent: Intent?) {
-    val result = ActivityRecognitionResult.extractResult(intent)
+    val result = ActivityRecognitionResult.extractResult(intent!!)
     // Get the list of the probable activities associated with the current state of the
 // device. Each activity is associated with a confidence level, which is an int between
 // 0 and 100.
-    val detectedActivities: ArrayList<DetectedActivity> = result.probableActivities as ArrayList<DetectedActivity>
+    val detectedActivities: ArrayList<DetectedActivity> =
+      result?.probableActivities as ArrayList<DetectedActivity>
     PreferenceManager.getDefaultSharedPreferences(this)
-        .edit()
-        .putString(Constants.KEY_DETECTED_ACTIVITIES,
-            Utils.detectedActivitiesToJson(detectedActivities))
-        .apply()
+      .edit()
+      .putString(
+        Constants.KEY_DETECTED_ACTIVITIES,
+        Utils.detectedActivitiesToJson(detectedActivities)
+      )
+      .apply()
     // Log each activity.
     logi("activities detected")
     for (da in detectedActivities) {
-      logi(Utils.getActivityString(
+      logi(
+        Utils.getActivityString(
           applicationContext,
-          da.type) + " " + da.confidence + "%"
+          da.type
+        ) + " " + da.confidence + "%"
       )
     }
   }
