@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
             val urlString = inputText.text.toString()
             if (urlString.trim().isNotEmpty() && isNetworkAvailable(this)) {
                 DownloadWebPageTask(this).execute(urlString)
-                AnkoAsynkTaskAlternative(this).downloadData(urlString)
+//                AnkoAsynkTaskAlternative(this).downloadData(urlString)
             } else {
                 Toast.makeText(
                     this, "No internet connection or empty URL!",

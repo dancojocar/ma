@@ -19,29 +19,29 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatelessWidget {
   final String title;
 
-  const MyHomePage({Key key=const Key("any"), required this.title}) : super(key: key);
+  const MyHomePage({Key key = const Key("any"), required this.title})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: Center(child: 
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const <Widget>[
-                  Text('My Demo Page!'),
-                ],
-              )
-      ),
+      body: Center(
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const <Widget>[
+          Text('My Demo Page!'),
+        ],
+      )),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
             const DrawerHeader(
-              child: Text('Drawer Header'),
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
+              child: Text('Drawer Header'),
             ),
             ListTile(
               title: const Text('Item 1'),

@@ -19,7 +19,7 @@ class ArticleListFragment : Fragment() {
     fun newInstance() = ArticleListFragment()
   }
 
-  private var listener: OnSelectionListener? = null
+  private lateinit var listener: OnSelectionListener
 
   interface OnSelectionListener {
     fun onSelect(message: String)
@@ -52,7 +52,7 @@ class ArticleListFragment : Fragment() {
       horizontalLayout.addView(textView)
       val button = Button(activity)
       button.text = getString(R.string.okButton, i)
-      button.setOnClickListener { listener!!.onSelect(getString(R.string.onPressMessage, i)) }
+      button.setOnClickListener { listener.onSelect(getString(R.string.onPressMessage, i)) }
       horizontalLayout.addView(button)
       list_fragment?.addView(horizontalLayout)
     }

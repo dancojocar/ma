@@ -3,4 +3,7 @@
     <string name="editText">From edit:</string>
     <string name="defaultText">Update</string>
     <string name="fromText">From editText: %1$s</string>
+  <string name="helloTv">Hello, I am a TextView</string>
+  <string name="helloButton">Hello, I am a Button</string>
+  <string name="hintText">Insert text here</string>
 </resources>

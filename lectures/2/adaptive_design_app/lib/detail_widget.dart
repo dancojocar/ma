@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
 class DetailWidget extends StatefulWidget {
-
   final int data;
 
   const DetailWidget(this.data, {Key? key}) : super(key: key);
 
   @override
-  _DetailWidgetState createState() => _DetailWidgetState();
+  DetailWidgetState createState() => DetailWidgetState();
 }
 
-class _DetailWidgetState extends State<DetailWidget> {
+class DetailWidgetState extends State<DetailWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -19,7 +18,10 @@ class _DetailWidgetState extends State<DetailWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(widget.data.toString(), style: TextStyle(fontSize: 36.0, color: Colors.white),),
+            Text(
+              widget.data.toString(),
+              style: const TextStyle(fontSize: 36.0, color: Colors.white),
+            ),
           ],
         ),
       ),
