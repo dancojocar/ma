@@ -7,10 +7,10 @@ class MasterDetailPage extends StatefulWidget {
   const MasterDetailPage({Key? key}) : super(key: key);
 
   @override
-  _MasterDetailPageState createState() => _MasterDetailPageState();
+  MasterDetailPageState createState() => MasterDetailPageState();
 }
 
-class _MasterDetailPageState extends State<MasterDetailPage> {
+class MasterDetailPageState extends State<MasterDetailPage> {
   var selectedValue = 0;
   var isLargeScreen = false;
 
@@ -19,7 +19,6 @@ class _MasterDetailPageState extends State<MasterDetailPage> {
     return Scaffold(
       appBar: AppBar(),
       body: OrientationBuilder(builder: (context, orientation) {
-
         if (MediaQuery.of(context).size.width > 600) {
           isLargeScreen = true;
         } else {
@@ -41,7 +40,9 @@ class _MasterDetailPageState extends State<MasterDetailPage> {
               }
             }),
           ),
-          isLargeScreen ? Expanded(child: DetailWidget(selectedValue)) : Container(),
+          isLargeScreen
+              ? Expanded(child: DetailWidget(selectedValue))
+              : Container(),
         ]);
       }),
     );

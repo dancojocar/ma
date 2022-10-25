@@ -18,7 +18,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class AppModule {
-
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {
@@ -34,7 +33,6 @@ class AppModule {
         return retrofit.create(MoviesService::class.java)
     }
 
-
     @Module
     @InstallIn(SingletonComponent::class)
     interface AppModuleInt {
@@ -48,5 +46,4 @@ class AppModule {
         fun provideGetMoviesUseCase(uc: GetMoviesUseCaseImpl): GetMoviesUseCase
 
     }
-
 }

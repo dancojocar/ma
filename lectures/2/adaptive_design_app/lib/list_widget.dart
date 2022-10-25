@@ -6,17 +6,14 @@ class ListWidget extends StatefulWidget {
   final int count;
   final ItemSelectedCallback onItemSelected;
 
-  const ListWidget(
-    this.count,
-    this.onItemSelected, 
-    {Key? key}
-  ) : super(key: key);
+  const ListWidget(this.count, this.onItemSelected, {Key? key})
+      : super(key: key);
 
   @override
-  _ListWidgetState createState() => _ListWidgetState();
+  ListWidgetState createState() => ListWidgetState();
 }
 
-class _ListWidgetState extends State<ListWidget> {
+class ListWidgetState extends State<ListWidget> {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
@@ -33,7 +30,10 @@ class _ListWidgetState extends State<ListWidget> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(position.toString(), style: const TextStyle(fontSize: 22.0),),
+                    child: Text(
+                      position.toString(),
+                      style: const TextStyle(fontSize: 22.0),
+                    ),
                   ),
                 ],
               ),
