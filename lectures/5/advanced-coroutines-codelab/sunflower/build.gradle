@@ -1,0 +1,32 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion compile_sdk_version
+    dataBinding {
+        enabled = true
+    }
+    defaultConfig {
+        minSdkVersion min_sdk_version
+        targetSdkVersion compile_sdk_version
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+  namespace 'com.example.android.advancedcoroutines.ui'
+
+}
+
+dependencies {
+    implementation libraries
+    implementation arch_libraries
+    kapt librariesKapt
+    testImplementation testLibraries
+    androidTestImplementation androidTestLibraries
+}
