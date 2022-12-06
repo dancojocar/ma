@@ -18,12 +18,15 @@ package com.example.android.repeatingalarm
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Context.ALARM_SERVICE
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import androidx.fragment.app.Fragment
 import android.view.MenuItem
+import androidx.annotation.RequiresApi
 import com.example.android.common.logd
 import com.example.android.common.toast
 
@@ -35,25 +38,12 @@ class RepeatingAlarmFragment : Fragment() {
     setHasOptionsMenu(true)
   }
 
+  @RequiresApi(Build.VERSION_CODES.S)
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-    // First create an intent for the alarm to activate.
-    // This code simply starts an Activity, or brings it to the front if it has already
-    // been created.
-    val intent = Intent(context, MainActivity::class.java)
-    intent.action = Intent.ACTION_MAIN
-    intent.flags = Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-
-    // Because the intent must be fired by a system service from outside the application,
-    // it's necessary to wrap it in a PendingIntent.  Providing a different process with
-    // a PendingIntent gives that other process permission to fire the intent that this
-    // application has created.
-    // Also, this code creates a PendingIntent to start an Activity.  To create a
-    // BroadcastIntent instead, simply call getBroadcast instead of getIntent.
-    val pendingIntent = PendingIntent.getActivity(
-      activity,
-      REQUEST_CODE, intent, 0
-    )
+    val pendingIntent = Intent(context, MyBroadcastReceiver::class.java).let { intent ->
+      PendingIntent.getBroadcast(context?.applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+    }
 
     // There are two clock types for alarms, ELAPSED_REALTIME and RTC.
     // ELAPSED_REALTIME uses time since system boot as a reference, and RTC uses UTC (wall
@@ -66,16 +56,16 @@ class RepeatingAlarmFragment : Fragment() {
     // off.  This is useful for situations such as alarm clocks.  Abuse of this flag is an
     // efficient way to skyrocket the uninstall rate of an application, so use with care.
     // For most situations, ELAPSED_REALTIME will suffice.
-    val alarmType = AlarmManager.ELAPSED_REALTIME_WAKEUP
+    val alarmType = AlarmManager.RTC_WAKEUP
 
     // The AlarmManager, like most system services, isn't created by application code, but
     // requested from the system.
     val alarmManager = requireActivity().getSystemService(ALARM_SERVICE) as AlarmManager
     when (item.itemId) {
       R.id.oneTime -> {
-        alarmManager.set(
+        alarmManager.setExactAndAllowWhileIdle(
           alarmType,
-          SystemClock.elapsedRealtime() + 60 * 1000,
+          SystemClock.elapsedRealtime() + 10 * 1000,
           pendingIntent
         )
         logd("One time alarm set.")

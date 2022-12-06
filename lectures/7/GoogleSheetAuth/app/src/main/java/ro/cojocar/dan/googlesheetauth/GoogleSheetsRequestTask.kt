@@ -19,10 +19,10 @@ class GoogleSheetsRequestTask(credentials: GoogleAccountCredential) {
     val transport = AndroidHttp.newCompatibleTransport()
     val jsonFactory = GsonFactory.getDefaultInstance()
     service = Sheets.Builder(
-        transport, jsonFactory, credentials
+      transport, jsonFactory, credentials
     )
-        .setApplicationName("GoogleSheetsRequestTask")
-        .build()
+      .setApplicationName("GoogleSheetsRequestTask")
+      .build()
   }
 
   /**
@@ -32,29 +32,28 @@ class GoogleSheetsRequestTask(credentials: GoogleAccountCredential) {
    * @return List of names and majors
    * @throws IOException when trying to access the document
    */
-  val dataFromApi: String
-    get() {
-      val spreadsheetId = "1d2cGX1jJhjzWQrU8UONUzg6Gd7R6LNqEHfcPUzb5L1I"
-      val range = "Class Data!A2:E20"
-      val results = StringBuilder()
-      try {
-        val response = service.spreadsheets().values()
-            .get(spreadsheetId, range)
-            .execute()
-        val values = response.getValues()
-        if (values != null) {
-          results.append("Name, Major\n")
-          for (row in values) {
-            results.append("${row[0]}, ${row[4]}\n")
-          }
+  fun dataFromApi(): String {
+    val spreadsheetId = "1d2cGX1jJhjzWQrU8UONUzg6Gd7R6LNqEHfcPUzb5L1I"
+    val range = "Class Data!A2:E20"
+    val results = StringBuilder()
+    try {
+      val response = service.spreadsheets().values()
+        .get(spreadsheetId, range)
+        .execute()
+      val values = response.getValues()
+      if (values != null) {
+        results.append("Name, Major\n")
+        for (row in values) {
+          results.append("${row[0]}, ${row[4]}\n")
         }
-      } catch (e: UserRecoverableAuthIOException) {
-        throw e
-      } catch (e: Exception) {
-        val errorMessage = "Received an error while trying to connect: $e"
-        results.append(errorMessage)
-        Log.e(this.javaClass.simpleName, errorMessage, e)
       }
-      return results.toString()
+    } catch (e: UserRecoverableAuthIOException) {
+      throw e
+    } catch (e: Exception) {
+      val errorMessage = "Received an error while trying to connect: $e"
+      results.append(errorMessage)
+      Log.e(this.javaClass.simpleName, errorMessage, e)
     }
+    return results.toString()
+  }
 }

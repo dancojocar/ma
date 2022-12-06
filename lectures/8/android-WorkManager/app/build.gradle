@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,34 @@
 
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
-    compileSdkVersion build_versions.compile_sdk
+    compileSdkVersion versions.compileSdk
     defaultConfig {
         applicationId "com.example.background"
+        renderscriptTargetApi 11
+        renderscriptSupportModeEnabled true
         vectorDrawables {
             useSupportLibrary true
         }
-        // Switching to Renderscript support provided by framework.
-        minSdkVersion 18
-        targetSdkVersion build_versions.target_sdk
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-    }
-    viewBinding {
-        enabled = true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -48,29 +52,18 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
+    viewBinding {
+        enabled = true
+    }
+    namespace 'com.example.background'
 }
 
 dependencies {
-    implementation project(path: ':lib')
-
-    implementation deps.kotlin.stdlib
-    implementation deps.work.runtime_ktx
-    implementation deps.app_compat
-    implementation deps.cardview
-    implementation deps.material
-    implementation deps.fragment.runtime_ktx
-    implementation deps.constraint_layout
-    implementation deps.arch_core.runtime
-    implementation deps.retrofit.runtime
-    implementation deps.retrofit.gson
-    implementation deps.okhttp_logging_interceptor
-    implementation deps.glide.runtime
-
-    testImplementation deps.junit
-    androidTestImplementation deps.atsl.ext_junit
-    androidTestImplementation deps.atsl.runner
-    androidTestImplementation deps.atsl.rules
-    androidTestImplementation deps.espresso.core
-    androidTestImplementation deps.work.testing
-    androidTestImplementation deps.arch_core.testing
+    implementation "androidx.appcompat:appcompat:1.5.1"
+    implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    implementation "androidx.activity:activity-ktx:1.6.1"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
+    implementation "androidx.work:work-runtime-ktx:$versions.work"
+    implementation "com.github.bumptech.glide:glide:4.13.0"
 }

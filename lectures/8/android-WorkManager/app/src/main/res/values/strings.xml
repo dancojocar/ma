@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2018 The Android Open Source Project
+  ~ Copyright (C) 2018 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -15,31 +15,26 @@
   -->
 
 <resources>
-    <string name="app_name">WorkManager Demo</string>
-    <string name="select_stock_image">Select Stock Image</string>
+    <string name="app_name">Blur-O-Matic</string>
+
+    <!-- Titles -->
+    <string name="blur_title">Select Blur Amount</string>
+
+    <!-- Buttons -->
     <string name="select_image">Select Image</string>
-    <!-- filters -->
-    <string name="filters_title">Choose Filters</string>
-    <string name="filter_watercolor">Watercolor</string>
-    <string name="filter_grayscale">Grayscale</string>
-    <string name="filter_blur">Blur</string>
-    <!-- destinations -->
-    <string name="destinations_title">Destination</string>
-    <string name="destination_save">Save Image</string>
-    <string name="destination_upload">Upload to Imgur</string>
-    <!-- actions -->
     <string name="go">Go</string>
-    <string name="cancel">Cancel</string>
-    <string name="output">Output</string>
-    <!-- content descriptions -->
-    <string name="description_image">The image to filter and upload.</string>
-    <!-- messages -->
-    <string name="set_permissions_in_settings">
-        Go to Settings -> Apps and Notifications -> WorkManager Demo -> App Permissions
-        and grant access to Storage.
-    </string>
-    <string name="credits">
-        <![CDATA[Stock Photos by <a href="https://www.flickr.com/photos/romainguy">Romain Guy</a>.
-        CC2 License.]]>
-    </string>
+    <string name="see_file">See File</string>
+
+    <!-- Content descriptions -->
+    <string name="description_image">The image to blur and save.</string>
+
+    <!-- Blur levels -->
+    <string name="blur_lv_1">A little blurred</string>
+    <string name="blur_lv_2">More blurred</string>
+    <string name="blur_lv_3">The most blurred</string>
+    <string name="cancel_work">Cancel Work</string>
+
+    <!-- Messages -->
+    <string name="set_permissions_in_settings">Go to Settings -> Apps and Notifications ->
+        WorkManager Demo -> App Permissions and grant access to Storage.</string>
 </resources>

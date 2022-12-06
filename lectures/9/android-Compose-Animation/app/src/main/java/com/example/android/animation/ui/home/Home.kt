@@ -16,6 +16,7 @@
 
 package com.example.android.animation.ui.home
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.animateColor
@@ -132,6 +133,7 @@ private enum class TabPage {
 /**
  * Shows the entire screen.
  */
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun Home() {
     // String resources.
@@ -705,7 +707,7 @@ private fun Modifier.swipeToDismiss(
                         // Record the velocity of the drag.
                         velocityTracker.addPosition(change.uptimeMillis, change.position)
                         // Consume the gesture event, not passed to external
-                        change.consumePositionChange()
+                        change.consume()
                     }
                 }
                 // Dragging finished. Calculate the velocity of the fling.

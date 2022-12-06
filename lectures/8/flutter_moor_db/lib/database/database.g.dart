@@ -6,7 +6,7 @@ part of 'database.dart';
 // MoorGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_brace_in_string_interps, unnecessary_this
+// ignore_for_file: type=lint
 class TodoEntry extends DataClass implements Insertable<TodoEntry> {
   final int id;
   final String content;
@@ -185,30 +185,32 @@ class TodosCompanion extends UpdateCompanion<TodoEntry> {
 }
 
 class $TodosTable extends Todos with TableInfo<$TodosTable, TodoEntry> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $TodosTable(this._db, [this._alias]);
+  $TodosTable(this.attachedDatabase, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      typeName: 'INTEGER',
+      type: const IntType(),
       requiredDuringInsert: false,
       defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _contentMeta = const VerificationMeta('content');
   @override
   late final GeneratedColumn<String?> content = GeneratedColumn<String?>(
       'content', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
+      type: const StringType(), requiredDuringInsert: true);
   final VerificationMeta _targetDateMeta = const VerificationMeta('targetDate');
   @override
   late final GeneratedColumn<DateTime?> targetDate = GeneratedColumn<DateTime?>(
       'target_date', aliasedName, true,
-      typeName: 'INTEGER', requiredDuringInsert: false);
+      type: const IntType(), requiredDuringInsert: false);
   final VerificationMeta _categoryMeta = const VerificationMeta('category');
+  @override
   late final GeneratedColumn<int?> category = GeneratedColumn<int?>(
       'category', aliasedName, true,
-      typeName: 'INTEGER',
+      type: const IntType(),
       requiredDuringInsert: false,
       $customConstraints: 'NULLABLE REFERENCES categories(id)');
   @override
@@ -248,13 +250,13 @@ class $TodosTable extends Todos with TableInfo<$TodosTable, TodoEntry> {
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   TodoEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return TodoEntry.fromData(data, _db,
+    return TodoEntry.fromData(data, attachedDatabase,
         prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
   $TodosTable createAlias(String alias) {
-    return $TodosTable(_db, alias);
+    return $TodosTable(attachedDatabase, alias);
   }
 }
 
@@ -379,14 +381,15 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
 
 class $CategoriesTable extends Categories
     with TableInfo<$CategoriesTable, Category> {
-  final GeneratedDatabase _db;
+  @override
+  final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $CategoriesTable(this._db, [this._alias]);
+  $CategoriesTable(this.attachedDatabase, [this._alias]);
   final VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int?> id = GeneratedColumn<int?>(
       'id', aliasedName, false,
-      typeName: 'INTEGER',
+      type: const IntType(),
       requiredDuringInsert: false,
       defaultConstraints: 'PRIMARY KEY AUTOINCREMENT');
   final VerificationMeta _descriptionMeta =
@@ -394,7 +397,7 @@ class $CategoriesTable extends Categories
   @override
   late final GeneratedColumn<String?> description = GeneratedColumn<String?>(
       'desc', aliasedName, false,
-      typeName: 'TEXT', requiredDuringInsert: true);
+      type: const StringType(), requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [id, description];
   @override
@@ -422,13 +425,13 @@ class $CategoriesTable extends Categories
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   Category map(Map<String, dynamic> data, {String? tablePrefix}) {
-    return Category.fromData(data, _db,
+    return Category.fromData(data, attachedDatabase,
         prefix: tablePrefix != null ? '$tablePrefix.' : null);
   }
 
   @override
   $CategoriesTable createAlias(String alias) {
-    return $CategoriesTable(_db, alias);
+    return $CategoriesTable(attachedDatabase, alias);
   }
 }
 

@@ -63,6 +63,7 @@ class AnimationsActivity : ListActivity() {
     )
   }
 
+  @Deprecated("Deprecated in Java")
   override fun onListItemClick(
       listView: ListView, view: View,
       position: Int, id: Long

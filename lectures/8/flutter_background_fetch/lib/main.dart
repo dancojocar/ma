@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const EVENTS_KEY = "fetch_events";
 
 /// This "Headless Task" is run when app is terminated.
+@pragma('vm:entry-point')
 void backgroundFetchHeadlessTask(HeadlessTask task) async {
   var taskId = task.taskId;
   var timeout = task.timeout;
@@ -36,16 +39,13 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
   prefs.setString(EVENTS_KEY, jsonEncode(events));
 
   if (taskId == 'flutter_background_fetch') {
-    /* DISABLED:  uncomment to fire a scheduleTask in headlessTask.
     BackgroundFetch.scheduleTask(TaskConfig(
         taskId: "com.transistorsoft.customtask",
         delay: 5000,
         periodic: false,
         forceAlarmManager: false,
         stopOnTerminate: false,
-        enableHeadless: true
-    ));
-     */
+        enableHeadless: true));
   }
   BackgroundFetch.finish(taskId);
 }
@@ -53,7 +53,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
 void main() {
   // Enable integration testing with the Flutter Driver extension.
   // See https://flutter.io/testing/ for more info.
-  runApp(const MyApp());
+  runApp(MyApp());
 
   // Register to receive BackgroundFetch events after app is terminated.
   // Requires {stopOnTerminate: false, enableHeadless: true}
@@ -61,8 +61,6 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -91,18 +89,20 @@ class _MyAppState extends State<MyApp> {
 
     // Configure BackgroundFetch.
     try {
-      var status = await BackgroundFetch.configure(BackgroundFetchConfig(
-        minimumFetchInterval: 15,
-        forceAlarmManager: false,
-        stopOnTerminate: false,
-        startOnBoot: true,
-        enableHeadless: true,
-        requiresBatteryNotLow: false,
-        requiresCharging: false,
-        requiresStorageNotLow: false,
-        requiresDeviceIdle: false,
-        requiredNetworkType: NetworkType.NONE,
-      ), _onBackgroundFetch, _onBackgroundFetchTimeout);
+      var status = await BackgroundFetch.configure(
+          BackgroundFetchConfig(
+              minimumFetchInterval: 15,
+              forceAlarmManager: false,
+              stopOnTerminate: false,
+              startOnBoot: true,
+              enableHeadless: true,
+              requiresBatteryNotLow: false,
+              requiresCharging: false,
+              requiresStorageNotLow: false,
+              requiresDeviceIdle: false,
+              requiredNetworkType: NetworkType.NONE),
+          _onBackgroundFetch,
+          _onBackgroundFetchTimeout);
       print('[BackgroundFetch] configure success: $status');
       setState(() {
         _status = status;
@@ -117,13 +117,9 @@ class _MyAppState extends State<MyApp> {
           periodic: false,
           forceAlarmManager: true,
           stopOnTerminate: false,
-          enableHeadless: true
-      ));
-    } catch(e) {
+          enableHeadless: true));
+    } on Exception catch (e) {
       print("[BackgroundFetch] configure ERROR: $e");
-      setState(() {
-        _status = e.hashCode;
-      });
     }
 
     // If the widget was removed from the tree while the asynchronous platform
@@ -144,19 +140,18 @@ class _MyAppState extends State<MyApp> {
     prefs.setString(EVENTS_KEY, jsonEncode(_events));
 
     if (taskId == "flutter_background_fetch") {
-      // Schedule a one-shot task when fetch event received (for testing).
-      /*
-      BackgroundFetch.scheduleTask(TaskConfig(
-          taskId: "com.transistorsoft.customtask",
-          delay: 5000,
-          periodic: false,
-          forceAlarmManager: true,
-          stopOnTerminate: false,
-          enableHeadless: true,
-          requiresNetworkConnectivity: true,
-          requiresCharging: true
-      ));
-       */
+      // Perform an example HTTP request.
+      var url =
+          Uri.https('www.googleapis.com', '/books/v1/volumes', {'q': '{http}'});
+
+      var response = await http.get(url);
+      if (response.statusCode == 200) {
+        var jsonResponse = jsonDecode(response.body) as Map<String, dynamic>;
+        var itemCount = jsonResponse['totalItems'];
+        print('Number of books about http: $itemCount.');
+      } else {
+        print('Request failed with status: ${response.statusCode}.');
+      }
     }
     // IMPORTANT:  You must signal completion of your fetch task or the OS can punish your app
     // for taking too long in the background.
@@ -201,48 +196,54 @@ class _MyAppState extends State<MyApp> {
       _events = [];
     });
   }
+
   @override
   Widget build(BuildContext context) {
-    const EMPTY_TEXT = Center(child: Text('Waiting for fetch events.  Simulate one.\n [Android] \$ ./scripts/simulate-fetch\n [iOS] XCode->Debug->Simulate Background Fetch'));
+    const EMPTY_TEXT = Center(
+        child: Text(
+            'Waiting for fetch events.  Simulate one.\n [Android] \$ ./scripts/simulate-fetch\n [iOS] XCode->Debug->Simulate Background Fetch'));
 
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-            title: const Text('BackgroundFetch Example', style: TextStyle(color: Colors.black)),
+            title: const Text('BackgroundFetch Example',
+                style: TextStyle(color: Colors.black)),
             backgroundColor: Colors.amberAccent,
             foregroundColor: Colors.black,
             actions: <Widget>[
               Switch(value: _enabled, onChanged: _onClickEnable),
-            ]
-        ),
-        body: (_events.isEmpty) ? EMPTY_TEXT : Container(
-          child: ListView.builder(
-              itemCount: _events.length,
-              itemBuilder: (context, index) {
-                var event = _events[index].split("@");
-                return InputDecorator(
-                    decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.only(left: 5.0, top: 5.0, bottom: 5.0),
-                        labelStyle: const TextStyle(color: Colors.blue, fontSize: 20.0),
-                        labelText: "[${event[0].toString()}]"
-                    ),
-                    child: Text(event[1], style: const TextStyle(color: Colors.black, fontSize: 16.0))
-                );
-              }
-          ),
-        ),
+            ]),
+        body: (_events.isEmpty)
+            ? EMPTY_TEXT
+            : Container(
+                child: ListView.builder(
+                    itemCount: _events.length,
+                    itemBuilder: (context, index) {
+                      var event = _events[index].split("@");
+                      return InputDecorator(
+                          decoration: InputDecoration(
+                              contentPadding: EdgeInsets.only(
+                                  left: 5.0, top: 5.0, bottom: 5.0),
+                              labelStyle:
+                                  TextStyle(color: Colors.blue, fontSize: 20.0),
+                              labelText: "[${event[0].toString()}]"),
+                          child: Text(event[1],
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 16.0)));
+                    }),
+              ),
         bottomNavigationBar: BottomAppBar(
             child: Container(
-                padding: const EdgeInsets.only(left: 5.0, right:5.0),
+                padding: EdgeInsets.only(left: 5.0, right: 5.0),
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
-                      ElevatedButton(onPressed: _onClickStatus, child: Text('Status: $_status')),
-                      ElevatedButton(onPressed: _onClickClear, child: const Text('Clear'))
-                    ]
-                )
-            )
-        ),
+                      ElevatedButton(
+                          onPressed: _onClickStatus,
+                          child: Text('Status: $_status')),
+                      ElevatedButton(
+                          onPressed: _onClickClear, child: Text('Clear'))
+                    ]))),
       ),
     );
   }

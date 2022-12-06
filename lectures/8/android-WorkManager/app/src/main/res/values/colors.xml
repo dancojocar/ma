@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright 2018 The Android Open Source Project
+  ~ Copyright (C) 2018 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
   -->
 
 <resources>
-    <color name="primary">#4fc3f7</color>
-    <color name="primary_dark">#0093c4</color>
-    <color name="primary_light">#8bf6ff</color>
-    <color name="accent">#616161</color>
-    <color name="primary_text">#000000</color>
-    <color name="secondary_text">#ffffff</color>
+    <color name="primary">#607D8B</color>
+    <color name="primary_dark">#455A64</color>
+    <color name="primary_light">#CFD8DC</color>
+    <color name="accent">#7C4DFF</color>
+    <color name="primary_text">#212121</color>
+    <color name="secondary_text">#757575</color>
     <color name="icons">#FFFFFF</color>
     <color name="divider">#BDBDBD</color>
 </resources>

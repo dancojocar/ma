@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:flutter_jwt/portfolio.dart';
 
 class PortfolioService {
-  final serverUrl = 'http://127.0.0.1:8080';
+  final serverUrl = 'http://10.0.2.2:8080';
 
   Future<String> auth() async {
     var data = json.encode({
       "Username": "test",
-      "Password": "test1", 
+      "Password": "test1",
     });
     var response = await http.post(
       Uri.parse('$serverUrl/token-auth'),
