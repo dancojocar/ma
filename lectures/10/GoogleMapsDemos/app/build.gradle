@@ -1,0 +1,121 @@
+import org.apache.tools.ant.filters.ConcatFilter
+
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+// Set the properties within `local.properties` into a `Properties` class so
+// that values within `local.properties` (e.g. Maps API key) are accessible in
+// this file.
+Properties properties = new Properties()
+if (rootProject.file("local.properties").exists()) {
+    properties.load(rootProject.file("local.properties").newDataInputStream())
+}
+def mapsApiKey = properties.getProperty("MAPS_API_KEY", "")
+
+android {
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId "com.example.kotlindemos"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+
+        // Inject the Maps API key into the manifest
+        manifestPlaceholders = [ mapsApiKey : mapsApiKey ]
+
+        // Reading the Maps API key into a BuildConfig value. This is only
+        // necessary so that the sample app can display a toast message if the
+        // API key was not set, otherwise, this can be skipped.
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"" )
+
+        // To add your Maps API key to this project:
+        // 1. Open the root project's local.properties file
+        // 2. Add this line, where YOUR_API_KEY is your API key:
+        //        MAPS_API_KEY=YOUR_API_KEY
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    flavorDimensions "version"
+    productFlavors {
+        gms {
+            dimension "version"
+            applicationIdSuffix ".gms"
+            versionNameSuffix "-gms"
+        }
+        v3 {
+            dimension "version"
+            applicationIdSuffix ".v3"
+            versionNameSuffix "-v3"
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        viewBinding true
+    }
+  namespace 'com.example.kotlindemos'
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    implementation "androidx.cardview:cardview:1.0.0"
+    implementation "androidx.recyclerview:recyclerview:1.2.1"
+    implementation 'androidx.multidex:multidex:2.0.1'
+
+    // GMS
+    gmsImplementation 'com.google.android.gms:play-services-maps:18.1.0'
+
+    // V3
+    v3Implementation 'com.google.android.libraries.maps:maps:3.1.0-beta'
+    v3Implementation 'com.google.android.gms:play-services-basement:18.1.0'
+    v3Implementation 'com.google.android.gms:play-services-base:18.1.0'
+    v3Implementation 'com.google.android.gms:play-services-gcm:17.0.0'
+    v3Implementation 'com.google.android.gms:play-services-location:21.0.1'
+
+    // Below is used to run the easypermissions library to manage location permissions
+    // EasyPermissions is needed to help us request for permission to access location
+    implementation 'pub.devrel:easypermissions:3.0.0'
+}
+
+task generateV3(type: Copy) {
+    group "V3 Beta"
+    description "Copies source code from GMS to V3 BETA."
+
+    from 'src/gms/java'
+    into 'src/v3/java'
+    filter { line ->
+        line.replace('com.google.android.gms.maps', 'com.google.android.libraries.maps')
+    }
+    filter(ConcatFilter, prepend: file('../../V3_FILE_HEADER'))
+}
+
+task generateV3Layout(type: Copy) {
+    group "V3 Beta"
+    description "Copies layout files from GMS to V3 BETA."
+
+    from 'src/gms/res/layout'
+    into 'src/v3/res/layout'
+    filter { line ->
+        line.replace('com.google.android.gms.maps', 'com.google.android.libraries.maps')
+    }
+}

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">biometric-playground</string>
+    <string name="use_biometrics_dialog">Do you want to set biometric login?</string>
+    <string name="use_biometrics_yes">Yes</string>
+    <string name="use_biometrics_no">No</string>
+    <string name="biometric_prompt_title">Use your finger to confirm</string>
+    <string name="biometric_prompt_cancel">Cancel</string>
+
+</resources>

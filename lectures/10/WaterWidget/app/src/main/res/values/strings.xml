@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">WaterWidget</string>
+    <string name="water_widget_main_activity">Water Widget Main Activity</string>
+    <string name="loading">Loading…</string>
+
+    <!-- Widget -->
+    <string name="glasses_of_water_format">Glasses of Water: %d</string>
+    <string name="water_goal">Daily Glass Goal: %d</string>
+    <string name="goal_met">You\'ve met the goal!</string>
+
+    <!-- Preview -->
+    <string name="glasses_of_water_preview">Glasses of Water: 8</string>
+</resources>

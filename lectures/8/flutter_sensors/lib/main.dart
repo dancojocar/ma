@@ -6,7 +6,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:sensors/sensors.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 import 'snake.dart';
 
@@ -22,13 +22,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -41,21 +41,21 @@ class _MyHomePageState extends State<MyHomePage> {
   static const int _snakeColumns = 20;
   static const double _snakeCellSize = 10.0;
 
-  List<double> _accelerometerValues;
-  List<double> _userAccelerometerValues;
-  List<double> _gyroscopeValues;
+  List<double>? _accelerometerValues;
+  List<double>? _userAccelerometerValues;
+  List<double>? _gyroscopeValues;
   List<StreamSubscription<dynamic>> _streamSubscriptions =
       <StreamSubscription<dynamic>>[];
 
   @override
   Widget build(BuildContext context) {
-    final List<String> accelerometer =
-        _accelerometerValues?.map((double v) => v.toStringAsFixed(1))?.toList();
-    final List<String> gyroscope =
-        _gyroscopeValues?.map((double v) => v.toStringAsFixed(1))?.toList();
-    final List<String> userAccelerometer = _userAccelerometerValues
+    final accelerometer =
+        _accelerometerValues?.map((double v) => v.toStringAsFixed(1)).toList();
+    final gyroscope =
+        _gyroscopeValues?.map((double v) => v.toStringAsFixed(1)).toList();
+    final userAccelerometer = _userAccelerometerValues
         ?.map((double v) => v.toStringAsFixed(1))
-        ?.toList();
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -81,31 +81,31 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text('Accelerometer: $accelerometer'),
               ],
             ),
-            padding: const EdgeInsets.all(16.0),
           ),
           Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text('UserAccelerometer: $userAccelerometer'),
               ],
             ),
-            padding: const EdgeInsets.all(16.0),
           ),
           Padding(
+            padding: const EdgeInsets.all(16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text('Gyroscope: $gyroscope'),
               ],
             ),
-            padding: const EdgeInsets.all(16.0),
           ),
         ],
       ),

@@ -8,10 +8,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:sensors/sensors.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 class Snake extends StatefulWidget {
-  Snake({this.rows = 20, this.columns = 20, this.cellSize = 10.0}) {
+  Snake({super.key, this.rows = 20, this.columns = 20, this.cellSize = 10.0}) {
     assert(10 <= rows);
     assert(10 <= columns);
     assert(5.0 <= cellSize);
@@ -61,8 +61,8 @@ class SnakeState extends State<Snake> {
   }
 
   double cellSize;
-  GameState state;
-  AccelerometerEvent acceleration;
+  late GameState state;
+  late AccelerometerEvent acceleration;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +86,7 @@ class SnakeState extends State<Snake> {
   }
 
   void _step() {
-    final math.Point<int> newDirection = acceleration == null
+    final math.Point<int>? newDirection = acceleration == null
         ? null
         : acceleration.x.abs() < 1.0 && acceleration.y.abs() < 1.0
             ? null
@@ -104,12 +104,12 @@ class GameState {
 
   int rows;
   int columns;
-  int snakeLength;
+  late int snakeLength;
 
   List<math.Point<int>> body = <math.Point<int>>[const math.Point<int>(0, 0)];
   math.Point<int> direction = const math.Point<int>(1, 0);
 
-  void step(math.Point<int> newDirection) {
+  void step(math.Point<int>? newDirection) {
     math.Point<int> next = body.last + direction;
     next = math.Point<int>(next.x % columns, next.y % rows);
 
