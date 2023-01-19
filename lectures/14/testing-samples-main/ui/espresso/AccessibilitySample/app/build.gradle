@@ -1,0 +1,69 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 33
+    buildToolsVersion rootProject.buildToolsVersion
+    defaultConfig {
+        applicationId "com.example.android.testing.espresso.AccessibilitySample"
+        minSdkVersion 14
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        multiDexEnabled true
+    }
+    lintOptions {
+        abortOnError false
+    }
+    productFlavors {
+    }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+        managedDevices {
+            devices {
+                // run with ../gradlew  nexusOneApi30DebugAndroidTest
+                nexusOneApi30(com.android.build.api.dsl.ManagedVirtualDevice) {
+                    // A lower resolution device is used here for better emulator performance
+                    device = "Nexus One"
+                    apiLevel = 30
+                    // Also use the AOSP ATD image for better emulator performance
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+    // App dependencies
+    implementation 'androidx.annotation:annotation:' + rootProject.androidxAnnotationVersion;
+    implementation 'com.google.guava:guava:' + rootProject.guavaVersion
+    implementation 'androidx.multidex:multidex:2.0.1'
+
+    // Testing-only dependencies
+    androidTestImplementation 'androidx.test:core:' + rootProject.coreVersion
+    androidTestImplementation 'androidx.test.ext:junit:' + rootProject.extJUnitVersion
+    androidTestImplementation 'androidx.test:runner:' + rootProject.runnerVersion
+    androidTestImplementation 'androidx.test.espresso:espresso-core:' + rootProject.espressoVersion
+    androidTestImplementation('androidx.test.espresso:espresso-accessibility:' + rootProject.espressoVersion) {
+        // workaround for https://github.com/android/android-test/issues/861
+        exclude group: 'org.checkerframework', module: 'checker'
+    }
+    androidTestImplementation 'com.google.truth:truth:1.1.3'
+}

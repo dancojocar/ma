@@ -1,0 +1,65 @@
+load("@rules_jvm_external//:defs.bzl", "artifact")
+load("//:common_defs.bzl", "minSdkVersion", "targetSdkVersion")
+
+licenses(["notice"])  # Apache 2.0
+
+android_library(
+    name = "CustomMatcherSampleLib",
+    srcs = glob(["app/src/main/**/*.java"]),
+    custom_package = "com.example.android.testing.espresso.CustomMatcherSample",
+    manifest = "app/src/main/AndroidManifest.xml",
+    resource_files = glob(["app/src/main/res/**/*"]),
+    deps = [
+        artifact("androidx.annotation:annotation"),
+        artifact("com.google.guava:guava"),
+    ],
+)
+
+android_binary(
+    name = "CustomMatcherSample",
+    custom_package = "com.example.android.testing.espresso.CustomMatcherSample",
+    manifest = "app/src/main/AppManifest.xml",
+    manifest_values = {
+        "minSdkVersion": minSdkVersion,
+        "targetSdkVersion": targetSdkVersion,
+    },
+    deps = [":CustomMatcherSampleLib"],
+)
+
+android_library(
+    name = "CustomMatcherSampleTestLib",
+    srcs = glob(["app/src/sharedTest/**/*.java"]),
+    custom_package = "com.example.android.testing.espresso.CustomMatcherSample.test",
+    deps = [
+        ":CustomMatcherSampleLib",
+        "//:test_deps",
+        "@maven//:org_robolectric_robolectric",
+        "@maven//:org_robolectric_annotations",
+        "@maven//:junit_junit",
+    ],
+)
+
+android_binary(
+    name = "CustomMatcherSampleTest",
+    custom_package = "com.example.android.testing.espresso.CustomMatcherSample.test",
+    instruments = ":CustomMatcherSample",
+    manifest = "app/src/androidTest/AndroidManifest.xml",
+    manifest_values = {
+        "minSdkVersion": minSdkVersion,
+        "targetSdkVersion": targetSdkVersion,
+    },
+    deps = [":CustomMatcherSampleTestLib"],
+)
+
+API_LEVELS = [
+    "19_x86",
+    "21_x86",
+    "22_x86",
+    "23_x86",
+]
+
+[android_instrumentation_test(
+    name = "CustomMatcherSampleInstrumentationTest_%s" % API_LEVEL,
+    target_device = "@android_test_support//tools/android/emulated_devices/generic_phone:android_%s_qemu2" % API_LEVEL,
+    test_app = ":CustomMatcherSampleTest",
+) for API_LEVEL in API_LEVELS]

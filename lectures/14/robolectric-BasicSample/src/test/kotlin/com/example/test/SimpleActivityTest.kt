@@ -1,12 +1,12 @@
 package com.example.test
 
 import android.widget.TextView
-import androidx.test.core.app.ActivityScenario
 import com.example.R
 import com.example.activity.SimpleActivity
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric.buildActivity
 import org.robolectric.RobolectricTestRunner
 
 
@@ -16,13 +16,14 @@ class SimpleActivityTest {
   @Test
   fun testSomething() {
     // GIVEN
-    ActivityScenario.launch(SimpleActivity::class.java).use {
-      it.onActivity {
-        //WHEN
-        val tv = it.findViewById<TextView>(R.id.text)
-        //THEN
-        assertThat(tv.text).isEqualTo("Hello, Kotlin!")
-      }
-    }
+    val controller = buildActivity(SimpleActivity::class.java).setup()
+
+    // WHEN
+    controller.pause().stop()
+    val activity: SimpleActivity = controller.get()
+    val tv = activity.findViewById<TextView>(R.id.text)
+
+    //THEN
+    assertThat(tv.text).isEqualTo("Hello, Kotlin!")
   }
 }
