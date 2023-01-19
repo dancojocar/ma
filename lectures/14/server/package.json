@@ -1,18 +1,17 @@
 {
-  "name": "demo2022",
+  "name": "demo2023",
   "version": "1.0.0",
   "description": "Demo Sample",
   "private": true,
   "main": "index.js",
   "scripts": {
-    "start": "backpack"
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@koa/cors": "^3.1.0",
-    "backpack-core": "0.8.4",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
     "koa-convert": "^2.0.0",

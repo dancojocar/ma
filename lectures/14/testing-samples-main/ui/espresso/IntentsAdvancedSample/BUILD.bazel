@@ -1,0 +1,63 @@
+load("@rules_jvm_external//:defs.bzl", "artifact")
+load("//:common_defs.bzl", "minSdkVersion", "targetSdkVersion")
+
+licenses(["notice"])  # Apache 2.0
+
+android_library(
+    name = "IntentsAdvancedSampleLib",
+    srcs = glob(["app/src/main/**/*.java"]),
+    custom_package = "com.example.android.testing.espresso.intents.AdvancedSample",
+    manifest = "app/src/main/AndroidManifest.xml",
+    resource_files = glob(["app/src/main/res/**/*"]),
+    deps = [
+        artifact("androidx.annotation:annotation"),
+        artifact("com.google.guava:guava"),
+    ],
+)
+
+android_binary(
+    name = "IntentsAdvancedSample",
+    custom_package = "com.example.android.testing.espresso.intents.AdvancedSample",
+    manifest = "app/src/main/AppManifest.xml",
+    manifest_values = {
+        "minSdkVersion": minSdkVersion,
+        "targetSdkVersion": targetSdkVersion,
+    },
+    deps = [":IntentsAdvancedSampleLib"],
+)
+
+android_library(
+    name = "IntentsAdvancedSampleTestLib",
+    srcs = glob(["app/src/androidTest/**/*.java"]),
+    custom_package = "com.example.android.testing.espresso.intents.AdvancedSample.test",
+    deps = [
+        artifact("androidx.test.espresso:espresso-intents"),
+        ":IntentsAdvancedSampleLib",
+        "//:test_deps",
+    ],
+)
+
+android_binary(
+    name = "IntentsAdvancedSampleTest",
+    custom_package = "com.example.android.testing.espresso.intents.AdvancedSample.test",
+    instruments = ":IntentsAdvancedSample",
+    manifest = "app/src/androidTest/AndroidManifest.xml",
+    manifest_values = {
+        "minSdkVersion": minSdkVersion,
+        "targetSdkVersion": targetSdkVersion,
+    },
+    deps = [":IntentsAdvancedSampleTestLib"],
+)
+
+API_LEVELS = [
+    "19_x86",
+    "21_x86",
+    "22_x86",
+    "23_x86",
+]
+
+[android_instrumentation_test(
+    name = "IntentsAdvancedSampleInstrumentationTest_%s" % API_LEVEL,
+    target_device = "@android_test_support//tools/android/emulated_devices/generic_phone:android_%s_qemu2" % API_LEVEL,
+    test_app = ":IntentsAdvancedSampleTest",
+) for API_LEVEL in API_LEVELS]

@@ -1,0 +1,78 @@
+/**
+ * Copyright (C) 2018 Google Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        APP_ID = "ro.ubbcluj.cs.ds"
+
+        //keystorePropertiesFilename lives in gradle.properties
+        keystorePropertiesFile = rootProject.file(keystorePropertiesFilename)
+        keystoreProperties = new Properties()
+        if (keystorePropertiesFile.exists()) {
+            keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+        } else {
+            println "Cannot find keystore properties file. " +
+                    "A) Create this file, B) use a different file, or C) use assembleDebug."
+            println "A) Create $keystorePropertiesFilename"
+            println "B) ./gradlew -PkeystorePropertiesFilename=release-keystore.properties assembleRelease"
+            println "C) ./gradlew assembleDebug"
+            println ""
+        }
+        keystoreFilename = keystoreProperties['storeFile']
+        //signing config values
+        releaseStoreFile = keystoreFilename == null ? null : rootProject.file(keystoreFilename)
+        releaseStorePassword = keystoreProperties['storePassword']
+        releaseKeyAlias = keystoreProperties['keyAlias']
+        releaseKeyPassword = keystoreProperties['keyPassword']
+
+        version_kotlin = '1.7.20'
+        version_billing = '2.0.1'
+        version_lifecycle = '1.1.1'
+        version_coroutines = '1.3.4'
+        version_room = "2.1.0-alpha03"
+        version_nav = "1.0.0-alpha07"
+        version_support = "1.0.0"
+        version_espresso = "3.1.0-alpha4"
+        version_runner = "1.1.0-alpha4"
+        version_rules = "1.1.0-alpha4"
+        version_arch_core = "2.0.0"
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$version_kotlin"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
