@@ -4,6 +4,7 @@
     <string name="defaultText">Update</string>
     <string name="fromText">From editText: %1$s</string>
   <string name="helloTv">Hello, I am a TextView</string>
+  <string name="helloTv2">Hello, I am a TextView2</string>
   <string name="helloButton">Hello, I am a Button</string>
   <string name="hintText">Insert text here</string>
 </resources>
