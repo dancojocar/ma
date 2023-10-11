@@ -38,10 +38,10 @@ final List<Entry> _data = <Entry>[
     'First Year',
     <Entry>[
       Entry(
-        'Englist groups',
+        'English groups',
         <Entry>[
           Entry('911', <Entry>[
-            Entry('911/1',<Entry>[
+            Entry('911/1', <Entry>[
               Entry('John Smith'),
               Entry('John Doe'),
             ]),
@@ -102,7 +102,7 @@ final List<Entry> _data = <Entry>[
     'Third Year',
     <Entry>[
       Entry(
-        'Englist groups',
+        'English groups',
         <Entry>[
           Entry('931'),
           Entry('932'),
@@ -132,7 +132,7 @@ final List<Entry> _data = <Entry>[
 // Displays one Entry. If the entry has children then it's displayed
 // with an ExpansionTile.
 class EntryItem extends StatelessWidget {
-  const EntryItem(this.entry, {Key? key}): super(key: key);
+  const EntryItem(this.entry, {Key? key}) : super(key: key);
 
   final Entry entry;
 
