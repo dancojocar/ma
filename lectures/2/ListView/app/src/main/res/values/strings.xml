@@ -1,0 +1,18 @@
+<resources>
+  <string name="app_name">ListView</string>
+  <string-array name="array_technology">
+    <item>Android</item>
+    <item>Java</item>
+    <item>Kotlin</item>
+    <item>Rust</item>
+    <item>Hadoop</item>
+    <item>Sap</item>
+    <item>Python</item>
+    <item>Ajax</item>
+    <item>C++</item>
+    <item>Ruby</item>
+    <item>Rails</item>
+    <item>.Net</item>
+    <item>Perl</item>
+  </string-array>
+</resources>
