@@ -16,31 +16,34 @@ import loge
 class MainActivity : AppCompatActivity() {
 
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_main)
+    val binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
-        val retrofitService = RetrofitService.getInstance()
+    val retrofitService = RetrofitService.getInstance()
 
-        val viewModel =
-            ViewModelProvider(this, MyViewModelFactory(NetworkRepository(retrofitService))).get(
-                MainViewModel::class.java
-            )
+    val viewModel =
+      ViewModelProvider(
+        this,
+        MyViewModelFactory(NetworkRepository(retrofitService))
+      ).get(
+        MainViewModel::class.java
+      )
 
-        val adapter = MainAdapter()
+    val adapter = MainAdapter()
 
-        binding.recyclerview.adapter = adapter
+    binding.recyclerview.adapter = adapter
 
-        viewModel.movieList.observe(this, Observer {
-            logd("onCreate: $it")
-            adapter.setMovieList(it)
-        })
+    viewModel.movieList.observe(this, Observer {
+      logd("onCreate: $it")
+      adapter.setMovieList(it)
+    })
 
-        viewModel.errorMessage.observe(this, Observer {
-            loge("Error while getting the movies: $it")
-        })
-        viewModel.getAllMovies()
-    }
+    viewModel.errorMessage.observe(this, Observer {
+      loge("Error while getting the movies: $it")
+    })
+    viewModel.getAllMovies()
+  }
 }
