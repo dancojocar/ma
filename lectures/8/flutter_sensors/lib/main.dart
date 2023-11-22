@@ -11,10 +11,12 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'snake.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -44,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<double>? _accelerometerValues;
   List<double>? _userAccelerometerValues;
   List<double>? _gyroscopeValues;
-  List<StreamSubscription<dynamic>> _streamSubscriptions =
+  final List<StreamSubscription<dynamic>> _streamSubscriptions =
       <StreamSubscription<dynamic>>[];
 
   @override

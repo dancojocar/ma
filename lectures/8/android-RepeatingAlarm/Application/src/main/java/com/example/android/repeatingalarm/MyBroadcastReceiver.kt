@@ -1,12 +1,15 @@
 package com.example.android.repeatingalarm
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat.getSystemService
@@ -34,6 +37,16 @@ class MyBroadcastReceiver: BroadcastReceiver() {
     // notificationId is a unique int for each notification that you must define
 
     // notificationId is a unique int for each notification that you must define
+    if (ActivityCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) != PackageManager.PERMISSION_GRANTED
+    ) {
+      // TODO: Consider calling
+      //    ActivityCompat#requestPermissions
+      Toast.makeText(context, "Please enable the post notification permission", Toast.LENGTH_LONG).show()
+      return
+    }
     notificationManager.notify(12345, builder.build())
   }
 

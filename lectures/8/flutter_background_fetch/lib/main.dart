@@ -53,7 +53,7 @@ void backgroundFetchHeadlessTask(HeadlessTask task) async {
 void main() {
   // Enable integration testing with the Flutter Driver extension.
   // See https://flutter.io/testing/ for more info.
-  runApp(MyApp());
+  runApp(const MyApp());
 
   // Register to receive BackgroundFetch events after app is terminated.
   // Requires {stopOnTerminate: false, enableHeadless: true}
@@ -61,6 +61,8 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   _MyAppState createState() => _MyAppState();
 }
@@ -199,7 +201,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    const EMPTY_TEXT = Center(
+    const emptyText = Center(
         child: Text(
             'Waiting for fetch events.  Simulate one.\n [Android] \$ ./scripts/simulate-fetch\n [iOS] XCode->Debug->Simulate Background Fetch'));
 
@@ -214,27 +216,25 @@ class _MyAppState extends State<MyApp> {
               Switch(value: _enabled, onChanged: _onClickEnable),
             ]),
         body: (_events.isEmpty)
-            ? EMPTY_TEXT
-            : Container(
-                child: ListView.builder(
-                    itemCount: _events.length,
-                    itemBuilder: (context, index) {
-                      var event = _events[index].split("@");
-                      return InputDecorator(
-                          decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(
-                                  left: 5.0, top: 5.0, bottom: 5.0),
-                              labelStyle:
-                                  TextStyle(color: Colors.blue, fontSize: 20.0),
-                              labelText: "[${event[0].toString()}]"),
-                          child: Text(event[1],
-                              style: TextStyle(
-                                  color: Colors.black, fontSize: 16.0)));
-                    }),
-              ),
+            ? emptyText
+            : ListView.builder(
+                itemCount: _events.length,
+                itemBuilder: (context, index) {
+                  var event = _events[index].split("@");
+                  return InputDecorator(
+                      decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.only(
+                              left: 5.0, top: 5.0, bottom: 5.0),
+                          labelStyle: const TextStyle(
+                              color: Colors.blue, fontSize: 20.0),
+                          labelText: "[${event[0].toString()}]"),
+                      child: Text(event[1],
+                          style: const TextStyle(
+                              color: Colors.black, fontSize: 16.0)));
+                }),
         bottomNavigationBar: BottomAppBar(
             child: Container(
-                padding: EdgeInsets.only(left: 5.0, right: 5.0),
+                padding: const EdgeInsets.only(left: 5.0, right: 5.0),
                 child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -242,7 +242,7 @@ class _MyAppState extends State<MyApp> {
                           onPressed: _onClickStatus,
                           child: Text('Status: $_status')),
                       ElevatedButton(
-                          onPressed: _onClickClear, child: Text('Clear'))
+                          onPressed: _onClickClear, child: const Text('Clear'))
                     ]))),
       ),
     );
