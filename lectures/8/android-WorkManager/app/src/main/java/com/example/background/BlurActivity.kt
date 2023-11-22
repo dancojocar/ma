@@ -18,6 +18,7 @@ package com.example.background
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -61,7 +62,7 @@ class BlurActivity : AppCompatActivity() {
             // so that the entire process of displaying a WorkInfo is in one location.
 
             // If there are no matching work info, do nothing
-            if (listOfWorkInfo.isNullOrEmpty()) {
+            if (listOfWorkInfo.isEmpty()) {
                 return@Observer
             }
 
@@ -82,6 +83,7 @@ class BlurActivity : AppCompatActivity() {
                     binding.seeFileButton.visibility = View.VISIBLE
                 }
             } else {
+                Log.d("work", "workInfosObserver state: "+workInfo.state)
                 showWorkInProgress()
             }
         }

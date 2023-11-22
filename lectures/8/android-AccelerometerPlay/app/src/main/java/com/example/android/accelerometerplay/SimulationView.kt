@@ -16,7 +16,7 @@ class SimulationView(context: Context) : FrameLayout(context), SensorEventListen
 
   companion object {
     // diameter of the balls in meters
-    const val sBallDiameter = 0.04f
+    const val sBallDiameter = 0.004f
   }
 
   private lateinit var mAccelerometer: Sensor
