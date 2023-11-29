@@ -114,7 +114,7 @@ class MainActivity : Activity(), AdapterView.OnItemClickListener {
 
       // Load the thumbnail image
       val image = localView!!.findViewById<View>(R.id.imageview_item) as ImageView
-      Picasso.with(image.context).load(item.thumbnailUrl).into(image)
+      Picasso.get().load(item.thumbnailUrl).into(image)
 
       // Set the TextView's contents
       val name = localView.findViewById<View>(R.id.textview_name) as TextView

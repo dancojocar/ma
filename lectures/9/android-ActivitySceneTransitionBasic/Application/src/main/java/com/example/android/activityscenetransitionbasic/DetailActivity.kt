@@ -79,7 +79,7 @@ class DetailActivity : Activity() {
    * Load the item's thumbnail image into our [ImageView].
    */
   private fun loadThumbnail() {
-    Picasso.with(binding.imageviewHeader.context)
+    Picasso.get()
       .load(mItem!!.thumbnailUrl)
       .noFade()
       .into(binding.imageviewHeader)
@@ -89,7 +89,7 @@ class DetailActivity : Activity() {
    * Load the item's full-size image into our [ImageView].
    */
   private fun loadFullSizeImage() {
-    Picasso.with(binding.imageviewHeader.context)
+    Picasso.get()
       .load(mItem!!.photoUrl)
       .noFade()
       .noPlaceholder()

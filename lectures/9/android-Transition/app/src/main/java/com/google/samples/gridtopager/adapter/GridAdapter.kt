@@ -103,11 +103,12 @@ class GridAdapter(fragment: Fragment) : RecyclerView.Adapter<ImageViewHolder>() 
       (fragment.exitTransition as TransitionSet).excludeTarget(view, true)
 
       val transitioningView = view.findViewById<ImageView>(R.id.card_image)
-      fragment.fragmentManager!!
+      fragment.parentFragmentManager
           .beginTransaction()
           .setReorderingAllowed(true) // Optimize for shared element transition
           .addSharedElement(transitioningView, transitioningView.transitionName)
-          .replace(R.id.fragment_container, ImagePagerFragment(), ImagePagerFragment::class.java
+          .replace(
+            R.id.fragment_container, ImagePagerFragment(), ImagePagerFragment::class.java
               .simpleName)
           .addToBackStack(null)
           .commit()

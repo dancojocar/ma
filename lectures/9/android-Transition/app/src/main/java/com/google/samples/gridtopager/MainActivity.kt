@@ -17,16 +17,20 @@ package com.google.samples.gridtopager
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.google.samples.gridtopager.databinding.ActivityMainBinding
 import com.google.samples.gridtopager.fragment.GridFragment
 
 /**
  * Grid to pager app's main activity.
  */
 class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
     if (savedInstanceState != null) {
       currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION, 0)
       // Return here to prevent adding additional GridFragments when changing orientation.
@@ -35,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     val fragmentManager = supportFragmentManager
     fragmentManager
         .beginTransaction()
-        .add(R.id.fragment_container, GridFragment(), GridFragment::class.java.getSimpleName())
+        .add(binding.fragmentContainer.id, GridFragment(), GridFragment::class.java.getSimpleName())
         .commit()
   }
 

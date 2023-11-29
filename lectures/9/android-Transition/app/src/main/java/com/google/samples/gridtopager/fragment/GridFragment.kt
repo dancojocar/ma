@@ -25,20 +25,24 @@ import android.view.ViewGroup
 import androidx.core.app.SharedElementCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
-import com.google.samples.gridtopager.MainActivity
 import com.google.samples.gridtopager.R
+import com.google.samples.gridtopager.databinding.FragmentGridBinding
+import com.google.samples.gridtopager.MainActivity
 import com.google.samples.gridtopager.adapter.GridAdapter
 
 /**
  * A fragment for displaying a grid of images.
  */
 class GridFragment : Fragment() {
+  private var _binding: FragmentGridBinding? = null
+  private val binding get() = _binding!!
 
   lateinit var recyclerView: RecyclerView
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                            savedInstanceState: Bundle?): View? {
-    recyclerView = inflater.inflate(R.layout.fragment_grid, container, false) as RecyclerView
+                            savedInstanceState: Bundle?): View {
+    _binding = FragmentGridBinding.inflate(inflater, container, false)
+    recyclerView = binding.recyclerView
     recyclerView.adapter = GridAdapter(this)
 
     prepareTransitions()
