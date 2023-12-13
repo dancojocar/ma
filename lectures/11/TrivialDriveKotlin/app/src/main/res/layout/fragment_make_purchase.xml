@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!--
-    Copyright (C) 2018 Google Inc. All Rights Reserved.
+    Copyright (C) 2021 Google Inc. All Rights Reserved.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,29 +15,32 @@
     limitations under the License.
     -->
 
-<androidx.appcompat.widget.LinearLayoutCompat
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
->
-    <androidx.appcompat.widget.AppCompatTextView
-        style="@style/PurchaseLabels"
-        android:text="@string/fun_products"/>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/inapp_inventory"
-        style="@style/InventoryRecyclerView"
-        tools:context="ro.ubbcluj.cs.ds.MakePurchaseFragment"
-        tools:listitem="@layout/inventory_item"
-    />
-    <androidx.appcompat.widget.AppCompatTextView
-        style="@style/PurchaseLabels"
-        android:text="@string/fun_subscriptions"/>
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/subs_inventory"
-        style="@style/InventoryRecyclerView"
-        tools:context="ro.ubbcluj.cs.ds.MakePurchaseFragment"
-        tools:listitem="@layout/inventory_item"
-    />
-</androidx.appcompat.widget.LinearLayoutCompat>
+<!--
+    This file combines use of the DataBinding library with included layouts. Since we get to
+    choose how included layouts are bound, we can bind them to any SKU_DETAILS object we wish,
+    so this creates a simple list with headers without having to do fancy RecyclerView things,
+    while still being able to reuse our included inventory_item widget.
+-->
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+
+        <variable
+            name="mpvm"
+            type="ro.ubbcluj.cs.ds.MakePurchaseViewModel"/>
+        <import type="android.view.View"/>
+    </data>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/inapp_inventory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:enabled="@{!mpvm.billingFlowInProcess}"
+            tools:context="ro.ubbcluj.cs.ds.ui.MakePurchaseFragment"
+            tools:listitem="@layout/inventory_item" />
+
+    </FrameLayout>
+</layout>

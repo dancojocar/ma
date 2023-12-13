@@ -7,43 +7,43 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
-import com.google.firebase.quickstart.database.R
+import com.google.firebase.quickstart.database.databinding.FragmentAllPostsBinding
+import com.google.firebase.quickstart.database.databinding.ItemPostBinding
 import com.google.firebase.quickstart.database.kotlin.PostDetailActivity
 import com.google.firebase.quickstart.database.kotlin.logd
 import com.google.firebase.quickstart.database.kotlin.models.Post
 import com.google.firebase.quickstart.database.kotlin.viewholder.PostViewHolder
-import kotlinx.android.synthetic.main.fragment_all_posts.view.*
 
 abstract class PostListFragment : Fragment() {
 
   private lateinit var database: DatabaseReference
 
-  private lateinit var recycler: RecyclerView
   private lateinit var manager: LinearLayoutManager
   private var adapter: FirebaseRecyclerAdapter<Post, PostViewHolder>? = null
+  private var _binding: FragmentAllPostsBinding? = null
+  private val binding get() = _binding!!
 
   val uid: String
     get() = FirebaseAuth.getInstance().currentUser!!.uid
 
   override fun onCreateView(
-      inflater: LayoutInflater,
-      container: ViewGroup?,
-      savedInstanceState: Bundle?
+    inflater: LayoutInflater,
+    container: ViewGroup?,
+    savedInstanceState: Bundle?
   ): View? {
     super.onCreateView(inflater, container, savedInstanceState)
-    val rootView = inflater.inflate(R.layout.fragment_all_posts, container, false)
+    _binding = FragmentAllPostsBinding.inflate(inflater, container, false)
+    val view = binding.root
 
     database = FirebaseDatabase.getInstance().reference
 
-    recycler = rootView.findViewById(R.id.messagesList)
-    rootView.messagesList.setHasFixedSize(true)
+    binding.messagesList.setHasFixedSize(true)
 
-    return rootView
+    return view
   }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -53,20 +53,22 @@ abstract class PostListFragment : Fragment() {
     manager = LinearLayoutManager(activity)
     manager.reverseLayout = true
     manager.stackFromEnd = true
-    recycler.layoutManager = manager
+    binding.messagesList.layoutManager = manager
 
     // Set up FirebaseRecyclerAdapter with the Query
     val postsQuery = getQuery(database)
 
     val options = FirebaseRecyclerOptions.Builder<Post>()
-        .setQuery(postsQuery, Post::class.java)
-        .build()
+      .setQuery(postsQuery, Post::class.java)
+      .build()
 
     adapter = object : FirebaseRecyclerAdapter<Post, PostViewHolder>(options) {
+      private lateinit var viewHolder: ItemPostBinding
 
       override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): PostViewHolder {
         val inflater = LayoutInflater.from(viewGroup.context)
-        return PostViewHolder(inflater.inflate(R.layout.item_post, viewGroup, false))
+        viewHolder = ItemPostBinding.inflate(inflater, viewGroup, false)
+        return PostViewHolder(viewHolder)
       }
 
       override fun onBindViewHolder(viewHolder: PostViewHolder, position: Int, model: Post) {
@@ -96,14 +98,14 @@ abstract class PostListFragment : Fragment() {
         }
       }
     }
-    recycler.adapter = adapter
+    binding.messagesList.adapter = adapter
   }
 
   private fun onStarClicked(postRef: DatabaseReference) {
     postRef.runTransaction(object : Transaction.Handler {
       override fun doTransaction(mutableData: MutableData): Transaction.Result {
         val p = mutableData.getValue(Post::class.java)
-            ?: return Transaction.success(mutableData)
+          ?: return Transaction.success(mutableData)
 
         if (p.stars.containsKey(uid)) {
           // Unstar the post and remove self from stars
@@ -121,9 +123,9 @@ abstract class PostListFragment : Fragment() {
       }
 
       override fun onComplete(
-          databaseError: DatabaseError?,
-          b: Boolean,
-          dataSnapshot: DataSnapshot?
+        databaseError: DatabaseError?,
+        b: Boolean,
+        dataSnapshot: DataSnapshot?
       ) {
         // Transaction completed
         logd("postTransaction:onComplete: $databaseError")

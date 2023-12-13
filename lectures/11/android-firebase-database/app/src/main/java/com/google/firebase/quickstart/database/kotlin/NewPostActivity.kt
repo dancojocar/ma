@@ -5,37 +5,40 @@ import android.text.TextUtils
 import android.widget.Toast
 import com.google.firebase.database.*
 import com.google.firebase.quickstart.database.R
+import com.google.firebase.quickstart.database.databinding.ActivityMainBinding
+import com.google.firebase.quickstart.database.databinding.ActivityNewPostBinding
 import com.google.firebase.quickstart.database.kotlin.models.Post
 import com.google.firebase.quickstart.database.kotlin.models.User
-import kotlinx.android.synthetic.main.activity_new_post.*
 import java.util.*
 
 class NewPostActivity : BaseActivity() {
 
   private lateinit var database: DatabaseReference
-
+  private lateinit var binding: ActivityNewPostBinding
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_new_post)
+    binding = ActivityNewPostBinding.inflate(layoutInflater)
+
+    setContentView(binding.root)
 
     database = FirebaseDatabase.getInstance().reference
 
-    fabSubmitPost.setOnClickListener { submitPost() }
+    binding.fabSubmitPost.setOnClickListener { submitPost() }
   }
 
   private fun submitPost() {
-    val title = fieldTitle.text.toString()
-    val body = fieldBody.text.toString()
+    val title = binding.fieldTitle.text.toString()
+    val body = binding.fieldBody.text.toString()
 
     // Title is required
     if (TextUtils.isEmpty(title)) {
-      fieldTitle.error = REQUIRED
+      binding.fieldTitle.error = REQUIRED
       return
     }
 
     // Body is required
     if (TextUtils.isEmpty(body)) {
-      fieldBody.error = REQUIRED
+      binding.fieldBody.error = REQUIRED
       return
     }
 
@@ -45,41 +48,43 @@ class NewPostActivity : BaseActivity() {
 
     val userId = uid
     database.child("users").child(userId).addListenerForSingleValueEvent(
-        object : ValueEventListener {
-          override fun onDataChange(dataSnapshot: DataSnapshot) {
-            // Get user value
-            val user = dataSnapshot.getValue(User::class.java)
+      object : ValueEventListener {
+        override fun onDataChange(dataSnapshot: DataSnapshot) {
+          // Get user value
+          val user = dataSnapshot.getValue(User::class.java)
 
-            if (user == null) {
-              // User is null, error out
-              loge("User $userId is unexpectedly null")
-              Toast.makeText(baseContext,
-                  "Error: could not fetch user.",
-                  Toast.LENGTH_SHORT).show()
-            } else {
-              // Write new post
-              writeNewPost(userId, user.username.toString(), title, body)
-            }
-
-            // Finish this Activity, back to the stream
-            setEditingEnabled(true)
-            finish()
+          if (user == null) {
+            // User is null, error out
+            loge("User $userId is unexpectedly null")
+            Toast.makeText(
+              baseContext,
+              "Error: could not fetch user.",
+              Toast.LENGTH_SHORT
+            ).show()
+          } else {
+            // Write new post
+            writeNewPost(userId, user.username.toString(), title, body)
           }
 
-          override fun onCancelled(databaseError: DatabaseError) {
-            logw("getUser:onCancelled", databaseError.toException())
-            setEditingEnabled(true)
-          }
-        })
+          // Finish this Activity, back to the stream
+          setEditingEnabled(true)
+          finish()
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+          logw("getUser:onCancelled", databaseError.toException())
+          setEditingEnabled(true)
+        }
+      })
   }
 
   private fun setEditingEnabled(enabled: Boolean) {
-    fieldTitle.isEnabled = enabled
-    fieldBody.isEnabled = enabled
+    binding.fieldTitle.isEnabled = enabled
+    binding.fieldBody.isEnabled = enabled
     if (enabled) {
-      fabSubmitPost.show()
+      binding.fabSubmitPost.show()
     } else {
-      fabSubmitPost.hide()
+      binding.fabSubmitPost.hide()
     }
   }
 
