@@ -67,6 +67,7 @@ class FacebookLoginActivity : BaseActivity(), View.OnClickListener {
     updateUI(currentUser)
   }
 
+  @Deprecated("Deprecated in Java")
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     super.onActivityResult(requestCode, resultCode, data)
 

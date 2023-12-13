@@ -10,24 +10,26 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.quickstart.database.R
+import com.google.firebase.quickstart.database.databinding.ActivitySignInBinding
 import com.google.firebase.quickstart.database.kotlin.models.User
-import kotlinx.android.synthetic.main.activity_sign_in.*
 
 class SignInActivity : BaseActivity(), View.OnClickListener {
 
   private lateinit var database: DatabaseReference
   private lateinit var auth: FirebaseAuth
+  private lateinit var binding: ActivitySignInBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_sign_in)
+    binding = ActivitySignInBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
     database = FirebaseDatabase.getInstance().reference
     auth = FirebaseAuth.getInstance()
 
     // Click listeners
-    buttonSignIn.setOnClickListener(this)
-    buttonSignUp.setOnClickListener(this)
+    binding.buttonSignIn.setOnClickListener(this)
+    binding.buttonSignUp.setOnClickListener(this)
   }
 
   public override fun onStart() {
@@ -46,21 +48,23 @@ class SignInActivity : BaseActivity(), View.OnClickListener {
     }
 
     showProgressDialog()
-    val email = fieldEmail.text.toString()
-    val password = fieldPassword.text.toString()
+    val email = binding.fieldEmail.text.toString()
+    val password = binding.fieldPassword.text.toString()
 
     auth.signInWithEmailAndPassword(email, password)
-        .addOnCompleteListener(this) { task ->
-          logd("signIn:onComplete:" + task.isSuccessful)
-          hideProgressDialog()
+      .addOnCompleteListener(this) { task ->
+        logd("signIn:onComplete:" + task.isSuccessful)
+        hideProgressDialog()
 
-          if (task.isSuccessful) {
-            onAuthSuccess(task.result?.user!!)
-          } else {
-            Toast.makeText(baseContext, "Sign In Failed",
-                Toast.LENGTH_SHORT).show()
-          }
+        if (task.isSuccessful) {
+          onAuthSuccess(task.result?.user!!)
+        } else {
+          Toast.makeText(
+            baseContext, "Sign In Failed",
+            Toast.LENGTH_SHORT
+          ).show()
         }
+      }
   }
 
   private fun signUp() {
@@ -70,21 +74,23 @@ class SignInActivity : BaseActivity(), View.OnClickListener {
     }
 
     showProgressDialog()
-    val email = fieldEmail.text.toString()
-    val password = fieldPassword.text.toString()
+    val email = binding.fieldEmail.text.toString()
+    val password = binding.fieldPassword.text.toString()
 
     auth.createUserWithEmailAndPassword(email, password)
-        .addOnCompleteListener(this) { task ->
-          logd("createUser:onComplete:" + task.isSuccessful)
-          hideProgressDialog()
+      .addOnCompleteListener(this) { task ->
+        logd("createUser:onComplete:" + task.isSuccessful)
+        hideProgressDialog()
 
-          if (task.isSuccessful) {
-            onAuthSuccess(task.result?.user!!)
-          } else {
-            Toast.makeText(baseContext, "Sign Up Failed",
-                Toast.LENGTH_SHORT).show()
-          }
+        if (task.isSuccessful) {
+          onAuthSuccess(task.result?.user!!)
+        } else {
+          Toast.makeText(
+            baseContext, "Sign Up Failed",
+            Toast.LENGTH_SHORT
+          ).show()
         }
+      }
   }
 
   private fun onAuthSuccess(user: FirebaseUser) {
@@ -108,18 +114,18 @@ class SignInActivity : BaseActivity(), View.OnClickListener {
 
   private fun validateForm(): Boolean {
     var result = true
-    if (TextUtils.isEmpty(fieldEmail.text.toString())) {
-      fieldEmail.error = "Required"
+    if (TextUtils.isEmpty(binding.fieldEmail.text.toString())) {
+      binding.fieldEmail.error = "Required"
       result = false
     } else {
-      fieldEmail.error = null
+      binding.fieldEmail.error = null
     }
 
-    if (TextUtils.isEmpty(fieldPassword.text.toString())) {
-      fieldPassword.error = "Required"
+    if (TextUtils.isEmpty(binding.fieldPassword.text.toString())) {
+      binding.fieldPassword.error = "Required"
       result = false
     } else {
-      fieldPassword.error = null
+      binding.fieldPassword.error = null
     }
 
     return result
@@ -140,10 +146,10 @@ class SignInActivity : BaseActivity(), View.OnClickListener {
   }
 
   private fun showProgressDialog() {
-    progressBar?.visibility = View.VISIBLE
+    binding.progressBar.visibility = View.VISIBLE
   }
 
   private fun hideProgressDialog() {
-    progressBar?.visibility = View.GONE
+    binding.progressBar.visibility = View.GONE
   }
 }

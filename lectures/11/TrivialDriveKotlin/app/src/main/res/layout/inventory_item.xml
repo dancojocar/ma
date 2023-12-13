@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <!--
-    Copyright (C) 2018 Google Inc. All Rights Reserved.
+    Copyright (C) 2021 Google Inc. All Rights Reserved.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,76 +13,111 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
     -->
 
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="@dimen/margin_std_half"
-    android:clickable="true"
-    app:cardBackgroundColor="@color/colorAccentLighter"
-    app:cardCornerRadius="@dimen/cardview_corner_radius"
-    app:contentPadding="@dimen/cardview_padding"
->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-    >
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/sku_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@id/guideline"
-            app:layout_constraintEnd_toStartOf="@id/sku_price"
-            app:layout_constraintHorizontal_chainStyle="spread_inside"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="This is a Title placeholder"/>
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/sku_price"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="@id/guideline"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/sku_title"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="$4.99"/>
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            app:layout_constraintGuide_percent="0.25"/>
+<!--
+    This layout uses the DataBinding Library to display the contents of a SkuDetails object
+    in a CardView and sets up a callback to buy it to the MakePurchaseFragment when a
+    CardView is clicked.
+-->
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/sku_image"
-            android:layout_width="wrap_content"
-            android:layout_height="68dp"
-            android:adjustViewBounds="true"
-            android:maxWidth="126dp"
-            android:scaleType="centerInside"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/sku_description"
-            app:layout_constraintHorizontal_chainStyle="packed"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/guideline"
-        />
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+          name="sku"
+          type="java.lang.String"
+          />
+        <variable
+          name="skuDetails"
+          type="ro.ubbcluj.cs.ds.MakePurchaseViewModel.SkuDetails"
+          />
+        <variable
+          name="makePurchaseFragment"
+          type="ro.ubbcluj.cs.ds.ui.MakePurchaseFragment"/>
+    </data>
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/sku_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/margin_std_half"
-            android:layout_marginRight="@dimen/margin_std_half"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/sku_image"
-            app:layout_constraintTop_toTopOf="@id/guideline"
-            tools:text="This is a description placeholder, telling users how cool this item is"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.cardview.widget.CardView>
+    <!--
+        This UI disables the RV list item so it can no longer be purchased, but with enough
+        inventory it would make more sense to hide previously-purchased items.
+    -->
+    <androidx.cardview.widget.CardView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="@dimen/margin_std_half"
+      android:clickable="@{makePurchaseFragment.canBuySku(skuDetails.sku)}"
+      android:enabled="@{makePurchaseFragment.canBuySku(skuDetails.sku)}"
+      android:focusable="true"
+      android:foreground="?android:attr/selectableItemBackground"
+      android:onClick="@{() -> makePurchaseFragment.makePurchase(skuDetails.sku)}"
+      app:cardCornerRadius="@dimen/cardview_corner_radius"
+      app:contentPadding="@dimen/cardview_padding">
+
+        <!-- Note that several of the text views contain debug information if the SKU isn't found to
+             make the app configuration process in Google Play more comprehensible. -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:duplicateParentState="true">
+
+            <androidx.appcompat.widget.AppCompatTextView
+              android:id="@+id/sku_price"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:duplicateParentState="true"
+              android:text="@{skuDetails.price == null ? @string/debug_price_not_found : skuDetails.price}"
+              app:layout_constraintEnd_toEndOf="parent"
+              app:layout_constraintTop_toTopOf="parent"
+              app:layout_constraintBottom_toBottomOf="@+id/sku_title"
+              tools:text="$4.99" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+              android:id="@+id/sku_title"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_marginEnd="@dimen/margin_std_2x"
+              android:duplicateParentState="true"
+              android:text="@{makePurchaseFragment.skuTitle(sku) == null ? @string/debug_title_not_found(sku) : makePurchaseFragment.skuTitle(sku)}"
+              android:textStyle="bold"
+              app:layout_constraintEnd_toStartOf="@id/sku_price"
+              app:layout_constraintHorizontal_bias="0.0"
+              app:layout_constraintStart_toStartOf="parent"
+              app:layout_constraintTop_toTopOf="parent"
+              tools:text="Title Placeholder" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+              android:id="@+id/sku_image"
+              android:layout_width="wrap_content"
+              android:layout_height="68dp"
+              android:layout_marginTop="@dimen/margin_std_half"
+              android:adjustViewBounds="true"
+              android:duplicateParentState="true"
+              android:maxWidth="126dp"
+              android:scaleType="centerInside"
+              android:src="@{context.getDrawable(skuDetails.iconDrawableId)}"
+              app:layout_constraintHorizontal_chainStyle="packed"
+              app:layout_constraintStart_toStartOf="parent"
+              app:layout_constraintTop_toBottomOf="@id/sku_title"
+              app:layout_constraintBottom_toBottomOf="parent"/>
+
+            <androidx.appcompat.widget.AppCompatTextView
+              android:id="@+id/sku_description"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_marginStart="@dimen/margin_std_half"
+              android:layout_marginTop="@dimen/margin_std_half"
+              android:layout_marginEnd="@dimen/margin_std"
+              android:duplicateParentState="true"
+              android:text="@{skuDetails.description == null ? @string/debug_description_not_found : skuDetails.description}"
+              app:layout_constraintBottom_toBottomOf="parent"
+              app:layout_constraintEnd_toEndOf="parent"
+              app:layout_constraintStart_toEndOf="@id/sku_image"
+              app:layout_constraintTop_toBottomOf="@id/sku_title"
+              tools:text="This is a description placeholder, telling your users what the item will do for them." />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.cardview.widget.CardView>
+</layout>
 
