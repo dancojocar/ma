@@ -23,7 +23,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key key=const Key("any key"), required this.title}) : super(key: key);
+  const MyHomePage({Key key = const Key("any key"), required this.title})
+      : super(key: key);
 
   final String title;
 
@@ -32,10 +33,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -43,10 +42,8 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: _buildBody(context),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-
-        },
-        label:const Icon(Icons.cancel),
+        onPressed: () {},
+        label: const Icon(Icons.cancel),
         backgroundColor: Colors.green,
       ),
     );
@@ -72,17 +69,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // build list view & its tile
   Widget _buildListView(BuildContext context, ResponseData posts) {
-    return
-      ListView.builder(itemBuilder: (context,index){
+    return ListView.builder(
+      itemBuilder: (context, index) {
         return Card(
           child: ListTile(
-            leading: const Icon(Icons.account_box,color: Colors.green,size: 50,),
-            title: Text(posts.data[index]['name'],style: const TextStyle(fontSize: 20),),
+            leading: const Icon(
+              Icons.account_box,
+              color: Colors.green,
+              size: 50,
+            ),
+            title: Text(
+              posts.data[index]['name'],
+              style: const TextStyle(fontSize: 20),
+            ),
             subtitle: Text(posts.data[index]['email']),
           ),
         );
-      },itemCount: posts.data.length,
-      );
+      },
+      itemCount: posts.data.length,
+    );
   }
-
 }

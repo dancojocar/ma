@@ -77,7 +77,7 @@ class CameraDemoActivity :
     private lateinit var animateToggle: CompoundButton
     private lateinit var customDurationToggle: CompoundButton
     private lateinit var customDurationBar: SeekBar
-    private var currPolylineOptions: PolylineOptions? = null
+    private lateinit var currPolylineOptions: PolylineOptions
     private var isCanceled = false
     // [END_EXCLUDE]
 
@@ -105,7 +105,7 @@ class CameraDemoActivity :
 
     override fun onMapReady(googleMap: GoogleMap) {
         // return early if the map was not initialised properly
-        map = googleMap ?: return
+        map = googleMap
 
         with(googleMap) {
             setOnCameraIdleListener(this@CameraDemoActivity)
@@ -305,19 +305,19 @@ class CameraDemoActivity :
         when (reason) {
             OnCameraMoveStartedListener.REASON_GESTURE -> {
                 // [START_EXCLUDE silent]
-                currPolylineOptions?.color(Color.BLUE)
+                currPolylineOptions.color(Color.BLUE)
                 // [END_EXCLUDE]
                 reasonText = "GESTURE"
             }
             OnCameraMoveStartedListener.REASON_API_ANIMATION -> {
                 // [START_EXCLUDE silent]
-                currPolylineOptions?.color(Color.RED)
+                currPolylineOptions.color(Color.RED)
                 // [END_EXCLUDE]
                 reasonText = "API_ANIMATION"
             }
             OnCameraMoveStartedListener.REASON_DEVELOPER_ANIMATION -> {
                 // [START_EXCLUDE silent]
-                currPolylineOptions?.color(Color.GREEN)
+                currPolylineOptions.color(Color.GREEN)
                 // [END_EXCLUDE]
                 reasonText = "DEVELOPER_ANIMATION"
             }
@@ -335,7 +335,7 @@ class CameraDemoActivity :
      * @param stuffToDo the code to be executed if currPolylineOptions is not null
      */
     private fun checkPolylineThen(stuffToDo: () -> Unit) {
-        if (currPolylineOptions != null) stuffToDo()
+        stuffToDo()
     }
     // [END_EXCLUDE]
 
@@ -356,7 +356,6 @@ class CameraDemoActivity :
         }
 
         isCanceled = true  // Set to clear the map when dragging starts again.
-        currPolylineOptions = null
         // [END_EXCLUDE]
         Log.d(TAG, "onCameraMoveCancelled")
     }
@@ -368,14 +367,13 @@ class CameraDemoActivity :
             map.addPolyline(currPolylineOptions)
         }
 
-        currPolylineOptions = null
         isCanceled = false  // Set to *not* clear the map when dragging starts again.
         // [END_EXCLUDE]
         Log.d(TAG, "onCameraIdle")
     }
     // [START_EXCLUDE silent]
     private fun addCameraTargetToPath() {
-        currPolylineOptions?.add(map.cameraPosition.target)
+        currPolylineOptions.add(map.cameraPosition.target)
     }
     // [END_EXCLUDE]
 }

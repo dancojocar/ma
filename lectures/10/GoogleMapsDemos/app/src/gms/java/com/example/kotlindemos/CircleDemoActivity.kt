@@ -101,12 +101,12 @@ class CircleDemoActivity :
      * This class contains information about a circle, including its markers
      */
     private inner class DraggableCircle(center: LatLng, private var radiusMeters: Double) {
-        private val centerMarker: Marker = map.addMarker(MarkerOptions().apply {
+        private val centerMarker: Marker? = map.addMarker(MarkerOptions().apply {
             position(center)
             draggable(true)
         })
 
-        private val radiusMarker: Marker = map.addMarker(
+        private val radiusMarker: Marker? = map.addMarker(
                 MarkerOptions().apply {
                     position(center.getPointAtDistance(radiusMeters))
                     icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
@@ -128,10 +128,10 @@ class CircleDemoActivity :
             when (marker) {
                 centerMarker -> {
                     circle.center = marker.position
-                    radiusMarker.position = marker.position.getPointAtDistance(radiusMeters)
+                    radiusMarker?.position = marker.position.getPointAtDistance(radiusMeters)
                 }
                 radiusMarker -> {
-                    radiusMeters = centerMarker.position.distanceFrom(radiusMarker.position)
+                    radiusMeters = centerMarker?.position?.distanceFrom(radiusMarker.position)!!
                     circle.radius = radiusMeters
                 }
                 else -> return false
@@ -202,7 +202,7 @@ class CircleDemoActivity :
      * When the map is ready, move the camera to put the Circle in the middle of the screen,
      * create a circle in Sydney, and set the listeners for the map, circles, and SeekBars.
      */
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap ?: return
         // we need to initialise map before creating a circle
         with(map) {

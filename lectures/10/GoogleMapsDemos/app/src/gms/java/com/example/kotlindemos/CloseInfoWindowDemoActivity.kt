@@ -45,7 +45,7 @@ class CloseInfoWindowDemoActivity :
      * the showing info window will be closed. Otherwise will show a different window.
      */
     private val markerClickListener = object : GoogleMap.OnMarkerClickListener {
-        override fun onMarkerClick(marker: Marker?): Boolean {
+        override fun onMarkerClick(marker: Marker): Boolean {
             if (marker == selectedMarker) {
                 selectedMarker = null
                 // Return true to indicate we have consumed the event and that we do not

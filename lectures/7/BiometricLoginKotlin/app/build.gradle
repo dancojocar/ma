@@ -7,7 +7,7 @@ android {
     compileSdkVersion 33
     defaultConfig {
         applicationId "com.example.biometricloginsample"
-        minSdkVersion 23
+        minSdkVersion 33
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"

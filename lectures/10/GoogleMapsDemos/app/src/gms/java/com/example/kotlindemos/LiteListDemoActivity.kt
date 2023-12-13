@@ -148,7 +148,7 @@ class LiteListDemoActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onMapReady(googleMap: GoogleMap?) {
+            override fun onMapReady(googleMap: GoogleMap) {
                 MapsInitializer.initialize(applicationContext)
                 // If map is not initialised properly
                 map = googleMap ?: return

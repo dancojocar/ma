@@ -4,10 +4,10 @@ plugins {
 }
 
 android {
-  compileSdkVersion 33
+  compileSdkVersion 34
   defaultConfig {
     applicationId "ro.cojocar.dan.googlesheetauth"
-    minSdkVersion 15
+    minSdkVersion 33
     targetSdkVersion 33
     versionCode 1
     versionName "1.0"
@@ -39,14 +39,14 @@ android {
 }
 
 dependencies {
-  implementation 'androidx.core:core-ktx:1.9.0'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-  implementation 'androidx.appcompat:appcompat:1.5.1'
-  implementation 'com.google.android.material:material:1.7.0'
+  implementation 'androidx.core:core-ktx:1.12.0'
+//  implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+  implementation 'androidx.appcompat:appcompat:1.6.1'
+  implementation 'com.google.android.material:material:1.10.0'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
   testImplementation 'junit:junit:4.13.2'
-  androidTestImplementation 'androidx.test.ext:junit:1.1.4'
-  androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+  androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+  androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
   implementation 'com.google.apis:google-api-services-sheets:v4-rev20180727-1.26.0'
   implementation 'com.google.http-client:google-http-client-gson:1.19.0'
   implementation 'com.google.android.gms:play-services-drive:17.0.0'
@@ -55,8 +55,8 @@ dependencies {
   implementation 'com.google.api-client:google-api-client-android:1.30.5'
   implementation 'pub.devrel:easypermissions:2.0.0'
   implementation 'androidx.multidex:multidex:2.0.1'
-  implementation 'com.google.android.gms:play-services-auth:20.3.0'
+  implementation 'com.google.android.gms:play-services-auth:20.7.0'
   implementation 'org.jetbrains.anko:anko-common:0.9'
-  implementation "androidx.preference:preference-ktx:1.2.0"
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0-alpha03")
+  implementation "androidx.preference:preference-ktx:1.2.1"
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0-beta01")
 }

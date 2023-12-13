@@ -8,7 +8,7 @@ class AuthApi @Inject constructor() {
     suspend fun login(username: String, password: String): UserToken {
         delay(1000)
 
-        return if (username == "test1234" && password == "test1234") {
+        return if (username == "test" && password == "test1234") {
             UserToken(FAKE_TOKEN)
         } else {
             throw LoginError

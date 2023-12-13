@@ -1,4 +1,3 @@
-
 class Portfolio {
   final int id;
   final String name;
@@ -16,7 +15,9 @@ class Portfolio {
 
   static List<Portfolio> fromJsonList(List<dynamic> json) {
     List<Portfolio> portfolios = [];
-    json.forEach((item) => portfolios.add(Portfolio.fromJson(item)));
+    for (var item in json) {
+      portfolios.add(Portfolio.fromJson(item));
+    }
     return portfolios;
   }
 
@@ -24,5 +25,4 @@ class Portfolio {
   String toString() {
     return 'Portfolio{id: $id, name: $name}';
   }
-
 }

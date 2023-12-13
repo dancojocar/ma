@@ -248,5 +248,5 @@ fun CredentialsDialog(
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview() {
-    LoginContent(onSubmitClicked = { username, password -> }, modifier = Modifier.padding(8.dp))
+    LoginContent(onSubmitClicked = { _, _ -> }, modifier = Modifier.padding(8.dp))
 }

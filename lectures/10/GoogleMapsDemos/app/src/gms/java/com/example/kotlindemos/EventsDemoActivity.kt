@@ -41,7 +41,7 @@ class EventsDemoActivity : AppCompatActivity(), OnMapClickListener,
         mapFragment?.getMapAsync(this)
     }
 
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
         // return early if the map was not initialised properly
         map = googleMap ?: return
         map.setOnMapClickListener(this)

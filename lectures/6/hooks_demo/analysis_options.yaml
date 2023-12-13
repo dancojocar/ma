@@ -1,0 +1,14 @@
+include: ../analysis_options.yaml
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    todo: error
+    include_file_not_found: ignore
+linter:
+  rules:
+    public_member_api_docs: false
+    avoid_print: false
+    use_key_in_widget_constructors: false

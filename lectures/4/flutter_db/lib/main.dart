@@ -1,179 +1,149 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
-import 'deprecated_test_page.dart';
-import 'exception_test_page.dart';
-import 'exp_test_page.dart';
-import 'src/utils.dart';
+import 'package:flutter/widgets.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
-import 'model/main_item.dart';
-import 'open_test_page.dart';
-import 'slow_test_page.dart';
-import 'src/main_item_widget.dart';
-import 'todo_test_page.dart';
-import 'type_test_page.dart';
+void main() async {
+  // Avoid errors caused by flutter upgrade.
+  // Importing 'package:flutter/widgets.dart' is required.
+  WidgetsFlutterBinding.ensureInitialized();
+  // Open the database and store the reference.
+  final database = openDatabase(
+    // Set the path to the database. Note: Using the `join` function from the
+    // `path` package is best practice to ensure the path is correctly
+    // constructed for each platform.
+    join(await getDatabasesPath(), 'doggie_database.db'),
+    // When the database is first created, create a table to store dogs.
+    onCreate: (db, version) {
+      // Run the CREATE TABLE statement on the database.
+      return db.execute(
+        'CREATE TABLE dogs(id INTEGER PRIMARY KEY, name TEXT, age INTEGER)',
+      );
+    },
+    // Set the version. This executes the onCreate function and provides a
+    // path to perform database upgrades and downgrades.
+    version: 1,
+  );
 
-void main() {
-  runApp(MyApp());
-}
+  // Define a function that inserts dogs into the database
+  Future<void> insertDog(Dog dog) async {
+    // Get a reference to the database.
+    final db = await database;
 
-/// Sqflite test app
-class MyApp extends StatefulWidget {
-  // This widget is the root of your application.
-
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-/// Open test page.
-const String testOpenRoute = '/test/open';
-
-/// Slow test page.
-const String testSlowRoute = '/test/slow';
-
-/// Type test page.
-const String testTypeRoute = '/test/type';
-
-/// Batch test page.
-const String testBatchRoute = '/test/batch';
-
-/// `todo` example test page.
-const String testTodoRoute = '/test/todo';
-
-/// Exception test page.
-const String testExceptionRoute = '/test/exception';
-
-/// Manual test page.
-const String testManualRoute = '/test/manual';
-
-/// Experiment test page.
-const String testExpRoute = '/test/exp';
-
-/// Deprecated test page.
-const String testDeprecatedRoute = '/test/deprecated';
-
-class _MyAppState extends State<MyApp> {
-  var routes = <String, WidgetBuilder>{
-    '/test': (BuildContext context) => MyHomePage(),
-    testOpenRoute: (BuildContext context) => OpenTestPage(),
-    testSlowRoute: (BuildContext context) => SlowTestPage(),
-    testTodoRoute: (BuildContext context) => TodoTestPage(),
-    testTypeRoute: (BuildContext context) => TypeTestPage(),
-    testExceptionRoute: (BuildContext context) => ExceptionTestPage(),
-    testExpRoute: (BuildContext context) => ExpTestPage(),
-    testDeprecatedRoute: (BuildContext context) => DeprecatedTestPage(),
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        title: 'Sqflite Demo',
-        theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with 'flutter run'. You'll see
-          // the application has a blue toolbar. Then, without quitting
-          // the app, try changing the primarySwatch below to Colors.green
-          // and then invoke 'hot reload' (press 'r' in the console where
-          // you ran 'flutter run', or press Run > Hot Reload App in IntelliJ).
-          // Notice that the counter didn't reset back to zero -- the application
-          // is not restarted.
-          primarySwatch: Colors.blue,
-        ),
-        home: MyHomePage(title: 'Sqflite Demo Home Page'),
-        routes: routes);
-  }
-}
-
-/// App home menu page.
-class MyHomePage extends StatefulWidget {
-  /// App home menu page.
-  MyHomePage({Key key, this.title}) : super(key: key) {
-    _items.add(MainItem('Open tests', 'Open onCreate/onUpgrade/onDowngrade',
-        route: testOpenRoute));
-    _items
-        .add(MainItem('Type tests', 'Test value types', route: testTypeRoute));
-    _items.add(MainItem('Batch tests', 'Test batch operations',
-        route: testBatchRoute));
-    _items.add(
-        MainItem('Slow tests', 'Lengthy operations', route: testSlowRoute));
-    _items.add(MainItem(
-        'Todo database example', 'Simple Todo-like database usage example',
-        route: testTodoRoute));
-    _items.add(MainItem('Exp tests', 'Experimental and various tests',
-        route: testExpRoute));
-    _items.add(MainItem('Exception tests', 'Tests that trigger exceptions',
-        route: testExceptionRoute));
-    _items.add(MainItem('Manual tests', 'Tests that requires manual execution',
-        route: testManualRoute));
-    _items.add(MainItem('Deprecated test',
-        'Keeping some old tests for deprecated functionalities',
-        route: testDeprecatedRoute));
-
-    // Uncomment to view all logs
-    //Sqflite.devSetDebugModeOn(true);
+    // Insert the Dog into the correct table. You might also specify the
+    // `conflictAlgorithm` to use in case the same dog is inserted twice.
+    //
+    // In this case, replace any previous data.
+    await db.insert(
+      'dogs',
+      dog.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  final List<MainItem> _items = [];
+  // A method that retrieves all the dogs from the dogs table.
+  Future<List<Dog>> dogs() async {
+    // Get a reference to the database.
+    final db = await database;
 
-  /// Page title.
-  final String title;
+    // Query the table for all The Dogs.
+    final List<Map<String, dynamic>> maps = await db.query('dogs');
 
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-String _debugAutoStartRouteName;
-
-/// (debug) set the route to start with.
-String get debugAutoStartRouteName => _debugAutoStartRouteName;
-
-/// Deprecated to avoid calls
-@deprecated
-set debugAutoStartRouteName(String routeName) =>
-    _debugAutoStartRouteName = routeName;
-
-class _MyHomePageState extends State<MyHomePage> {
-  int get _itemCount => widget._items.length;
-
-  @override
-  void initState() {
-    super.initState();
-
-    Future.delayed(Duration.zero).then((_) async {
-      if (mounted) {
-        // Use it to auto start a test page
-        if (debugAutoStartRouteName != null) {
-          // only once
-
-          // await Navigator.of(context).pushNamed(testExpRoute);
-          // await Navigator.of(context).pushNamed(testRawRoute);
-          var future = Navigator.of(context).pushNamed(debugAutoStartRouteName);
-          // ignore: deprecated_member_use_from_same_package
-          debugAutoStartRouteName = null;
-          await future;
-          // await Navigator.of(context).pushNamed(testExceptionRoute);
-        }
-      }
+    // Convert the List<Map<String, dynamic> into a List<Dog>.
+    return List.generate(maps.length, (i) {
+      return Dog(
+        id: maps[i]['id'] as int,
+        name: maps[i]['name'] as String,
+        age: maps[i]['age'] as int,
+      );
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title:
-              Center(child: Text('Sqflite demo', textAlign: TextAlign.center)),
-        ),
-        body:
-            ListView.builder(itemBuilder: _itemBuilder, itemCount: _itemCount));
+  Future<void> updateDog(Dog dog) async {
+    // Get a reference to the database.
+    final db = await database;
+
+    // Update the given Dog.
+    await db.update(
+      'dogs',
+      dog.toMap(),
+      // Ensure that the Dog has a matching id.
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [dog.id],
+    );
   }
 
-  //new Center(child: new Text('Running on: $_platformVersion\n')),
+  Future<void> deleteDog(int id) async {
+    // Get a reference to the database.
+    final db = await database;
 
-  Widget _itemBuilder(BuildContext context, int index) {
-    return MainItemWidget(widget._items[index], (MainItem item) {
-      Navigator.of(context).pushNamed(item.route);
-    });
+    // Remove the Dog from the database.
+    await db.delete(
+      'dogs',
+      // Use a `where` clause to delete a specific dog.
+      where: 'id = ?',
+      // Pass the Dog's id as a whereArg to prevent SQL injection.
+      whereArgs: [id],
+    );
+  }
+
+  // Create a Dog and add it to the dogs table
+  var fido = const Dog(
+    id: 0,
+    name: 'Fido',
+    age: 35,
+  );
+
+  await insertDog(fido);
+
+  // Now, use the method above to retrieve all the dogs.
+  print(await dogs()); // Prints a list that include Fido.
+
+  // Update Fido's age and save it to the database.
+  fido = Dog(
+    id: fido.id,
+    name: fido.name,
+    age: fido.age + 7,
+  );
+  await updateDog(fido);
+
+  // Print the updated results.
+  print(await dogs()); // Prints Fido with age 42.
+
+  // Delete Fido from the database.
+  await deleteDog(fido.id);
+
+  // Print the list of dogs (empty).
+  print(await dogs());
+}
+
+class Dog {
+  final int id;
+  final String name;
+  final int age;
+
+  const Dog({
+    required this.id,
+    required this.name,
+    required this.age,
+  });
+
+  // Convert a Dog into a Map. The keys must correspond to the names of the
+  // columns in the database.
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'age': age,
+    };
+  }
+
+  // Implement toString to make it easier to see information about
+  // each dog when using the print statement.
+  @override
+  String toString() {
+    return 'Dog{id: $id, name: $name, age: $age}';
   }
 }

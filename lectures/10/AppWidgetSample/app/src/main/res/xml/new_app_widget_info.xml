@@ -15,7 +15,7 @@ limitations under the License. -->
   android:initialKeyguardLayout="@layout/new_app_widget"
   android:initialLayout="@layout/new_app_widget"
   android:minWidth="110dp"
-  android:minHeight="180dp"
+  android:minHeight="100dp"
   android:previewImage="@drawable/example_appwidget_preview"
   android:resizeMode="horizontal|vertical"
   android:updatePeriodMillis="1800000"
