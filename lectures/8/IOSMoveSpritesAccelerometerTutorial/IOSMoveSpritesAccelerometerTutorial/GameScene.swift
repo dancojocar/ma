@@ -37,9 +37,9 @@ class GameScene: SKScene {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        var action = SKAction.moveTo(x: destX, duration: 1)
+        var action = SKAction.moveTo(x: destX, duration: 10)
         airplane.run(action)
-        action = SKAction.moveTo(y: destY, duration: 1)
+        action = SKAction.moveTo(y: destY, duration: 10)
         airplane.run(action)
     }
 }

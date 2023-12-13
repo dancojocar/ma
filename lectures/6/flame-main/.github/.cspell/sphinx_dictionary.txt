@@ -1,0 +1,6 @@
+# keywords used on the sphinx language
+infobox
+linkcheck
+seealso
+toctree
+toctrees

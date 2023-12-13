@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
 
 
   private fun fetch() {
-    val fetchFromGoogle = Observable.create(ObservableOnSubscribe<String> { emitter ->
+    val fetchFromGoogle = Observable.create { emitter ->
       try {
         val data = fetchData("http://www.google.com")
         emitter.onNext(data) // Emit the contents of the URL
@@ -105,9 +105,9 @@ class MainActivity : AppCompatActivity() {
       } catch (e: Exception) {
         emitter.onError(e) // In case there are network errors
       }
-    })
+    }
 
-    val fetchFromYahoo = Observable.create(ObservableOnSubscribe<String> { emitter ->
+    val fetchFromYahoo = Observable.create { emitter ->
       try {
         val data = fetchData("http://www.yahoo.com")
         emitter.onNext(data) // Emit the contents of the URL
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
       } catch (e: Exception) {
         emitter.onError(e) // In case there are network errors
       }
-    })
+    }
 
     binding.progress.visibility = View.VISIBLE
     // Fetch from both simultaneously
@@ -125,11 +125,11 @@ class MainActivity : AppCompatActivity() {
       },
       fetchFromYahoo.onErrorReturn {
         "Error from Yahoo: ${it.message}"
-      },
-      { google, yahoo ->
-        // Do something with the results of both threads
-        google + "\n" + yahoo
-      })
+      }
+    ) { google, yahoo ->
+      // Do something with the results of both threads
+      google + "\n" + yahoo
+    }
 
     // Create a new Thread
     disposable.add(

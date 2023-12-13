@@ -6,8 +6,7 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion max_sdk_version
-    buildToolsVersion build_tool_version
-    defaultConfig {
+  defaultConfig {
         applicationId "co.temy.securitysample"
         minSdkVersion min_sdk_version
         targetSdkVersion max_sdk_version
@@ -106,6 +105,7 @@ android {
             java.srcDirs = ["src/stages/stage3"]
         }
     }
+  namespace 'co.temy.securitysample'
 }
 
 configurations.all {

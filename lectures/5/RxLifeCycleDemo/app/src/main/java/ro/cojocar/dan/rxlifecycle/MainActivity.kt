@@ -6,11 +6,15 @@ import com.trello.rxlifecycle4.components.support.RxAppCompatActivity
 import com.trello.rxlifecycle4.kotlin.bindToLifecycle
 import com.trello.rxlifecycle4.kotlin.bindUntilEvent
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.disposables.Disposable
 import ro.cojocar.dan.rxlifecycle.databinding.ActivityMainBinding
 import java.util.concurrent.TimeUnit
 
 class MainActivity : RxAppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
+  private lateinit var onCreateSubscription: Disposable
+  private lateinit var onStartSubscription: Disposable
+  private lateinit var onResumeSubscription: Disposable
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -19,7 +23,7 @@ class MainActivity : RxAppCompatActivity() {
     setContentView(view)
 
     // Specifically bind this until onPause()
-    Observable.interval(1, TimeUnit.SECONDS)
+    onCreateSubscription = Observable.interval(1, TimeUnit.SECONDS)
       .doOnDispose { logi("Unsubscribing subscription from onCreate()") }
       .bindUntilEvent(this, ActivityEvent.PAUSE)
       .subscribe { num -> logi("Started in onCreate(), running until onPause(): $num") }
@@ -30,7 +34,7 @@ class MainActivity : RxAppCompatActivity() {
     logd("onStart()")
     // Using automatic unsubscribe, this should determine that the correct time to
     // unsubscribe is onStop (the opposite of onStart).
-    Observable.interval(1, TimeUnit.SECONDS)
+    onStartSubscription = Observable.interval(1, TimeUnit.SECONDS)
       .doOnDispose { logi("Unsubscribing subscription from onStart()") }
       .bindToLifecycle(this)
       .subscribe { num -> logi("Started in onStart(), running until in onStop(): $num") }
@@ -39,7 +43,7 @@ class MainActivity : RxAppCompatActivity() {
   override fun onResume() {
     super.onResume()
     logd("onResume()")
-    Observable.interval(1, TimeUnit.SECONDS)
+    onResumeSubscription = Observable.interval(1, TimeUnit.SECONDS)
       .doOnDispose { logi("Unsubscribing subscription from onResume()") }
       .bindUntilEvent(this, ActivityEvent.DESTROY)
       .subscribe { num -> logi("Started in onResume(), running until in onDestroy(): $num") }

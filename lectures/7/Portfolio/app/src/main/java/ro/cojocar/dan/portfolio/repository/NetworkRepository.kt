@@ -11,7 +11,7 @@ object NetworkRepository {
     return portfolios
   }
 
-  suspend fun auth(credentials: LoginCredentials): String? {
+  suspend fun auth(credentials: LoginCredentials): String {
     val tokenHolder = PortfolioApi.service.authenticate(credentials)
     return tokenHolder.token
   }

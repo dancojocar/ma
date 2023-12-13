@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-  compileSdkVersion 33
+  compileSdkVersion 34
   defaultConfig {
     applicationId "com.example.android.roomwordssample"
     minSdkVersion 20

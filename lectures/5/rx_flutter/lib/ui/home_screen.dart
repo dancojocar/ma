@@ -38,8 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: TextField(
                   decoration: const InputDecoration(
-                      hintText: 'Enter a word',
-                      suffixIcon: Icon(Icons.search)),
+                      hintText: 'Enter a word', suffixIcon: Icon(Icons.search)),
                   onChanged: (value) {
                     // print("send to block: $value");
                     bloc.changeQuery(value);
@@ -103,12 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Row(
               children: <Widget>[
                 ClipRRect(
+                  borderRadius: BorderRadius.circular(25.0),
                   child: FadeInImage.assetNetwork(
                       width: 30,
                       height: 30,
                       placeholder: 'assets/user.png',
                       image: result.user.profileImage.medium),
-                  borderRadius: BorderRadius.circular(25.0),
                 ),
                 const SizedBox(width: 10.0),
                 Text(result.user.name),

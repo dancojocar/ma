@@ -161,7 +161,7 @@ class PolylineDemoActivity :
         return resourceIds.map { getString(it) }
     }
 
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
 
         // exit early if the map was not initialised properly
         googleMap ?: return

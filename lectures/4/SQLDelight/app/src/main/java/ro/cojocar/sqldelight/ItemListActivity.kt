@@ -55,14 +55,14 @@ class ItemListActivity : AppCompatActivity() {
     toolbar.title = title
 
 
-    binding.fab.setOnClickListener { view ->
+    binding.fab.setOnClickListener { localView ->
       queries.insertPlayer(
         1,
         "Bobby Fischer",
         "I don’t believe in psychology. I believe in good moves"
       )
       simpleItemRecyclerViewAdapter.notifyDataSetChanged()
-      Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+      Snackbar.make(localView, "Replace with your own action", Snackbar.LENGTH_LONG)
         .setAction("Action", null).show()
     }
 
@@ -92,27 +92,23 @@ class ItemListActivity : AppCompatActivity() {
   ) :
     RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
-    private val onClickListener: View.OnClickListener
-
-    init {
-      onClickListener = View.OnClickListener { v ->
-        val item = v.tag as ChessPlayer
-        if (twoPane) {
-          val fragment = ItemDetailFragment().apply {
-            arguments = Bundle().apply {
-              putLong(ItemDetailFragment.ARG_ITEM_ID, item.player_number)
-            }
+    private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
+      val item = v.tag as ChessPlayer
+      if (twoPane) {
+        val fragment = ItemDetailFragment().apply {
+          arguments = Bundle().apply {
+            putLong(ItemDetailFragment.ARG_ITEM_ID, item.player_number)
           }
-          parentActivity.supportFragmentManager
-            .beginTransaction()
-            .replace(R.id.item_detail_container, fragment)
-            .commit()
-        } else {
-          val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
-            putExtra(ItemDetailFragment.ARG_ITEM_ID, item.player_number)
-          }
-          v.context.startActivity(intent)
         }
+        parentActivity.supportFragmentManager
+          .beginTransaction()
+          .replace(R.id.item_detail_container, fragment)
+          .commit()
+      } else {
+        val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
+          putExtra(ItemDetailFragment.ARG_ITEM_ID, item.player_number)
+        }
+        v.context.startActivity(intent)
       }
     }
 

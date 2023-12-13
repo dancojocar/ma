@@ -48,7 +48,6 @@ class BasicMapDemoActivity :
      * we just move the camera to Sydney and add a marker in Sydney.
      */
     override fun onMapReady(googleMap: GoogleMap) {
-        googleMap ?: return
         with(googleMap) {
             moveCamera(CameraUpdateFactory.newLatLngZoom(SYDNEY, ZOOM_LEVEL))
             addMarker(MarkerOptions().position(SYDNEY))

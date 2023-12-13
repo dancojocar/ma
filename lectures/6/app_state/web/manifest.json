@@ -1,6 +1,6 @@
 {
-    "name": "ephemeral_state",
-    "short_name": "ephemeral_state",
+    "name": "app_state",
+    "short_name": "app_state",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

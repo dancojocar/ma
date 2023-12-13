@@ -29,7 +29,6 @@ import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.viewbinding.BuildConfig
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.sample.basiclocationsample.databinding.MainActivityBinding
@@ -193,7 +192,7 @@ class MainActivity : AppCompatActivity() {
               // Build intent that displays the App settings screen.
               val intent = Intent().apply {
                 action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                data = Uri.fromParts("package", BuildConfig.LIBRARY_PACKAGE_NAME, null)
+                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
               }
               startActivity(intent)

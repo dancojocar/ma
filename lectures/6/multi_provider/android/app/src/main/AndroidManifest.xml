@@ -1,6 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.multi_provider">
-   <application
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
         android:label="multi_provider"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

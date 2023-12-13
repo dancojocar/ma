@@ -185,7 +185,7 @@ class PlantRepository private constructor(
     /**
      * Returns true if we should make a network request.
      */
-    private suspend fun shouldUpdatePlantsCache(growZone: GrowZone): Boolean {
+    private suspend fun shouldUpdatePlantsCache(): Boolean {
         // suspending function, so you can e.g. check the status of the database here
         return true
     }
@@ -197,7 +197,7 @@ class PlantRepository private constructor(
      * cache-invalidation policy.
      */
     suspend fun tryUpdateRecentPlantsCache() {
-        if (shouldUpdatePlantsCache(NoGrowZone)) fetchRecentPlants()
+        if (shouldUpdatePlantsCache()) fetchRecentPlants()
     }
 
     /**
@@ -207,7 +207,7 @@ class PlantRepository private constructor(
      * cache-invalidation policy.
      */
     suspend fun tryUpdateRecentPlantsForGrowZoneCache(growZoneNumber: GrowZone) {
-        if (shouldUpdatePlantsCache(growZoneNumber)) fetchPlantsForGrowZone(growZoneNumber)
+        if (shouldUpdatePlantsCache()) fetchPlantsForGrowZone(growZoneNumber)
     }
 
     /**

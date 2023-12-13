@@ -19,7 +19,7 @@ class SimpleItemRecyclerViewAdapter(
   var portfolios = emptyList<Portfolio>()
     set(value) {
       field = value
-      notifyDataSetChanged()
+      notifyItemRangeChanged(0, value.size)
     }
 
   private val onClickListener: View.OnClickListener

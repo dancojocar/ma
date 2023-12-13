@@ -50,7 +50,7 @@ class GroundOverlayDemoActivity : AppCompatActivity(), OnSeekBarChangeListener,
         mapFragment?.getMapAsync(this)
     }
 
-    override fun onMapReady(map: GoogleMap?) {
+    override fun onMapReady(map: GoogleMap) {
         map ?: return
 
         // Register a listener to respond to clicks on GroundOverlays.

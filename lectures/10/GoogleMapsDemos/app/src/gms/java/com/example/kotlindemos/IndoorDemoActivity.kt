@@ -39,7 +39,7 @@ class IndoorDemoActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment?.getMapAsync(this)
     }
 
-    override fun onMapReady(googleMap: GoogleMap?) {
+    override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap ?: return
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(37.614631, -122.385153), 18f))
     }
