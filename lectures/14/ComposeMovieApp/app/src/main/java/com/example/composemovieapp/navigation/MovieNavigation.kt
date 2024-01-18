@@ -3,11 +3,11 @@ package com.example.composemovieapp.navigation
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.example.composemovieapp.movies.MoviesScreen
 import com.example.composemovieapp.navigation.Screen.*
 import androidx.navigation.compose.NavHost
+import androidx.navigation.navArgument
 import com.example.composemovieapp.details.MovieDetailsScreen
 
 

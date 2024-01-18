@@ -16,7 +16,6 @@
 
 package com.example.jetnews.ui.home
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,13 +23,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -42,6 +38,7 @@ import com.example.jetnews.R
 import com.example.jetnews.data.posts.impl.posts
 import com.example.jetnews.model.Post
 import com.example.jetnews.ui.theme.JetnewsTheme
+import com.example.jetnews.utils.CompletePreviews
 
 @Composable
 fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
@@ -66,58 +63,55 @@ fun PostCardTop(post: Post, modifier: Modifier = Modifier) {
 
         Text(
             text = post.title,
-            style = typography.h6,
+            style = typography.titleLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         Text(
             text = post.metadata.author.name,
-            style = typography.subtitle2,
+            style = typography.labelLarge,
             modifier = Modifier.padding(bottom = 4.dp)
         )
-
-        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-            Text(
-                text = stringResource(
-                    id = R.string.home_post_min_read,
-                    formatArgs = arrayOf(
-                        post.metadata.date,
-                        post.metadata.readTimeMinutes
-                    )
-                ),
-                style = typography.subtitle2
-            )
-        }
+        Text(
+            text = stringResource(
+                id = R.string.home_post_min_read,
+                formatArgs = arrayOf(
+                    post.metadata.date,
+                    post.metadata.readTimeMinutes
+                )
+            ),
+            style = typography.bodySmall
+        )
     }
 }
 // TUTORIAL CONTENT ENDS HERE
 
-// Preview section
-
-@Preview("Default colors")
+/**
+ * Preview of the [PostCardTop] composable. Fake data is passed into the composable.
+ *
+ * Learn more about Preview features in the [documentation](https://d.android.com/jetpack/compose/tooling#preview)
+ */
+@Preview
 @Composable
-fun TutorialPreview() {
-    TutorialPreviewTemplate()
-}
-
-@Preview("Dark theme", uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun TutorialPreviewDark() {
-    TutorialPreviewTemplate()
-}
-
-@Preview("Font scaling 1.5", fontScale = 1.5f)
-@Composable
-fun TutorialPreviewFontscale() {
-    TutorialPreviewTemplate()
-}
-
-@Composable
-fun TutorialPreviewTemplate() {
-    val post = posts.highlightedPost
-
+fun PostCardTopPreview() {
     JetnewsTheme {
         Surface {
-            PostCardTop(post)
+            PostCardTop(posts.highlightedPost)
+        }
+    }
+}
+
+/*
+ * These previews will only show up on Android Studio Dolphin and later.
+ * They showcase a feature called Multipreview Annotations.
+ *
+ * Read more in the [documentation](https://d.android.com/jetpack/compose/tooling#preview-multipreview)
+*/
+@CompletePreviews
+@Composable
+fun PostCardTopPreviews() {
+    JetnewsTheme {
+        Surface {
+            PostCardTop(posts.highlightedPost)
         }
     }
 }

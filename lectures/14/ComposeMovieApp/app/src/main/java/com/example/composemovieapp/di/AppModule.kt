@@ -10,8 +10,11 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 
@@ -34,6 +37,9 @@ class AppModule {
         return retrofit.create(MoviesService::class.java)
     }
 
+    @IoDispatcher
+    @Provides
+    fun providesIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @Module
     @InstallIn(SingletonComponent::class)
@@ -46,7 +52,10 @@ class AppModule {
         @Binds
         @Singleton
         fun provideGetMoviesUseCase(uc: GetMoviesUseCaseImpl): GetMoviesUseCase
-
     }
+
+    @Retention(AnnotationRetention.BINARY)
+    @Qualifier
+    annotation class IoDispatcher
 
 }

@@ -16,14 +16,14 @@
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.agpVersion = '7.3.1'
     repositories {
         // Insert local test repo here
         google()
         mavenCentral()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:$agpVersion"
+        classpath "com.android.tools.build:gradle:8.2.1"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -36,10 +36,4 @@ allprojects {
         google()
         mavenCentral()
     }
-}
-
-ext {
-    buildToolsVersion = "31.0.0"
-    junitVersion = "4.12"
-    mockitoVersion = "1.10.19"
 }

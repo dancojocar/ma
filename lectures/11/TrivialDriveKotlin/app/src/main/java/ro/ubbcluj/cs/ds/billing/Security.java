@@ -53,7 +53,7 @@ class Security {
      * your local.properties, it will be echoed into BuildConfig.
      */
 
-    final private static String BASE_64_ENCODED_PUBLIC_KEY = ""; //BuildConfig.BASE64_ENCODED_PUBLIC_KEY;
+    final private static String BASE_64_ENCODED_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjEq0CDSDhflhA49oUVTd5ztVhhZEEq3HOYyKJYebljST64FWWer/bguqvpniTJ39rKD/REz06iAxnY++BcSfk1nBCsTbuDxkbmmmwXEBo6gXjykY9v9ToEUaLi9fQCGhOYa/oVdkrSUMhkSbeA94WUCZvkf9hjH97TRc73IM+CCYx2sFHwEupeJMzvWjJstFp5GNzjpWjLY8Xg61bBhC2z5emGGleQuaD3PGh+5Q+7LI2r1rvtvVjcMdDLuAcA4iiijf/f+pFE7BVb/JvaR63T8K3GWZYMfrGfWmh0KU/Uvyz6VCv3GgEJtGqr2wXaP9mm0p5F+IyQp7bwzptQQkUQIDAQAB"; //BuildConfig.BASE64_ENCODED_PUBLIC_KEY;
 
     /**
      * Verifies that the data was signed with the given signature

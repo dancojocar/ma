@@ -1,22 +1,42 @@
 package com.example.dan.crashlyticsdemo
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.example.dan.crashlyticsdemo.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.compose.runtime.Composable
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
-
+class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val crashlytics = FirebaseCrashlytics.getInstance()
     crashlytics.log("app started")
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-    binding.crashButton.setOnClickListener {
-      throw RuntimeException("Test Crash")
+    setContent {
+      CrashTestScreen()
+    }
+  }
+}
+
+@Composable
+fun CrashTestScreen() {
+  Column(
+    modifier = Modifier.fillMaxSize(),
+    verticalArrangement = Arrangement.Center,
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    Text("Hello World!")
+    Button(
+      onClick = {
+        throw RuntimeException("Testing a crash!")
+      }) {
+      Text(text = "Crash")
     }
   }
 }
