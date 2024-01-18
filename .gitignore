@@ -7,6 +7,7 @@
 
 # Java class files
 *.class
+*.hprof
 
 # Generated files
 bin/
@@ -96,6 +97,7 @@ node_modules
 
 # OS X
 .DS_Store
+.build
 
 # Test generated files
 /ReactAndroid/src/androidTest/assets/AndroidTestBundle.js

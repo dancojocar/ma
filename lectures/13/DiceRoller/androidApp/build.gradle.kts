@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
 }
 
 android {
     compileSdk = 33
+    namespace = "com.google.samples.apps.diceroller"
     defaultConfig {
         applicationId = "com.google.samples.apps.diceroller"
         minSdk = 26
@@ -36,18 +37,22 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.2"
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
 dependencies {
     implementation(project(":shared"))
 
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
-    implementation("androidx.activity:activity-compose:1.6.1")
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material)
 
-    implementation(platform("androidx.compose:compose-bom:2022.10.00"))
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material:material")
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }

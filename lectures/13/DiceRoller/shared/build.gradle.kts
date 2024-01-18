@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 plugins {
-    kotlin("multiplatform")
-    kotlin("native.cocoapods")
-    id("com.android.library")
-    id("com.rickclephas.kmp.nativecoroutines") version "0.13.1"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.cocoapods)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.skie)
 }
 
 version = "1.0"
@@ -33,27 +34,46 @@ kotlin {
         homepage = "Link to the Shared Module homepage"
         ios.deploymentTarget = "14.1"
         podfile = project.file("../iosApp/Podfile")
+        listOf(
+            iosX64(),
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach {
+            it.binaries.all {
+                linkerOpts += "-ld64"
+            }
+        }
         framework {
             baseName = "shared"
         }
     }
 
-    val dataStoreVersion = "1.1.0-dev01"
+    android {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
+        }
+    }
+
+    sourceSets.all {
+        languageSettings.optIn("kotlin.experimental.ExperimentalObjCName")
+    }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api("androidx.datastore:datastore-preferences-core:$dataStoreVersion")
-                api("androidx.datastore:datastore-core-okio:$dataStoreVersion")
+                api(libs.androidx.datastore.preferences.core)
+                api(libs.androidx.datastore.core.okio)
             }
         }
         val commonTest by getting {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(libs.kotlin.test)
             }
         }
         val androidMain by getting
-        val androidTest by getting
+        val androidUnitTest by getting
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -73,16 +93,21 @@ kotlin {
             iosSimulatorArm64Test.dependsOn(this)
         }
     }
+
 }
 
 android {
     compileSdk = 33
+    namespace = "com.google.samples.apps.diceroller.shared"
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     buildFeatures {
         buildConfig = false
     }
     defaultConfig {
         minSdk = 26
-        targetSdk = 33
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }

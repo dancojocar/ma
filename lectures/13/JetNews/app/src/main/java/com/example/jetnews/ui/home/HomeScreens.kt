@@ -22,48 +22,51 @@ import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ContentAlpha
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.LocalContentAlpha
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.ScaffoldState
-import androidx.compose.material.SnackbarResult
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
-import androidx.compose.material.TextField
-import androidx.compose.material.TextFieldDefaults
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.TopAppBarState
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -74,10 +77,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -98,14 +103,11 @@ import com.example.jetnews.ui.article.postContentItems
 import com.example.jetnews.ui.article.sharePost
 import com.example.jetnews.ui.components.JetnewsSnackbarHost
 import com.example.jetnews.ui.modifiers.interceptKey
-import com.example.jetnews.ui.rememberContentPaddingForScreen
 import com.example.jetnews.ui.theme.JetnewsTheme
 import com.example.jetnews.ui.utils.BookmarkButton
 import com.example.jetnews.ui.utils.FavoriteButton
 import com.example.jetnews.ui.utils.ShareButton
 import com.example.jetnews.ui.utils.TextSettingsButton
-import com.example.jetnews.utils.isScrolled
-import com.google.accompanist.insets.imePadding
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import kotlinx.coroutines.currentCoroutineContext
@@ -129,7 +131,7 @@ fun HomeFeedWithArticleDetailsScreen(
     openDrawer: () -> Unit,
     homeListLazyListState: LazyListState,
     articleDetailLazyListStates: Map<String, LazyListState>,
-    scaffoldState: ScaffoldState,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     onSearchInputChanged: (String) -> Unit,
 ) {
@@ -139,11 +141,9 @@ fun HomeFeedWithArticleDetailsScreen(
         onRefreshPosts = onRefreshPosts,
         onErrorDismiss = onErrorDismiss,
         openDrawer = openDrawer,
-        homeListLazyListState = homeListLazyListState,
-        scaffoldState = scaffoldState,
+        snackbarHostState = snackbarHostState,
         modifier = modifier,
-    ) { hasPostsUiState, contentModifier ->
-        val contentPadding = rememberContentPaddingForScreen(additionalTop = 8.dp)
+    ) { hasPostsUiState, contentPadding, contentModifier ->
         Row(contentModifier) {
             PostList(
                 postsFeed = hasPostsUiState.postsFeed,
@@ -154,8 +154,7 @@ fun HomeFeedWithArticleDetailsScreen(
                 contentPadding = contentPadding,
                 modifier = Modifier
                     .width(334.dp)
-                    .notifyInput(onInteractWithList)
-                    .imePadding(), // add padding for the on-screen keyboard
+                    .notifyInput(onInteractWithList),
                 state = homeListLazyListState,
                 searchInput = hasPostsUiState.searchInput,
                 onSearchInputChanged = onSearchInputChanged,
@@ -163,8 +162,10 @@ fun HomeFeedWithArticleDetailsScreen(
             // Crossfade between different detail posts
             Crossfade(targetState = hasPostsUiState.selectedPost) { detailPost ->
                 // Get the lazy list state for this detail view
-                val detailLazyListState by derivedStateOf {
-                    articleDetailLazyListStates.getValue(detailPost.id)
+                val detailLazyListState by remember {
+                    derivedStateOf {
+                        articleDetailLazyListStates.getValue(detailPost.id)
+                    }
                 }
 
                 // Key against the post id to avoid sharing any state between different posts
@@ -178,7 +179,6 @@ fun HomeFeedWithArticleDetailsScreen(
                             .notifyInput {
                                 onInteractWithDetail(detailPost.id)
                             }
-                            .imePadding() // add padding for the on-screen keyboard
                     ) {
                         stickyHeader {
                             val context = LocalContext.current
@@ -228,7 +228,7 @@ fun HomeFeedScreen(
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
     homeListLazyListState: LazyListState,
-    scaffoldState: ScaffoldState,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
@@ -239,19 +239,16 @@ fun HomeFeedScreen(
         onRefreshPosts = onRefreshPosts,
         onErrorDismiss = onErrorDismiss,
         openDrawer = openDrawer,
-        homeListLazyListState = homeListLazyListState,
-        scaffoldState = scaffoldState,
+        snackbarHostState = snackbarHostState,
         modifier = modifier
-    ) { hasPostsUiState, contentModifier ->
+    ) { hasPostsUiState, contentPadding, contentModifier ->
         PostList(
             postsFeed = hasPostsUiState.postsFeed,
             favorites = hasPostsUiState.favorites,
             showExpandedSearch = !showTopAppBar,
             onArticleTapped = onSelectPost,
             onToggleFavorite = onToggleFavorite,
-            contentPadding = rememberContentPaddingForScreen(
-                additionalTop = if (showTopAppBar) 0.dp else 8.dp
-            ),
+            contentPadding = contentPadding,
             modifier = contentModifier,
             state = homeListLazyListState,
             searchInput = searchInput,
@@ -269,6 +266,7 @@ fun HomeFeedScreen(
  * This helper functions exists because [HomeFeedWithArticleDetailsScreen] and [HomeFeedScreen] are
  * extremely similar, except for the rendered content when there are posts to display.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenWithList(
     uiState: HomeUiState,
@@ -276,28 +274,29 @@ private fun HomeScreenWithList(
     onRefreshPosts: () -> Unit,
     onErrorDismiss: (Long) -> Unit,
     openDrawer: () -> Unit,
-    homeListLazyListState: LazyListState,
-    scaffoldState: ScaffoldState,
+    snackbarHostState: SnackbarHostState,
     modifier: Modifier = Modifier,
     hasPostsContent: @Composable (
         uiState: HomeUiState.HasPosts,
+        contentPadding: PaddingValues,
         modifier: Modifier
     ) -> Unit
 ) {
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
     Scaffold(
-        scaffoldState = scaffoldState,
-        snackbarHost = { JetnewsSnackbarHost(hostState = it) },
+        snackbarHost = { JetnewsSnackbarHost(hostState = snackbarHostState) },
         topBar = {
             if (showTopAppBar) {
                 HomeTopAppBar(
                     openDrawer = openDrawer,
-                    elevation = if (!homeListLazyListState.isScrolled) 0.dp else 4.dp
+                    topAppBarState = topAppBarState
                 )
             }
         },
         modifier = modifier
     ) { innerPadding ->
-        val contentModifier = Modifier.padding(innerPadding)
+        val contentModifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
 
         LoadingContent(
             empty = when (uiState) {
@@ -309,13 +308,14 @@ private fun HomeScreenWithList(
             onRefresh = onRefreshPosts,
             content = {
                 when (uiState) {
-                    is HomeUiState.HasPosts -> hasPostsContent(uiState, contentModifier)
+                    is HomeUiState.HasPosts ->
+                        hasPostsContent(uiState, innerPadding, contentModifier)
                     is HomeUiState.NoPosts -> {
                         if (uiState.errorMessages.isEmpty()) {
                             // if there are no posts, and no error, let the user refresh manually
                             TextButton(
                                 onClick = onRefreshPosts,
-                                modifier.fillMaxSize()
+                                modifier.padding(innerPadding).fillMaxSize()
                             ) {
                                 Text(
                                     stringResource(id = R.string.home_tap_to_load_content),
@@ -324,7 +324,11 @@ private fun HomeScreenWithList(
                             }
                         } else {
                             // there's currently an error showing, don't show any content
-                            Box(contentModifier.fillMaxSize()) { /* empty screen */ }
+                            Box(
+                                contentModifier
+                                    .padding(innerPadding)
+                                    .fillMaxSize()
+                            ) { /* empty screen */ }
                         }
                     }
                 }
@@ -347,10 +351,10 @@ private fun HomeScreenWithList(
         val onErrorDismissState by rememberUpdatedState(onErrorDismiss)
 
         // Effect running in a coroutine that displays the Snackbar on the screen
-        // If there's a change to errorMessageText, retryMessageText or scaffoldState,
+        // If there's a change to errorMessageText, retryMessageText or snackbarHostState,
         // the previous effect will be cancelled and a new one will start with the new values
-        LaunchedEffect(errorMessageText, retryMessageText, scaffoldState) {
-            val snackbarResult = scaffoldState.snackbarHostState.showSnackbar(
+        LaunchedEffect(errorMessageText, retryMessageText, snackbarHostState) {
+            val snackbarResult = snackbarHostState.showSnackbar(
                 message = errorMessageText,
                 actionLabel = retryMessageText
             )
@@ -438,8 +442,12 @@ private fun PostList(
                 )
             }
         }
-        if (postsFeed.popularPosts.isNotEmpty()) {
-            item { PostListPopularSection(postsFeed.popularPosts, onArticleTapped) }
+        if (postsFeed.popularPosts.isNotEmpty() && !showExpandedSearch) {
+            item {
+                PostListPopularSection(
+                    postsFeed.popularPosts, onArticleTapped
+                )
+            }
         }
         if (postsFeed.recentPosts.isNotEmpty()) {
             item { PostListHistorySection(postsFeed.recentPosts, onArticleTapped) }
@@ -472,7 +480,7 @@ private fun PostListTopSection(post: Post, navigateToArticle: (String) -> Unit) 
     Text(
         modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp),
         text = stringResource(id = R.string.home_top_section_title),
-        style = MaterialTheme.typography.subtitle1
+        style = MaterialTheme.typography.titleMedium
     )
     PostCardTop(
         post = post,
@@ -522,18 +530,23 @@ private fun PostListPopularSection(
         Text(
             modifier = Modifier.padding(16.dp),
             text = stringResource(id = R.string.home_popular_section_title),
-            style = MaterialTheme.typography.subtitle1
+            style = MaterialTheme.typography.titleLarge
         )
-
-        LazyRow(modifier = Modifier.padding(end = 16.dp)) {
-            items(posts) { post ->
+        Row(
+            modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .height(IntrinsicSize.Max)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            for (post in posts) {
                 PostCardPopular(
                     post,
-                    navigateToArticle,
-                    Modifier.padding(start = 16.dp, bottom = 16.dp)
+                    navigateToArticle
                 )
             }
         }
+        Spacer(Modifier.height(16.dp))
         PostListDivider()
     }
 }
@@ -564,76 +577,47 @@ private fun PostListHistorySection(
 private fun PostListDivider() {
     Divider(
         modifier = Modifier.padding(horizontal = 14.dp),
-        color = MaterialTheme.colors.onSurface.copy(alpha = 0.08f)
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
     )
 }
 
 /**
- * Expanded search UI - includes support for enter-to-send and escape-to-dismiss on the search field
+ * Expanded search UI - includes support for enter-to-send on the search field
  */
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun HomeSearch(
     modifier: Modifier = Modifier,
     searchInput: String = "",
     onSearchInputChanged: (String) -> Unit,
 ) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(Dp.Hairline, MaterialTheme.colors.onSurface.copy(alpha = .6f)),
-        elevation = 4.dp,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        ) {
-            CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                IconButton(onClick = { /* Functionality not supported yet */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = stringResource(R.string.cd_search)
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                val context = LocalContext.current
-                val focusManager = LocalFocusManager.current
-                val keyboardController = LocalSoftwareKeyboardController.current
-                TextField(
-                    value = searchInput,
-                    onValueChange = { onSearchInputChanged(it) },
-                    placeholder = { Text(stringResource(R.string.home_search)) },
-                    colors = TextFieldDefaults.textFieldColors(
-                        backgroundColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ), // keyboardOptions change the newline key to a search key on the soft keyboard
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    // keyboardActions submits the search query when the search key is pressed
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            submitSearch(onSearchInputChanged, context)
-                            keyboardController?.hide()
-                        }
-                    ),
-                    modifier = Modifier
-                        .interceptKey(Key.Enter) { // submit a search query when Enter is pressed
-                            submitSearch(onSearchInputChanged, context)
-                        }
-                        .interceptKey(Key.Escape) { // dismiss focus when Escape is pressed
-                            focusManager.clearFocus()
-                        }
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                IconButton(onClick = { /* Functionality not supported yet */ }) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = stringResource(R.string.cd_more_actions)
-                    )
-                }
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    OutlinedTextField(
+        value = searchInput,
+        onValueChange = onSearchInputChanged,
+        placeholder = { Text(stringResource(R.string.home_search)) },
+        leadingIcon = { Icon(Icons.Filled.Search, null) },
+        modifier = modifier
+            .fillMaxWidth()
+            .interceptKey(Key.Enter) {
+                // submit a search query when Enter is pressed
+                submitSearch(onSearchInputChanged, context)
+                keyboardController?.hide()
+                focusManager.clearFocus(force = true)
+            },
+        singleLine = true,
+        // keyboardOptions change the newline key to a search key on the soft keyboard
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        // keyboardActions submits the search query when the search key is pressed
+        keyboardActions = KeyboardActions(
+            onSearch = {
+                submitSearch(onSearchInputChanged, context)
+                keyboardController?.hide()
             }
-        }
-    }
+        )
+    )
 }
 
 /**
@@ -663,7 +647,7 @@ private fun PostTopBar(
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(Dp.Hairline, MaterialTheme.colors.onSurface.copy(alpha = .6f)),
+        border = BorderStroke(Dp.Hairline, MaterialTheme.colorScheme.onSurface.copy(alpha = .6f)),
         modifier = modifier.padding(end = 16.dp)
     ) {
         Row(Modifier.padding(horizontal = 8.dp)) {
@@ -678,21 +662,25 @@ private fun PostTopBar(
 /**
  * TopAppBar for the Home screen
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeTopAppBar(
-    elevation: Dp,
-    openDrawer: () -> Unit
+    openDrawer: () -> Unit,
+    modifier: Modifier = Modifier,
+    topAppBarState: TopAppBarState = rememberTopAppBarState(),
+    scrollBehavior: TopAppBarScrollBehavior? =
+        TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
 ) {
+    val context = LocalContext.current
     val title = stringResource(id = R.string.app_name)
-    TopAppBar(
+    CenterAlignedTopAppBar(
         title = {
-            Icon(
+            Image(
                 painter = painterResource(R.drawable.ic_jetnews_wordmark),
                 contentDescription = title,
-                tint = MaterialTheme.colors.onBackground,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 4.dp, top = 10.dp)
+                contentScale = ContentScale.Inside,
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
+                modifier = Modifier.fillMaxWidth()
             )
         },
         navigationIcon = {
@@ -700,20 +688,26 @@ private fun HomeTopAppBar(
                 Icon(
                     painter = painterResource(R.drawable.ic_jetnews_logo),
                     contentDescription = stringResource(R.string.cd_open_navigation_drawer),
-                    tint = MaterialTheme.colors.primary
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         },
         actions = {
-            IconButton(onClick = { /* TODO: Open search */ }) {
+            IconButton(onClick = {
+                Toast.makeText(
+                    context,
+                    "Search is not yet implemented in this configuration",
+                    Toast.LENGTH_LONG
+                ).show()
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Search,
                     contentDescription = stringResource(R.string.cd_search)
                 )
             }
         },
-        backgroundColor = MaterialTheme.colors.surface,
-        elevation = elevation
+        scrollBehavior = scrollBehavior,
+        modifier = modifier
     )
 }
 
@@ -743,7 +737,7 @@ fun PreviewHomeListDrawerScreen() {
             onErrorDismiss = {},
             openDrawer = {},
             homeListLazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
+            snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {}
         )
     }
@@ -779,7 +773,7 @@ fun PreviewHomeListNavRailScreen() {
             onErrorDismiss = {},
             openDrawer = {},
             homeListLazyListState = rememberLazyListState(),
-            scaffoldState = rememberScaffoldState(),
+            snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {}
         )
     }
@@ -818,7 +812,7 @@ fun PreviewHomeListDetailScreen() {
                     post.id to rememberLazyListState()
                 }
             },
-            scaffoldState = rememberScaffoldState(),
+            snackbarHostState = SnackbarHostState(),
             onSearchInputChanged = {}
         )
     }
