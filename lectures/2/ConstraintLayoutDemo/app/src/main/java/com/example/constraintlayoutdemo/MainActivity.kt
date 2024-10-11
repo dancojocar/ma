@@ -42,7 +42,7 @@ fun ConstraintLayoutDemo() {
       .constrainAs(blueBox) {})
 
     Box(modifier = Modifier
-      .size(50.dp)
+      .size(100.dp)
       .background(Color.Yellow)
       .constrainAs(yellowBox) {
         top.linkTo(blueBox.bottom)
@@ -50,10 +50,10 @@ fun ConstraintLayoutDemo() {
       })
 
     Box(modifier = Modifier
-      .size(50.dp)
+      .size(100.dp)
       .background(Color.Red)
       .constrainAs(redBox) {
-        top.linkTo(yellowBox.top, 20.dp)
+        top.linkTo(yellowBox.top, 50.dp)
         start.linkTo(yellowBox.end)
       })
 

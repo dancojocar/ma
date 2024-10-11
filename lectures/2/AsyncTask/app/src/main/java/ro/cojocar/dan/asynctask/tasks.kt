@@ -1,8 +1,7 @@
 package ro.cojocar.dan.asynctask
 
 import android.os.AsyncTask
-import kotlinx.android.synthetic.main.activity_main.*
-import org.jetbrains.anko.*
+//import org.jetbrains.anko.*
 import java.io.IOException
 import java.lang.ref.WeakReference
 
@@ -25,12 +24,12 @@ class DownloadWebPageTask(context: MainActivity) : AsyncTask<String, Void, Strin
 
     // onPostExecute displays the results of the AsyncTask.
     override fun onPostExecute(result: String) {
-        activityReference.get()?.outputText?.text = result
+        activityReference.get()?.binding?.outputText?.text = result
         activityReference.get()?.hideProgressIndicator()
     }
 
 }
-
+/*
 @Suppress("unused")
 class AnkoAsynkTaskAlternative(context: MainActivity) {
     private val activityReference: WeakReference<MainActivity> = WeakReference(context)
@@ -57,3 +56,4 @@ class AnkoAsynkTaskAlternative(context: MainActivity) {
         }
     }
 }
+*/

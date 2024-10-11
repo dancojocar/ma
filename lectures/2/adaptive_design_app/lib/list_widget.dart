@@ -6,8 +6,7 @@ class ListWidget extends StatefulWidget {
   final int count;
   final ItemSelectedCallback onItemSelected;
 
-  const ListWidget(this.count, this.onItemSelected, {Key? key})
-      : super(key: key);
+  const ListWidget(this.count, this.onItemSelected, {super.key});
 
   @override
   ListWidgetState createState() => ListWidgetState();

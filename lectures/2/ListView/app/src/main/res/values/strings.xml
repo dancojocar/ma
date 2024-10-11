@@ -14,5 +14,58 @@
     <item>Rails</item>
     <item>.Net</item>
     <item>Perl</item>
+    <item>Swift</item>
+    <item>Objective-C</item>
+    <item>Flutter</item>
+    <item>React Native</item>
+    <item>Go</item>
+    <item>Scala</item>
+    <item>TensorFlow</item>
+    <item>Docker</item>
+    <item>Kubernetes</item>
+    <item>Node.js</item>
+    <item>Angular</item>
+    <item>React</item>
+    <item>Vue.js</item>
+    <item>TypeScript</item>
+    <item>GraphQL</item>
+    <item>Django</item>
+    <item>Flask</item>
+    <item>Laravel</item>
+    <item>Symfony</item>
+    <item>Spring</item>
+    <item>Hibernate</item>
+    <item>MySQL</item>
+    <item>PostgreSQL</item>
+    <item>MongoDB</item>
+    <item>Redis</item>
+    <item>Elasticsearch</item>
+    <item>Solr</item>
+    <item>Cassandra</item>
+    <item>SQLite</item>
+    <item>MariaDB</item>
+    <item>Oracle</item>
+    <item>Firebase</item>
+    <item>Heroku</item>
+    <item>AWS</item>
+    <item>Azure</item>
+    <item>GCP</item>
+    <item>Terraform</item>
+    <item>Ansible</item>
+    <item>Chef</item>
+    <item>Puppet</item>
+    <item>Jenkins</item>
+    <item>Travis CI</item>
+    <item>CircleCI</item>
+    <item>Bash</item>
+    <item>Zsh</item>
+    <item>Powershell</item>
+    <item>Jira</item>
+    <item>Confluence</item>
+    <item>Git</item>
+    <item>Mercurial</item>
+    <item>SVN</item>
+    <item>Bitbucket</item>
+    <item>GitHub</item>
   </string-array>
 </resources>

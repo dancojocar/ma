@@ -4,7 +4,7 @@ import 'package:adaptive_design_app/detail_widget.dart';
 import 'package:adaptive_design_app/list_widget.dart';
 
 class MasterDetailPage extends StatefulWidget {
-  const MasterDetailPage({Key? key}) : super(key: key);
+  const MasterDetailPage({super.key});
 
   @override
   MasterDetailPageState createState() => MasterDetailPageState();

@@ -44,10 +44,10 @@ fun BoxWithConstraintsDemo() {
     }
 
     Text(
-      "Here we set the size to 200.dp",
+      "Here we set the size to 400.dp",
       modifier = Modifier.padding(top = 20.dp)
     )
-    Column(modifier = Modifier.size(200.dp)) {
+    Column(modifier = Modifier.size(400.dp)) {
       MyBoxWithConstraintsDemo()
     }
   }
@@ -55,16 +55,17 @@ fun BoxWithConstraintsDemo() {
 
 @Composable
 private fun MyBoxWithConstraintsDemo() {
+
   BoxWithConstraints {
     val boxWithConstraintsScope = this
     //You can use this scope to get the
     // minWidth, maxWidth, minHeight, maxHeight in dp and constraints
 
     Column {
-      if (boxWithConstraintsScope.maxHeight >= 400.dp) {
+      if (boxWithConstraintsScope.maxHeight >= 410.dp) {
         Text(
-          "This is only visible when the maxHeight is >= 400.dp",
-          style = TextStyle(fontSize = 20.sp)
+          "This is only visible when the maxHeight is >= 410.dp",
+          style = TextStyle(fontSize = 40.sp)
         )
       }
       Column {

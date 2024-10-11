@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 
 class ExpansionTileSample extends StatelessWidget {
-  const ExpansionTileSample({Key? key}) : super(key: key);
+  const ExpansionTileSample({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +132,7 @@ final List<Entry> _data = <Entry>[
 // Displays one Entry. If the entry has children then it's displayed
 // with an ExpansionTile.
 class EntryItem extends StatelessWidget {
-  const EntryItem(this.entry, {Key? key}) : super(key: key);
+  const EntryItem(this.entry, {super.key});
 
   final Entry entry;
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class DetailWidget extends StatefulWidget {
   final int data;
 
-  const DetailWidget(this.data, {Key? key}) : super(key: key);
+  const DetailWidget(this.data, {super.key});
 
   @override
   DetailWidgetState createState() => DetailWidgetState();

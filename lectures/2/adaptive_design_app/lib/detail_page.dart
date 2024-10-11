@@ -4,7 +4,7 @@ import 'package:adaptive_design_app/detail_widget.dart';
 class DetailPage extends StatefulWidget {
   final int data;
 
-  const DetailPage(this.data, {Key? key}) : super(key: key);
+  const DetailPage(this.data, {super.key});
 
   @override
   DetailPageState createState() => DetailPageState();
