@@ -10,7 +10,7 @@ import com.example.movieapp.domain.Movie
 
 class MainAdapter : RecyclerView.Adapter<MainViewHolder>() {
 
-    var movies = mutableListOf<Movie>()
+    private var movies = mutableListOf<Movie>()
 
     @SuppressLint("NotifyDataSetChanged")
     fun setMovieList(movies: List<Movie>) {
@@ -28,7 +28,9 @@ class MainAdapter : RecyclerView.Adapter<MainViewHolder>() {
     override fun onBindViewHolder(holder: MainViewHolder, position: Int) {
         val movie = movies[position]
         holder.binding.name.text = movie.name
-        Glide.with(holder.itemView.context).load(movie.imageUrl).into(holder.binding.imageview)
+        Glide.with(holder.itemView.context)
+            .load(movie.imageUrl)
+            .into(holder.binding.imageview)
 
     }
 

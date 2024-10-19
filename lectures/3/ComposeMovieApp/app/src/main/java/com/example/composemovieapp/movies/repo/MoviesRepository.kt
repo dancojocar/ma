@@ -9,7 +9,7 @@ interface MoviesRepository {
 }
 
 class MoviesRepositoryImpl @Inject constructor(
-    val service: MoviesService
+    private val service: MoviesService
 ) : MoviesRepository {
     override suspend fun getAllMovies(): List<Movie> {
         return service.getAllMovies()

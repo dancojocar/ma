@@ -13,26 +13,33 @@ import com.example.composemovieapp.details.MovieDetailsScreen
 
 @Composable
 fun MovieNavigation() {
-    val navController = rememberNavController()
+  val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Movies.route) {
-        composable(
-            route = Movies.route
-        ) {
-            MoviesScreen(
-                onMovieClick = { selectedMovie ->
-                    navController.navigate("${MovieDetails.route}/$selectedMovie")
-                }
-            )
+  NavHost(
+    navController = navController,
+    startDestination = Movies.route
+  ) {
+    composable(
+      route = Movies.route
+    ) {
+      MoviesScreen(
+        onMovieClick = { selectedMovie ->
+          navController.navigate("${MovieDetails.route}/$selectedMovie")
         }
-        composable(
-            route = "${MovieDetails.route}/{selectedMovie}",
-            arguments = listOf(navArgument("selectedMovie") { type = NavType.StringType })
-        ) { navBackStackEntry ->
-            navBackStackEntry.arguments?.getString("selectedMovie")?.let { movie ->
-                MovieDetailsScreen(selectedMovie = movie)
-            }
-        }
-
+      )
     }
+    composable(
+      route = "${MovieDetails.route}/{selectedMovie}",
+      arguments = listOf(navArgument("selectedMovie") {
+        type = NavType.StringType
+      })
+    ) { navBackStackEntry ->
+      navBackStackEntry.arguments?.getString("selectedMovie")?.let { movie ->
+        MovieDetailsScreen(
+          selectedMovie = movie,
+          onButtonClick = { navController.popBackStack() })
+      }
+    }
+
+  }
 }

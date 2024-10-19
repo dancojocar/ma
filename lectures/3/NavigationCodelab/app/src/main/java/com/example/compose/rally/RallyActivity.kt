@@ -34,38 +34,38 @@ import com.example.compose.rally.ui.theme.RallyTheme
  * https://material.io/design/material-studies/rally.html
  */
 class RallyActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            RallyApp()
-        }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+      RallyApp()
     }
+  }
 }
 
 @Composable
 fun RallyApp() {
-    RallyTheme {
-        val navController = rememberNavController()
-        val currentBackStack by navController.currentBackStackEntryAsState()
-        val currentDestination = currentBackStack?.destination
-        val currentScreen =
-            rallyTabRowScreens.find { it.route == currentDestination?.route } ?: Overview
+  RallyTheme {
+    val navController = rememberNavController()
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStack?.destination
+    val currentScreen =
+      rallyTabRowScreens.find { it.route == currentDestination?.route } ?: Overview
 
-        Scaffold(
-            topBar = {
-                RallyTabRow(
-                    allScreens = rallyTabRowScreens,
-                    onTabSelected = { newScreen ->
-                        navController.navigateSingleTopTo(newScreen.route)
-                    },
-                    currentScreen = currentScreen
-                )
-            }
-        ) { innerPadding ->
-            RallyNavHost(
-                navController = navController,
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
+    Scaffold(
+      topBar = {
+        RallyTabRow(
+          allScreens = rallyTabRowScreens,
+          onTabSelected = { newScreen ->
+            navController.navigateSingleTopTo(newScreen.route)
+          },
+          currentScreen = currentScreen
+        )
+      }
+    ) { innerPadding ->
+      RallyNavHost(
+        navController = navController,
+        modifier = Modifier.padding(innerPadding)
+      )
     }
+  }
 }

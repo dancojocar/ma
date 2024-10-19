@@ -12,7 +12,7 @@ import java.io.*
 class MainActivity : AppCompatActivity() {
 
   companion object {
-    private const val SHARED_PROVIDER_AUTHORITY = BuildConfig.APPLICATION_ID
+    private const val SHARED_PROVIDER_AUTHORITY = "ro.cojocar.dan.fileprovider"
     private const val SHARED_FOLDER = "myimages"
   }
 
@@ -34,8 +34,8 @@ class MainActivity : AppCompatActivity() {
 
     // Create a intent
     val intentBuilder = ShareCompat.IntentBuilder(this)
-        .setType("image/*")
-        .addStream(uri)
+      .setType("image/*")
+      .addStream(uri)
 
     // Start the intent
     val chooserIntent = intentBuilder.createChooserIntent()

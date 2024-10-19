@@ -9,7 +9,7 @@ interface GetMoviesUseCase {
 }
 
 class GetMoviesUseCaseImpl @Inject constructor(
-    val repo: MoviesRepository
+    private val repo: MoviesRepository
 ) : GetMoviesUseCase {
     override suspend fun invoke(): List<Movie> {
         return repo.getAllMovies()

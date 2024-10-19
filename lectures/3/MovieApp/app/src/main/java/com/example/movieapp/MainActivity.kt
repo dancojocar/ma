@@ -15,7 +15,6 @@ import loge
 
 class MainActivity : AppCompatActivity() {
 
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
@@ -28,22 +27,20 @@ class MainActivity : AppCompatActivity() {
       ViewModelProvider(
         this,
         MyViewModelFactory(NetworkRepository(retrofitService))
-      ).get(
-        MainViewModel::class.java
-      )
+      )[MainViewModel::class.java]
 
     val adapter = MainAdapter()
 
     binding.recyclerview.adapter = adapter
 
-    viewModel.movieList.observe(this, Observer {
+    viewModel.movieList.observe(this) {
       logd("onCreate: $it")
       adapter.setMovieList(it)
-    })
+    }
 
-    viewModel.errorMessage.observe(this, Observer {
+    viewModel.errorMessage.observe(this) {
       loge("Error while getting the movies: $it")
-    })
+    }
     viewModel.getAllMovies()
   }
 }
