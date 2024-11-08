@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// This example demonstrates how to create a custom Hook.
 class CustomHookExample extends HookWidget {
+  const CustomHookExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Consume the custom hook. It returns a StreamController that we can use

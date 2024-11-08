@@ -148,7 +148,7 @@ class ProductBox extends StatelessWidget {
                 Image.asset("assets/${item.image}"),
                 Expanded(
                     child: Container(
-                        padding: const EdgeInsets.all(5),
+                        padding: const EdgeInsets.all(0),
                         child: ScopedModel<Product>(
                             model: item,
                             child: Column(

@@ -1,6 +1,7 @@
 package ro.cojocar.dan.rxlifecycle
 
 import android.os.Bundle
+import android.view.View
 import com.trello.rxlifecycle4.android.ActivityEvent
 import com.trello.rxlifecycle4.components.support.RxAppCompatActivity
 import com.trello.rxlifecycle4.kotlin.bindToLifecycle
@@ -24,9 +25,9 @@ class MainActivity : RxAppCompatActivity() {
 
     // Specifically bind this until onPause()
     onCreateSubscription = Observable.interval(1, TimeUnit.SECONDS)
-      .doOnDispose { logi("Unsubscribing subscription from onCreate()") }
+      .doOnDispose { appendLogToTextView("Unsubscribing subscription from onCreate()") }
       .bindUntilEvent(this, ActivityEvent.PAUSE)
-      .subscribe { num -> logi("Started in onCreate(), running until onPause(): $num") }
+      .subscribe { num -> appendLogToTextView("Started in onCreate(), running until onPause(): $num") }
   }
 
   override fun onStart() {
@@ -35,18 +36,18 @@ class MainActivity : RxAppCompatActivity() {
     // Using automatic unsubscribe, this should determine that the correct time to
     // unsubscribe is onStop (the opposite of onStart).
     onStartSubscription = Observable.interval(1, TimeUnit.SECONDS)
-      .doOnDispose { logi("Unsubscribing subscription from onStart()") }
+      .doOnDispose { appendLogToTextView("Unsubscribing subscription from onStart()") }
       .bindToLifecycle(this)
-      .subscribe { num -> logi("Started in onStart(), running until in onStop(): $num") }
+      .subscribe { num -> appendLogToTextView("Started in onStart(), running until in onStop(): $num") }
   }
 
   override fun onResume() {
     super.onResume()
     logd("onResume()")
     onResumeSubscription = Observable.interval(1, TimeUnit.SECONDS)
-      .doOnDispose { logi("Unsubscribing subscription from onResume()") }
+      .doOnDispose { appendLogToTextView("Unsubscribing subscription from onResume()") }
       .bindUntilEvent(this, ActivityEvent.DESTROY)
-      .subscribe { num -> logi("Started in onResume(), running until in onDestroy(): $num") }
+      .subscribe { num -> appendLogToTextView("Started in onResume(), running until in onDestroy(): $num") }
   }
 
   override fun onPause() {
@@ -62,5 +63,14 @@ class MainActivity : RxAppCompatActivity() {
   override fun onDestroy() {
     super.onDestroy()
     logd("onDestroy()")
+  }
+
+  private fun appendLogToTextView(message: String) {
+    logi(message)
+    // Ensure this code runs on the main (UI) thread
+    runOnUiThread {
+      binding.textView.append("$message\n")
+      binding.scrollView.post { binding.scrollView.fullScroll(View.FOCUS_DOWN) }
+    }
   }
 }

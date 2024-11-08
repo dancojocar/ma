@@ -1,12 +1,16 @@
-# Padracing
+# padracing
 
-Padracing is a small racing game to showcase the possibility of running
-Flame and Forge2D in DartPad.
+A new Flutter project.
 
-In this game I took on the challenge to build a game completely without
-assets, since you can't have assets in DartPad (yet).
-I could of course have pulled in network assets, but decided that the
-challenge of not having any assets at all made it more fun.
+## Getting Started
 
-Created by: [Lukas Klingsbo](https://twitter.com/spyd0n)
-([spydon](https://github.com/spydon))
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

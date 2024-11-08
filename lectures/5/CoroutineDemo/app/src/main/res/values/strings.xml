@@ -3,4 +3,8 @@
   <string name="start_threads">Start Threads</string>
   <string name="next_fibonacci">Next Fibonacci</string>
   <string name="start_coroutines">Start Coroutines</string>
+  <string name="startMessage">%1$s\n\n%2$s\nStart: %3$s</string>
+  <string name="endMessage">%1$s\n  End: %2$s</string>
+  <string name="diffMessage">%1$s\nDiff: %2$s</string>
+  <string name="fibMessage">%1$s\nFib: %2$s</string>
 </resources>

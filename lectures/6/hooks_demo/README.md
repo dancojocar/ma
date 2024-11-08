@@ -1,12 +1,16 @@
-# Flutter Hooks Gallery
+# hooks_demo
 
-A series of examples demonstrating how to use Flutter Hooks! It teaches how to
-use the Widgets and hooks that are provided by this library, as well examples 
-demonstrating how to write custom hooks.
+A new Flutter project.
 
-## Run the app
+## Getting Started
 
-  1. Open a terminal
-  2. Navigate to this `example` directory
-  3. Run `flutter create .`
-  4. Run `flutter run` from your Terminal, or launch the project from your IDE!
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

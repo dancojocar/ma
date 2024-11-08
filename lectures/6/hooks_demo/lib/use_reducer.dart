@@ -20,6 +20,8 @@ class IncrementCounter {
 }
 
 class UseReducerExample extends HookWidget {
+  const UseReducerExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Create the reducer function that will handle the actions you dispatch

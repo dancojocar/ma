@@ -7,12 +7,14 @@ import 'use_effect.dart';
 import 'use_state.dart';
 import 'use_stream.dart';
 
-void main() => runApp(HooksGalleryApp());
+void main() => runApp(const HooksGalleryApp());
 
 /// An App that demonstrates how to use hooks. It includes examples that cover
 /// the hooks provided by this library as well as examples that demonstrate
 /// how to write custom hooks.
 class HooksGalleryApp extends HookWidget {
+  const HooksGalleryApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     useAnimationController(duration: const Duration(seconds: 2));
@@ -25,15 +27,15 @@ class HooksGalleryApp extends HookWidget {
         body: ListView(children: [
           _GalleryItem(
             title: 'useState',
-            builder: (context) => UseStateExample(),
+            builder: (context) => const UseStateExample(),
           ),
           _GalleryItem(
             title: 'useMemoize + useStream',
-            builder: (context) => UseStreamExample(),
+            builder: (context) => const UseStreamExample(),
           ),
           _GalleryItem(
             title: 'Custom Hook Function',
-            builder: (context) => CustomHookExample(),
+            builder: (context) => const CustomHookExample(),
           ),
           _GalleryItem(
             title: 'Star Wars Planets',

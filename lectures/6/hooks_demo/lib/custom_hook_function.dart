@@ -5,6 +5,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 /// This example demonstrates how to write a hook function that enhances the
 /// useState hook with logging functionality.
 class CustomHookFunctionExample extends HookWidget {
+  const CustomHookFunctionExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Next, invoke the custom `useLoggedState` hook with a default value to

@@ -6,6 +6,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 ///
 /// First, instead of a StatefulWidget, use a HookWidget instead!
 class UseStateExample extends HookWidget {
+  const UseStateExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Next, invoke the `useState` function with a default value to create a

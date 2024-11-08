@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -21,16 +22,18 @@ import com.example.realm.ui.theme.RealmTheme
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.ext.query
-import io.realm.kotlin.ext.realmSetOf
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 
 class MainActivity : ComponentActivity(), CoroutineScope by MainScope() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
       RealmTheme {
-        // A surface container using the 'background' color from the theme
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Surface(
+          modifier = Modifier.fillMaxSize(),
+          color = MaterialTheme.colorScheme.background
+        ) {
 
           val config =
             RealmConfiguration.Builder(
@@ -73,11 +76,14 @@ class MainActivity : ComponentActivity(), CoroutineScope by MainScope() {
 
   @Composable
   fun PersonItem(person: Person) {
-    Column {
+    Column(modifier = Modifier.padding(8.dp)) {
       Text(text = "DebugId: ${person.id.timestamp}")
-      Text(text = "Name: ${person.name} Age: ${person.age}")
-      Text(text = " -> Dog: ${person.dog?.name}")
+      Text(text = "Name: ${person.name}, Age: ${person.age}")
+      Text(text = "Dog: ${person.dog?.name}")
+
+      // Displaying all cats for this person in LazyColumn
       val cats: Set<Cat> = person.cats
+      Text(text = "Cats:")
       LazyColumn(modifier = Modifier.height(100.dp)) {
         items(cats.toList()) { cat ->
           CatItem(cat)
@@ -88,6 +94,6 @@ class MainActivity : ComponentActivity(), CoroutineScope by MainScope() {
 
   @Composable
   fun CatItem(cat: Cat) {
-    Text(" --> Cat Name: ${cat.name}")
+    Text(text = " --> Cat: ${cat.name}", modifier = Modifier.padding(start = 16.dp))
   }
 }

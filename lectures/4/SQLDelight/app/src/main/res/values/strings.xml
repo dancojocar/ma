@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">SQLDelight</string>
     <string name="title_item_detail">Item Detail</string>
+    <string name="add_item">Add item</string>
+    <string name="add_to_favorites">Add to favorites</string>
 </resources>

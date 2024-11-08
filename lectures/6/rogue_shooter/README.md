@@ -1,6 +1,16 @@
-# Flame Performance Test Game
+# rogue_shooter
 
-This is a simple scrolling shooter game which we use for testing the performance of Flame,
-since it uses a lot of components and hitboxes. When it reaches a certain amount of
-components (counted in the lower right corner) you can expect it to drop a bit in FPS,
-depending on what platform you are on.
+A new Flutter project.
+
+## Getting Started
+
+This project is a starting point for a Flutter application.
+
+A few resources to get you started if this is your first Flutter project:
+
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

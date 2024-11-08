@@ -25,13 +25,8 @@ class ItemDetailFragment : Fragment() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val androidSqlDriver = AndroidSqliteDriver(
-      schema = Database.Schema,
-      context = context!!,
-      name = "players.db"
-    )
+    val queries = setupDatabase(requireContext())
 
-    val queries = Database(androidSqlDriver).playerQueries
     arguments?.let {
       if (it.containsKey(ARG_ITEM_ID)) {
         val selectById = queries.selectById(it.getLong(ARG_ITEM_ID))

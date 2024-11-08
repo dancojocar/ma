@@ -4,10 +4,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.*
 import ro.cojocar.dan.coroutinedemo.databinding.ActivityMainBinding
 import java.lang.Thread.sleep
 import kotlin.concurrent.thread
+import kotlin.coroutines.suspendCoroutine
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
@@ -43,18 +45,19 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     binding.buttonCoroutines.setOnClickListener {
       binding.myProgress.visibility = View.VISIBLE
-      launch {
+      lifecycleScope.launch {
         captureRunningTimes("coroutines") {
-          runBlocking {
-            createCoroutines(delayArray)
-          }
+          createCoroutines(delayArray)
         }
       }
     }
+
     binding.buttonThreads.setOnClickListener {
       binding.myProgress.visibility = View.VISIBLE
-      captureRunningTimes("threads") {
-        createThreads(delayArray)
+      lifecycleScope.launch {
+        captureRunningTimes("threads") {
+          createThreads(delayArray)
+        }
       }
     }
 
@@ -72,7 +75,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
 
     val iterator = fibonacci.iterator()
     binding.buttonFibonacci.setOnClickListener {
-      binding.textView.text = "${binding.textView.text}\nFib: ${iterator.next()}"
+      binding.textView.text =
+        getString(R.string.fibMessage, binding.textView.text, iterator.next().toString())
       binding.scrollView.fullScroll(View.FOCUS_DOWN)
     }
 
@@ -88,25 +92,25 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
   }
 
 
-  private fun captureRunningTimes(name: String, block: () -> Unit) {
+  private suspend fun captureRunningTimes(name: String, block: suspend () -> Unit) {
     val start = System.currentTimeMillis() / 1000
-    binding.textView.text = "${binding.textView.text}\n\n${name}\nStart: $start"
+    binding.textView.text =
+      getString(R.string.startMessage, binding.textView.text, name, start.toString())
     block()
     val end = System.currentTimeMillis() / 1000
-    binding.textView.text = "${binding.textView.text}\n  End: $end"
-    binding.textView.text = "${binding.textView.text}\nDiff: ${end - start}"
+    binding.textView.text = getString(R.string.endMessage, binding.textView.text, end.toString())
+    binding.textView.text =
+      getString(R.string.diffMessage, binding.textView.text, "" + (end - start))
     binding.scrollView.fullScroll(View.FOCUS_DOWN)
   }
 
   private suspend fun createCoroutines(delayArray: LongArray) {
     try {
+      logd("Started")
       coroutineScope {
-        logd("Started")
         val jobs = List(delayArray.size) {
-          launch {
-            withContext(Dispatchers.IO) {
-              delay(delayArray[it])
-            }
+          launch(Dispatchers.IO) {
+            delay(delayArray[it])
           }
         }
         jobs.forEach { it.join() }
@@ -122,9 +126,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
   private fun createThreads(delayArray: LongArray) {
     try {
       logd("Started")
-      val jobs = List(delayArray.size) {
+      val jobs = delayArray.map { delay ->
         thread {
-          sleep(delayArray[it])
+          sleep(delay)
         }
       }
       jobs.forEach { it.join() }

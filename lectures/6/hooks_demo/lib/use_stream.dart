@@ -6,6 +6,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 /// This example demonstrates how to use Hooks to rebuild a Widget whenever
 /// a Stream emits a new value.
 class UseStreamExample extends StatelessWidget {
+  const UseStreamExample({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.dan.sqlite.databinding.ActivityMainBinding
 import com.example.dan.sqlite.databinding.NoteBinding
 import android.app.Activity
+import android.app.AlertDialog
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import com.example.dan.sqlite.NoteActivity.Companion.NOTE_ACTIVITY_CONTENT
 import com.example.dan.sqlite.NoteActivity.Companion.NOTE_ACTIVITY_ID
@@ -45,8 +46,7 @@ class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
+    setContentView(binding.root)
     binding.lvNotes.onItemClickListener =
       AdapterView.OnItemClickListener { _, _, position, _ ->
         toast("Click on ${listNotes[position].title}")
@@ -127,14 +127,25 @@ class MainActivity : AppCompatActivity() {
         updateNote(mNote)
       }
       vh.binding.ivDelete.setOnClickListener {
-        val dbManager = NoteDbManager(this.context!!)
-        val selectionArgs = arrayOf(mNote.id.toString())
-        dbManager.delete(
-          "${NoteContract.NoteEntry.COLUMN_ID}=?",
-          selectionArgs
-        )
-        listNotes.remove(mNote)
-        notifyDataSetChanged()
+        // Show confirmation dialog
+        AlertDialog.Builder(it.context)
+          .setTitle("Delete Note")
+          .setMessage("Are you sure you want to delete this note?")
+          .setPositiveButton("Yes") { dialog, _ ->
+            val dbManager = NoteDbManager(it.context)
+            val selectionArgs = arrayOf(mNote.id.toString())
+            dbManager.delete(
+              "${NoteContract.NoteEntry.COLUMN_ID}=?",
+              selectionArgs
+            )
+            listNotes.remove(mNote)
+            notifyDataSetChanged()
+            dialog.dismiss() // Close the dialog
+          }
+          .setNegativeButton("No") { dialog, _ ->
+            dialog.dismiss()
+          }
+          .show()
       }
       return view
     }

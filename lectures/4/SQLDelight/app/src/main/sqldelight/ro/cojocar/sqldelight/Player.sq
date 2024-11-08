@@ -34,3 +34,6 @@ INSERT OR REPLACE INTO chessPlayer(player_number, full_name, quotes) VALUES (?, 
 
 deletePlayer:
 DELETE FROM chessPlayer WHERE player_number = ?;
+
+countAll:
+SELECT count(*) FROM chessPlayer;
