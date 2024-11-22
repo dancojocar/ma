@@ -13,14 +13,14 @@ class CategoriesDrawer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.orange),
             child: Text(
               'Todo-List Demo with moor',
               style: Theme.of(context)
                   .textTheme
-                  .subtitle1
+                  .titleMedium
                   ?.copyWith(color: Colors.white),
             ),
-            decoration: const BoxDecoration(color: Colors.orange),
           ),
           Flexible(
             child: StreamBuilder<List<CategoryWithActiveInfo>>(
@@ -41,16 +41,17 @@ class CategoriesDrawer extends StatelessWidget {
           Row(
             children: <Widget>[
               TextButton(
-                child: const Text('Add category'),
                 style: ButtonStyle(
-                  foregroundColor: MaterialStateProperty.all(
+                  foregroundColor: WidgetStateProperty.all(
                     Theme.of(context).colorScheme.secondary,
                   ),
                 ),
                 onPressed: () {
                   showDialog(
-                      context: context, builder: (_) => AddCategoryDialog());
+                      context: context,
+                      builder: (_) => const AddCategoryDialog());
                 },
+                child: const Text('Add category'),
               ),
             ],
           ),
@@ -63,7 +64,7 @@ class CategoriesDrawer extends StatelessWidget {
 class _CategoryDrawerEntry extends StatelessWidget {
   final CategoryWithActiveInfo entry;
 
-  const _CategoryDrawerEntry({Key? key, required this.entry}) : super(key: key);
+  const _CategoryDrawerEntry({super.key, required this.entry});
 
   @override
   Widget build(BuildContext context) {
@@ -115,13 +116,13 @@ class _CategoryDrawerEntry extends StatelessWidget {
                       },
                     ),
                     TextButton(
-                      child: const Text('Delete'),
                       style: ButtonStyle(
-                        foregroundColor: MaterialStateProperty.all(Colors.red),
+                        foregroundColor: WidgetStateProperty.all(Colors.red),
                       ),
                       onPressed: () {
                         Navigator.pop(context, true);
                       },
+                      child: const Text('Delete'),
                     ),
                   ],
                 );

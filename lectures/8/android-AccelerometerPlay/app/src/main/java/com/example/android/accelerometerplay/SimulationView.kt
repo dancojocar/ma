@@ -150,7 +150,7 @@ class SimulationView(context: Context) : FrameLayout(context), SensorEventListen
 
   fun setSensorManager(mSensorManager: SensorManager) {
     this.mSensorManager = mSensorManager
-    this.mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    this.mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!!
   }
 }
 

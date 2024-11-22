@@ -1,9 +1,3 @@
-// Copyright 2017 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -63,53 +57,64 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text('Sensor Example'),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: <Widget>[
-          Center(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border.all(width: 1.0, color: Colors.black38),
-              ),
-              child: SizedBox(
-                height: _snakeRows * _snakeCellSize,
-                width: _snakeColumns * _snakeCellSize,
-                child: Snake(
-                  rows: _snakeRows,
-                  columns: _snakeColumns,
-                  cellSize: _snakeCellSize,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Center(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border.all(width: 1.0, color: Colors.black38),
+                ),
+                child: SizedBox(
+                  height: _snakeRows * _snakeCellSize,
+                  width: _snakeColumns * _snakeCellSize,
+                  child: Snake(
+                    rows: _snakeRows,
+                    columns: _snakeColumns,
+                    cellSize: _snakeCellSize,
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text('Accelerometer: $accelerometer'),
-              ],
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Flexible(
+                    child: Text('Accelerometer: $accelerometer',
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text('UserAccelerometer: $userAccelerometer'),
-              ],
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Flexible(
+                    child: Text('UserAccelerometer: $userAccelerometer',
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text('Gyroscope: $gyroscope'),
-              ],
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Flexible(
+                    child: Text('Gyroscope: $gyroscope',
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -126,18 +131,19 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _streamSubscriptions
-        .add(accelerometerEvents.listen((AccelerometerEvent event) {
+        .add(accelerometerEventStream().listen((AccelerometerEvent event) {
       setState(() {
         _accelerometerValues = <double>[event.x, event.y, event.z];
       });
     }));
-    _streamSubscriptions.add(gyroscopeEvents.listen((GyroscopeEvent event) {
+    _streamSubscriptions
+        .add(gyroscopeEventStream().listen((GyroscopeEvent event) {
       setState(() {
         _gyroscopeValues = <double>[event.x, event.y, event.z];
       });
     }));
-    _streamSubscriptions
-        .add(userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+    _streamSubscriptions.add(
+        userAccelerometerEventStream().listen((UserAccelerometerEvent event) {
       setState(() {
         _userAccelerometerValues = <double>[event.x, event.y, event.z];
       });

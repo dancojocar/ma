@@ -62,7 +62,7 @@ class MainActivity : Activity() {
     private val mRotationVectorSensor: Sensor =
         mSensorManager.getDefaultSensor(
             Sensor.TYPE_ROTATION_VECTOR
-        )
+        )!!
     private val mRotationMatrix = FloatArray(16)
 
     init {

@@ -24,5 +24,5 @@ package com.example.android.jobscheduler
 @JvmField val MSG_COLOR_START = 2
 @JvmField val MSG_COLOR_STOP = 3
 
-@JvmField val MESSENGER_INTENT_KEY = "${BuildConfig.APPLICATION_ID}.MESSENGER_INTENT_KEY"
-@JvmField val WORK_DURATION_KEY = "${BuildConfig.APPLICATION_ID}.WORK_DURATION_KEY"
+@JvmField val MESSENGER_INTENT_KEY = "TestApp.MESSENGER_INTENT_KEY"
+@JvmField val WORK_DURATION_KEY = "TestApp.WORK_DURATION_KEY"

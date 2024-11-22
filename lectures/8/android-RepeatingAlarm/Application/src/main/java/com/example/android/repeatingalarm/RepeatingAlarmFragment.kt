@@ -39,6 +39,7 @@ class RepeatingAlarmFragment : Fragment() {
   }
 
   @RequiresApi(Build.VERSION_CODES.S)
+  @Deprecated("")
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
     val pendingIntent = Intent(context, MyBroadcastReceiver::class.java).let { intent ->

@@ -1,6 +1,6 @@
 {
-    "name": "flutter_path_finder_algorithms",
-    "short_name": "flutter_path_finder_algorithms",
+    "name": "flutter_finder_algs",
+    "short_name": "flutter_finder_algs",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

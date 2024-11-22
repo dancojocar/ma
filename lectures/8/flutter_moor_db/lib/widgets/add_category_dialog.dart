@@ -3,7 +3,7 @@ import 'package:flutter_moor_db/bloc.dart';
 import 'package:provider/provider.dart';
 
 class AddCategoryDialog extends StatefulWidget {
-  const AddCategoryDialog({Key? key}) : super(key: key);
+  const AddCategoryDialog({super.key});
 
   @override
   _AddCategoryDialogState createState() => _AddCategoryDialogState();
@@ -24,7 +24,7 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
               padding: const EdgeInsets.all(8),
               child: Text(
                 'Add a category',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
             TextField(
@@ -35,16 +35,16 @@ class _AddCategoryDialogState extends State<AddCategoryDialog> {
               ),
               onSubmitted: (_) => _addEntry(),
             ),
-            ButtonBar(
+            OverflowBar(
               children: [
                 TextButton(
-                  child: const Text('Add'),
                   style: ButtonStyle(
-                    foregroundColor: MaterialStateProperty.all(
+                    foregroundColor: WidgetStateProperty.all(
                       Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                   onPressed: _addEntry,
+                  child: const Text('Add'),
                 ),
               ],
             ),
