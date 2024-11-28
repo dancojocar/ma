@@ -43,7 +43,7 @@ class BasicTransitionFragment : Fragment(), RadioGroup.OnCheckedChangeListener {
   private var mSceneRoot: ViewGroup? = null
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                            savedInstanceState: Bundle?): View? {
+                            savedInstanceState: Bundle?): View {
     _binding = FragmentBasicTransitionBinding.inflate(inflater, container, false)
     val view = binding.root
     val radioGroup = binding.selectScene
@@ -51,7 +51,7 @@ class BasicTransitionFragment : Fragment(), RadioGroup.OnCheckedChangeListener {
     mSceneRoot = binding.mSceneRoot
 
     // A Scene can be instantiated from a live view hierarchy.
-    mScene1 = Scene(mSceneRoot, mSceneRoot?.findViewById<View>(R.id.container) as View)
+    mScene1 = Scene(mSceneRoot, mSceneRoot?.findViewById<View>(R.id.container)!!)
 
     // You can also inflate a generate a Scene from a layout resource file.
     mScene2 = Scene.getSceneForLayout(mSceneRoot, R.layout.scene2, activity)

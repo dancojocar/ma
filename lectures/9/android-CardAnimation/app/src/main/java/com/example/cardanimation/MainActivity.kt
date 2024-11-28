@@ -257,8 +257,8 @@ fun Modifier.swipeToBack(
                 initialVelocity = velocity,
                 animationSpec = keyframes {
                   durationMillis = boomerangDuration
-                  0f at 0 with easeInOutEasing
-                  (if (leftSide) rotationOvershoot else -rotationOvershoot) at boomerangDuration - 50 with LinearOutSlowInEasing
+                  0f at 0 using easeInOutEasing
+                  (if (leftSide) rotationOvershoot else -rotationOvershoot) at boomerangDuration - 50 using LinearOutSlowInEasing
                   (if (leftSide) rotationToFling else -rotationToFling) at boomerangDuration
                 })
               rotation.snapTo(0f)
@@ -268,7 +268,7 @@ fun Modifier.swipeToBack(
                 initialVelocity = velocity,
                 animationSpec = keyframes {
                   durationMillis = boomerangDuration
-                  -distanceToFling at (boomerangDuration / 2) with easeInOutEasing
+                  -distanceToFling at (boomerangDuration / 2) using easeInOutEasing
                   40f at boomerangDuration - 70
                 }
               ) {

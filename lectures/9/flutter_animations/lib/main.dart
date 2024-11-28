@@ -17,7 +17,7 @@ Color randomColor() {
 }
 
 class AnimatedContainerDemo extends StatefulWidget {
-  const AnimatedContainerDemo({Key? key}) : super(key: key);
+  const AnimatedContainerDemo({super.key});
 
   @override
   _AnimatedContainerDemoState createState() => _AnimatedContainerDemoState();

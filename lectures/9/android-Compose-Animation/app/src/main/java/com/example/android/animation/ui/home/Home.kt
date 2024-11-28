@@ -89,6 +89,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -100,7 +101,6 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.consumePositionChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
@@ -182,7 +182,8 @@ fun Home() {
 
     // The background color. The value is changed by the current tab.
     val backgroundColor by animateColorAsState(
-        if (tabPage == TabPage.Home) Purple100 else Green300)
+        if (tabPage == TabPage.Home) Purple100 else Green300, label = "Home"
+    )
 
     // The coroutine scope for event handlers calling suspend functions.
     val coroutineScope = rememberCoroutineScope()
@@ -277,7 +278,6 @@ fun Home() {
  * @param extended Whether the tab should be shown in its expanded state.
  */
 // AnimatedVisibility is currently an experimental API in Compose Animation.
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun HomeFloatingActionButton(
     extended: Boolean,
@@ -308,7 +308,6 @@ private fun HomeFloatingActionButton(
 /**
  * Shows a message that the edit feature is not available.
  */
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun EditMessage(shown: Boolean) {
     AnimatedVisibility(
@@ -342,8 +341,8 @@ private fun EditMessage(shown: Boolean) {
  */
 @Composable
 private fun LazyListState.isScrollingUp(): Boolean {
-    var previousIndex by remember(this) { mutableStateOf(firstVisibleItemIndex) }
-    var previousScrollOffset by remember(this) { mutableStateOf(firstVisibleItemScrollOffset) }
+    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
     return remember(this) {
         derivedStateOf {
             if (previousIndex != firstVisibleItemIndex) {
@@ -424,7 +423,6 @@ private fun TopicRow(topic: String, expanded: Boolean, onClick: () -> Unit) {
 /**
  * Shows a separator for topics.
  */
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TopicRowSpacer(visible: Boolean) {
     AnimatedVisibility(visible = visible) {
@@ -602,7 +600,7 @@ private fun WeatherRow(
 @Composable
 private fun LoadingRow() {
     // Creates an `InfiniteTransition` that runs infinite child animation values.
-    val infiniteTransition = rememberInfiniteTransition()
+    val infiniteTransition = rememberInfiniteTransition(label = "")
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -618,7 +616,7 @@ private fun LoadingRow() {
             // When the value finishes animating from 0f to 1f, it repeats by reversing the
             // animation direction.
             repeatMode = RepeatMode.Reverse
-        )
+        ), label = ""
     )
     Row(
         modifier = Modifier
