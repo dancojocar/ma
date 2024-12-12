@@ -49,9 +49,7 @@ class AppointmentListItem extends StatelessWidget {
 
 class _AppointmentNameRow extends StatelessWidget {
   const _AppointmentNameRow(
-    this.appointment, {
-    Key? key,
-  }) : super(key: key);
+    this.appointment);
 
   final Appointment appointment;
 
@@ -74,9 +72,7 @@ class _AppointmentNameRow extends StatelessWidget {
 
 class _AppointmentTimeSlotRow extends StatelessWidget {
   const _AppointmentTimeSlotRow(
-    this.appointment, {
-    Key? key,
-  }) : super(key: key);
+    this.appointment);
 
   final Appointment appointment;
 

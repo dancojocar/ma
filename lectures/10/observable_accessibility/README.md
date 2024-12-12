@@ -1,6 +1,6 @@
 # observable_accessibility
 
-A new Flutter project to showcase accessibility features of Flutter.
+A new Flutter project.
 
 ## Getting Started
 

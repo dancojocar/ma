@@ -3,10 +3,10 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class PageIndicator extends StatelessWidget {
   const PageIndicator({
-    Key? key,
+    super.key,
     required this.pagesCount,
     required this.controller,
-  }) : super(key: key);
+  });
 
   final int pagesCount;
   final PageController controller;

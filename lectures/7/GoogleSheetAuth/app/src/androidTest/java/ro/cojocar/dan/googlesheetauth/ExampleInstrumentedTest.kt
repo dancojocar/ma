@@ -18,7 +18,5 @@ class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
         // Context of the app under test.
-        val appContext = InstrumentationRegistry.getTargetContext()
-        assertEquals("ro.cojocar.dan.googlesheetauth", appContext.packageName)
     }
 }

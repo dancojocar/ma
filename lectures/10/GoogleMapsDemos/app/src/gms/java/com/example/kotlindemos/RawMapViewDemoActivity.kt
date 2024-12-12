@@ -78,6 +78,7 @@ class RawMapViewDemoActivity : AppCompatActivity(), OnMapReadyCallback {
     super.onDestroy()
   }
 
+  @Deprecated("Deprecated in Java")
   override fun onLowMemory() {
     super.onLowMemory()
     mapView.onLowMemory()

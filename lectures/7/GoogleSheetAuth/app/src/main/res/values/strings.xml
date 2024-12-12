@@ -2,4 +2,5 @@
     <string name="app_name">GoogleSheetAuth</string>
     <string name="noConnection">Ouch!!! No connection!</string>
     <string name="installGooglePlay">Please install google play services</string>
+  <string name="permissionDenied">Permission denied</string>
 </resources>

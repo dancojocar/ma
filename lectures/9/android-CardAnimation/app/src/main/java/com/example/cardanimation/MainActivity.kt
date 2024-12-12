@@ -239,7 +239,7 @@ fun Modifier.swipeToBack(
           // Enough velocity to fling the card to the back
           val boomerangDuration = 1600
           val maxDistanceToFling = (size.height * 2).toFloat()
-          val maxRotations = 1
+          val maxRotations = 5
           val easeInOutEasing = CubicBezierEasing(0.42f, 0.0f, 0.58f, 1.0f)
 
           val distanceToFling = min(

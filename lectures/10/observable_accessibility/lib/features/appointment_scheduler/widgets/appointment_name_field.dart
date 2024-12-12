@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppointmentNameField extends StatelessWidget {
   const AppointmentNameField({
-    Key? key,
+    super.key,
     required this.controller,
     this.onEditingComplete,
-  }) : super(key: key);
+  });
 
   final TextEditingController controller;
 

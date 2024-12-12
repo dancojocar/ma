@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   final PortfolioBloc portfolioBloc;
   final PortfolioService portfolioService;
 
-  const MyApp(this.portfolioBloc, this.portfolioService, {Key? key}) : super(key: key);
+  const MyApp(this.portfolioBloc, this.portfolioService, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +73,7 @@ class PortfolioList extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return Text(
                       '${snapshot.data![index].id} - ${snapshot.data![index].name}',
-                      style: Theme.of(context).textTheme.headline4,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     );
                   },
                 );

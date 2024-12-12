@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class AppointmentPhoneNumberField extends StatelessWidget {
   const AppointmentPhoneNumberField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.onChanged,
     required this.focusNode,
-  }) : super(key: key);
+  });
 
   final TextEditingController controller;
 

@@ -17,16 +17,17 @@ void main() async {
   runApp(
     App(
       sharedPreferences: sharedPreferences,
+      enableAccessibilityTools: true,
     ),
   );
 }
 
 class App extends StatelessWidget {
   const App({
-    Key? key,
+    super.key,
     this.enableAccessibilityTools = false,
     required this.sharedPreferences,
-  }) : super(key: key);
+  });
 
   final bool enableAccessibilityTools;
 

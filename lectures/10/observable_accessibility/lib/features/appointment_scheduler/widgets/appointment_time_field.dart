@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class AppointmentTimeField extends StatelessWidget {
   const AppointmentTimeField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.initialTime,
     required this.onTimeSelected,
     required this.focusNode,
-  }) : super(key: key);
+  });
 
   final TextEditingController controller;
 

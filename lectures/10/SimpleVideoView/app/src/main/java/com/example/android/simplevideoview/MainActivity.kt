@@ -149,9 +149,9 @@ class MainActivity : AppCompatActivity() {
   }
 
   companion object {
-    //    private const val VIDEO_SAMPLE = "tacoma_narrows"
-    private const val VIDEO_SAMPLE =
-      "http://techslides.com/demos/sample-videos/small.mp4";
+        private const val VIDEO_SAMPLE = "tacoma_narrows"
+//    private const val VIDEO_SAMPLE =
+//      "http://techslides.com/demos/sample-videos/small.mp4";
 
     // Tag for the instance state bundle.
     private const val PLAYBACK_TIME = "play_time"

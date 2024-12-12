@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppointmentTermsField extends StatelessWidget {
   const AppointmentTermsField({
-    Key? key,
+    super.key,
     required this.isChecked,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   final bool isChecked;
   final ValueChanged<bool?> onChanged;
@@ -18,6 +18,7 @@ class AppointmentTermsField extends StatelessWidget {
           key: const Key('APPOINTMENT_TERMS_CHECKBOX'),
           value: isChecked,
           onChanged: onChanged,
+          semanticLabel: 'Accept terms and conditions',
         ),
         RichText(
           text: const TextSpan(

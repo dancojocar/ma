@@ -181,9 +181,8 @@ class _ScheduleAppointmentFormState extends State<ScheduleAppointmentForm> {
 
 class _BookingResultIndicator extends StatelessWidget {
   const _BookingResultIndicator({
-    Key? key,
     required this.onResetBookingForm,
-  }) : super(key: key);
+  });
 
   final VoidCallback onResetBookingForm;
 

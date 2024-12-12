@@ -3,12 +3,12 @@ import 'package:clock/clock.dart';
 
 class AppointmentDateField extends StatelessWidget {
   const AppointmentDateField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.initialDate,
     required this.onDateSelected,
     required this.focusNode,
-  }) : super(key: key);
+  });
 
   final TextEditingController controller;
 

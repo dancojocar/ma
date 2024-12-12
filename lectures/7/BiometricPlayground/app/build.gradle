@@ -1,18 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-//    id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
     id 'com.google.devtools.ksp'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.example.biometric"
-        minSdk 33
-        targetSdk 33
+        minSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -50,21 +50,21 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.10.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.activity:activity-compose:1.8.0'
-    implementation 'androidx.compose.material:material:1.5.4'
-    implementation 'androidx.compose.ui:ui-tooling:1.5.4'
-    implementation "androidx.navigation:navigation-compose:2.7.5"
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2'
-    implementation "com.google.dagger:hilt-android:2.48"
-    implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+    implementation 'androidx.compose.material:material:1.7.5'
+    implementation 'androidx.compose.ui:ui-tooling:1.7.5'
+    implementation "androidx.navigation:navigation-compose:2.8.4"
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+    implementation "com.google.dagger:hilt-android:2.50"
+    implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
 
 //    kapt "com.google.dagger:hilt-compiler:2.48.1"
-    ksp "com.google.dagger:dagger-compiler:2.48.1" // Dagger compiler
-    ksp "com.google.dagger:hilt-compiler:2.48.1"   // Hilt compiler
+    ksp "com.google.dagger:dagger-compiler:2.50" // Dagger compiler
+    ksp "com.google.dagger:hilt-compiler:2.50"   // Hilt compiler
     implementation 'androidx.biometric:biometric-ktx:1.2.0-alpha05'
     implementation "androidx.security:security-crypto-ktx:1.1.0-alpha06"
 
@@ -72,6 +72,6 @@ dependencies {
     ksp 'io.github.raamcosta.compose-destinations:ksp:1.5.1-beta'
 
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

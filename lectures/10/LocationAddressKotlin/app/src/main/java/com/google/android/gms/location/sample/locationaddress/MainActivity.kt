@@ -392,7 +392,7 @@ class MainActivity : AppCompatActivity() {
           // Build intent that displays the App settings screen.
           val intent = Intent().apply {
             action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-            data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
+            data = Uri.fromParts("package", "com.google.android.gms.location.sample.locationaddress", null)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
           }
           startActivity(intent)

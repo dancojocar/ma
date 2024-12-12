@@ -5,11 +5,15 @@ import android.accounts.AccountManager
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
@@ -17,20 +21,15 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.client.util.ExponentialBackOff
 import com.google.api.services.sheets.v4.SheetsScopes
-import pub.devrel.easypermissions.AfterPermissionGranted
-import pub.devrel.easypermissions.EasyPermissions
-import ro.cojocar.dan.googlesheetauth.databinding.ActivityMainBinding
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.uiThread
+import ro.cojocar.dan.googlesheetauth.databinding.ActivityMainBinding
 
 /**
  * Enable the api using:
  * https://console.developers.google.com/start/api?id=sheets.googleapis.com
  * <p>
- * Following: https://developers.google.com/drive/android/get-started
+ * Following: https://developers.google.com/drive/api/quickstart/java
  *
  * <p>
  * keytool -exportcert -keystore ~/.android/debug.keystore -list -v
@@ -49,8 +48,7 @@ class MainActivity : AppCompatActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
+    setContentView(binding.root)
 
     binding.button.setOnClickListener {
       binding.button.isEnabled = false
@@ -58,8 +56,7 @@ class MainActivity : AppCompatActivity() {
       getResultsFromApi()
     }
 
-    // Initialize credentials and service object.
-    credentials = GoogleAccountCredential.usingOAuth2(this, listOf(*scopes))
+    credentials = GoogleAccountCredential.usingOAuth2(this, scopes.toList())
       .setBackOff(ExponentialBackOff())
   }
 
@@ -80,19 +77,16 @@ class MainActivity : AppCompatActivity() {
       binding.output.text = getString(R.string.noConnection)
     } else {
       binding.progressBar.visibility = View.VISIBLE
-      doAsync {
-
+      lifecycleScope.launch(Dispatchers.IO) {
         try {
           val values = GoogleSheetsRequestTask(credentials).dataFromApi()
-          uiThread {
+          launch(Dispatchers.Main) {
             binding.progressBar.visibility = View.GONE
             binding.output.text = values
             binding.button.isEnabled = true
           }
         } catch (e: UserRecoverableAuthIOException) {
-          logi("Trying again")
-          // Start a dialog from which the user can choose an account
-          startActivityForResult(e.intent, REQUEST_GOOGLE_PLAY_SERVICES)
+          startActivityForResult(e.intent, REQUEST_AUTHORIZATION)
         }
       }
     }
@@ -108,25 +102,21 @@ class MainActivity : AppCompatActivity() {
    * function will be rerun automatically whenever the GET_ACCOUNTS permission
    * is granted.
    */
-  @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
   private fun chooseAccount() {
-    if (EasyPermissions.hasPermissions(this, Manifest.permission.GET_ACCOUNTS)) {
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
       val prefs = PreferenceManager.getDefaultSharedPreferences(this)
       val accountName = prefs.getString(PREF_ACCOUNT_NAME, null)
       if (accountName != null) {
         credentials.selectedAccountName = accountName
         getResultsFromApi()
       } else {
-        // Start a dialog from which the user can choose an account
         startActivityForResult(credentials.newChooseAccountIntent(), REQUEST_ACCOUNT_PICKER)
       }
     } else {
-      // Request the GET_ACCOUNTS permission via a user dialog
-      EasyPermissions.requestPermissions(
+      ActivityCompat.requestPermissions(
         this,
-        "This app needs to access your Google account (via Contacts).",
-        REQUEST_PERMISSION_GET_ACCOUNTS,
-        Manifest.permission.GET_ACCOUNTS
+        arrayOf(Manifest.permission.GET_ACCOUNTS),
+        REQUEST_PERMISSION_GET_ACCOUNTS
       )
     }
   }
@@ -150,7 +140,7 @@ class MainActivity : AppCompatActivity() {
       } else {
         getResultsFromApi()
       }
-      REQUEST_ACCOUNT_PICKER -> if (resultCode == Activity.RESULT_OK && data != null && data.extras != null) {
+      REQUEST_ACCOUNT_PICKER -> if (resultCode == Activity.RESULT_OK && data != null) {
         val accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
         if (accountName != null) {
           val prefs = PreferenceManager.getDefaultSharedPreferences(this)
@@ -165,31 +155,17 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  /**
-   * Respond to requests for permissions at runtime for API 23 and above.
-   *
-   * @param requestCode  The request code passed in
-   * requestPermissions(android.app.Activity, String, int, String[])
-   * @param permissions  The requested permissions. Never null.
-   * @param grantResults The grant results for the corresponding permissions
-   * which is either PERMISSION_GRANTED or PERMISSION_DENIED. Never null.
-   */
-  override fun onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<String>,
-    grantResults: IntArray
-  ) {
+  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    if (requestCode == REQUEST_PERMISSION_GET_ACCOUNTS) {
+      if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        chooseAccount()
+      } else {
+        binding.output.text = getString(R.string.permissionDenied)
+      }
+    }
     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    EasyPermissions.onRequestPermissionsResult(
-      requestCode, permissions, grantResults, this
-    )
   }
 
-  /**
-   * Checks whether the device currently has a network connection.
-   *
-   * @return true if the device has a network connection, false otherwise.
-   */
   private fun isDeviceOnline(context: Context): Boolean {
     val connectivityManager =
       context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -202,22 +178,12 @@ class MainActivity : AppCompatActivity() {
     return false
   }
 
-  /**
-   * Check that Google Play services APK is installed and up to date.
-   *
-   * @return true if Google Play Services is available and up to
-   * date on this device; false otherwise.
-   */
   private fun isGooglePlayServicesAvailable(): Boolean {
     val apiAvailability = GoogleApiAvailability.getInstance()
     val connectionStatusCode = apiAvailability.isGooglePlayServicesAvailable(this)
     return connectionStatusCode == ConnectionResult.SUCCESS
   }
 
-  /**
-   * Attempt to resolve a missing, out-of-date, invalid or disabled Google
-   * Play Services installation via a user dialog, if possible.
-   */
   private fun acquireGooglePlayServices() {
     val apiAvailability = GoogleApiAvailability.getInstance()
     val connectionStatusCode = apiAvailability.isGooglePlayServicesAvailable(this)
@@ -226,20 +192,9 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  /**
-   * Display an error dialog showing that Google Play Services is missing
-   * or out of date.
-   *
-   * @param connectionStatusCode code describing the presence (or lack of)
-   * Google Play Services on this device.
-   */
   private fun showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode: Int) {
     val apiAvailability = GoogleApiAvailability.getInstance()
-    val dialog = apiAvailability.getErrorDialog(
-      this@MainActivity,
-      connectionStatusCode,
-      REQUEST_GOOGLE_PLAY_SERVICES
-    )
+    val dialog = apiAvailability.getErrorDialog(this, connectionStatusCode, REQUEST_GOOGLE_PLAY_SERVICES)
     dialog?.show()
   }
 
