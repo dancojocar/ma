@@ -638,7 +638,7 @@ class BillingDataSource private constructor(
             val purchase = heldSubscriptions[0]
             billingFlowParamsBuilder.setSubscriptionUpdateParams(
               BillingFlowParams.SubscriptionUpdateParams.newBuilder()
-                .setOldSkuPurchaseToken(purchase.purchaseToken)
+                .setOldPurchaseToken(purchase.purchaseToken)
                 .build()
             )
           }

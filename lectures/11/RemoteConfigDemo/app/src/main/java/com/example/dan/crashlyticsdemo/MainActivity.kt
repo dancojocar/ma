@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun fetchValues() {
+    logd("Fetching config params")
     binding.textView.text = remoteConfig.getString(HELLO_MESSAGE)
 
     remoteConfig.fetchAndActivate()
@@ -59,6 +60,7 @@ class MainActivity : AppCompatActivity() {
             Toast.LENGTH_SHORT
           ).show()
         } else {
+          logd("Failed to fetch", task.exception)
           Toast.makeText(
             this, "Fetch failed",
             Toast.LENGTH_SHORT

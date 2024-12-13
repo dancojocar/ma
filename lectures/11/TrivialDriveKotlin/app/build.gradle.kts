@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "ro.ubbcluj.cs.ds"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "ro.ubbcluj.cs.ds"
         minSdk = 33
-        targetSdk = 33
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 35
+        versionCode = 20241213
+        versionName = "2024.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -73,22 +73,22 @@ android {
 
 dependencies {
 
-    implementation("com.android.billingclient:billing-ktx:6.1.0")
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha13")
-    implementation("com.google.android.material:material:1.10.0")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.21")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
+    implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    implementation("androidx.databinding:databinding-runtime:8.2.0")
+    implementation("androidx.databinding:databinding-runtime:8.7.3")
     ksp("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.lifecycle:lifecycle-process:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
     implementation("android.arch.navigation:navigation-fragment-ktx:1.0.0")
     implementation("android.arch.navigation:navigation-ui-ktx:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20")
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.21")
 }

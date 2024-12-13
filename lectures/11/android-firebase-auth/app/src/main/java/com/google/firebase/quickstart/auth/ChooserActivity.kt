@@ -79,7 +79,7 @@ class ChooserActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     private val CLASSES = arrayOf(
       GoogleSignInActivity::class.java,
 //      FacebookLoginActivity::class.java,
-      TwitterLoginActivity::class.java,
+//      TwitterLoginActivity::class.java,
       EmailPasswordActivity::class.java,
       PasswordlessActivity::class.java,
       PhoneAuthActivity::class.java,

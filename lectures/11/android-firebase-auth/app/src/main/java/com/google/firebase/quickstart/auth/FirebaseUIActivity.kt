@@ -60,7 +60,7 @@ class FirebaseUIActivity : AppCompatActivity(), View.OnClickListener {
     // Build FirebaseUI sign in intent. For documentation on this operation and all
     // possible customization see: https://github.com/firebase/firebaseui-android
     val intent = AuthUI.getInstance().createSignInIntentBuilder()
-      .setIsSmartLockEnabled(!BuildConfig.DEBUG)
+      .setIsSmartLockEnabled(true)
       .setAvailableProviders(listOf(AuthUI.IdpConfig.EmailBuilder().build()))
       .setLogo(R.mipmap.ic_launcher)
       .build()

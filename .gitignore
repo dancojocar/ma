@@ -104,4 +104,4 @@ node_modules
 
 #Firebase & Google config files
 google-services.json
-
+firebase_options.dart

@@ -41,11 +41,12 @@ abstract class PostListFragment : Fragment() {
 
     database = FirebaseDatabase.getInstance().reference
 
-    binding.messagesList.setHasFixedSize(true)
+    binding.messagesList.setHasFixedSize(false)
 
     return view
   }
 
+  @Deprecated("Deprecated in Java")
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)
 
@@ -53,7 +54,13 @@ abstract class PostListFragment : Fragment() {
     manager = LinearLayoutManager(activity)
     manager.reverseLayout = true
     manager.stackFromEnd = true
-    binding.messagesList.layoutManager = manager
+    
+    // Disable predictive animations and item changes animations
+    binding.messagesList.apply {
+      layoutManager = manager
+      itemAnimator = null
+      setHasFixedSize(true)
+    }
 
     // Set up FirebaseRecyclerAdapter with the Query
     val postsQuery = getQuery(database)
@@ -63,41 +70,60 @@ abstract class PostListFragment : Fragment() {
       .build()
 
     adapter = object : FirebaseRecyclerAdapter<Post, PostViewHolder>(options) {
-      private lateinit var viewHolder: ItemPostBinding
-
       override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): PostViewHolder {
         val inflater = LayoutInflater.from(viewGroup.context)
-        viewHolder = ItemPostBinding.inflate(inflater, viewGroup, false)
-        return PostViewHolder(viewHolder)
+        val binding = ItemPostBinding.inflate(inflater, viewGroup, false)
+        return PostViewHolder(binding)
       }
 
       override fun onBindViewHolder(viewHolder: PostViewHolder, position: Int, model: Post) {
-        val postRef = getRef(position)
+        try {
+          if (position >= itemCount) return  // Prevent index out of bounds
+          
+          val postRef = getRef(position)
+          val postKey = postRef.key
 
-        // Set click listener for the whole post view
-        val postKey = postRef.key
-        viewHolder.itemView.setOnClickListener {
-          // Launch PostDetailActivity
-          val intent = Intent(activity, PostDetailActivity::class.java)
-          intent.putExtra(PostDetailActivity.EXTRA_POST_KEY, postKey)
-          startActivity(intent)
+          // Set click listener for the whole post view
+          viewHolder.itemView.setOnClickListener {
+            // Launch PostDetailActivity
+            val intent = Intent(activity, PostDetailActivity::class.java)
+            intent.putExtra(PostDetailActivity.EXTRA_POST_KEY, postKey)
+            startActivity(intent)
+          }
+
+          // Determine if the current user has liked this post and set UI accordingly
+          viewHolder.setLikedState(model.stars?.containsKey(uid) ?: false)
+
+          // Bind Post to ViewHolder, setting OnClickListener for the star button
+          viewHolder.bindToPost(model) {
+            // Need to write to both places the post is stored
+            postKey?.let { key ->
+              val globalPostRef = database.child("posts").child(key)
+              val userPostRef = database.child("user-posts").child(model.uid ?: "").child(key)
+
+              // Run two transactions
+              onStarClicked(globalPostRef)
+              onStarClicked(userPostRef)
+            }
+          }
+        } catch (e: Exception) {
+          logd("Error binding view holder: ${e.message}")
         }
+      }
 
-        // Determine if the current user has liked this post and set UI accordingly
-        viewHolder.setLikedState(model.stars.containsKey(uid))
-
-        // Bind Post to ViewHolder, setting OnClickListener for the star button
-        viewHolder.bindToPost(model) {
-          // Need to write to both places the post is stored
-          val globalPostRef = database.child("posts").child(postRef.key!!)
-          val userPostRef = database.child("user-posts").child(model.uid!!).child(postRef.key!!)
-
-          // Run two transactions
-          onStarClicked(globalPostRef)
-          onStarClicked(userPostRef)
+      override fun onDataChanged() {
+        super.onDataChanged()
+        // Handle empty adapter
+        if (itemCount == 0) {
+          binding.messagesList.visibility = View.GONE
+          // You might want to show an empty state view here
+        } else {
+          binding.messagesList.visibility = View.VISIBLE
         }
       }
     }
+
+    // Initialize RecyclerView with the adapter
     binding.messagesList.adapter = adapter
   }
 
@@ -133,13 +159,13 @@ abstract class PostListFragment : Fragment() {
     })
   }
 
-  override fun onStart() {
-    super.onStart()
+  override fun onResume() {
+    super.onResume()
     adapter?.startListening()
   }
 
-  override fun onStop() {
-    super.onStop()
+  override fun onPause() {
+    super.onPause()
     adapter?.stopListening()
   }
 

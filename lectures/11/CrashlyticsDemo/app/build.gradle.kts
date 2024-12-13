@@ -3,16 +3,17 @@ plugins {
   id("org.jetbrains.kotlin.android")
   id("com.google.gms.google-services")
   id("com.google.firebase.crashlytics")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
   namespace = "com.example.dan.crashlyticsdemo"
-  compileSdk = 34
+  compileSdk = 35
 
   defaultConfig {
     applicationId = "com.example.dan.crashlyticsdemo"
     minSdk = 33
-    targetSdk = 34
+    targetSdk = 35
     versionCode = 1
     versionName = "1.0"
 
@@ -49,7 +50,7 @@ dependencies {
   implementation(composeBom)
   androidTestImplementation(composeBom)
   implementation("androidx.compose.material3:material3")
-  implementation("androidx.activity:activity-compose:1.8.2")
+  implementation("androidx.activity:activity-compose:1.9.3")
 //  implementation("androidx.compose.ui:ui-tooling-preview")
 //  debugImplementation("androidx.compose.ui:ui-tooling")
 //  implementation("androidx.compose.ui:ui")
@@ -57,9 +58,9 @@ dependencies {
 //  implementation("androidx.appcompat:appcompat:1.6.1")
 
   testImplementation("junit:junit:4.13.2")
-  androidTestImplementation("androidx.test.ext:junit:1.1.5")
+  androidTestImplementation("androidx.test.ext:junit:1.2.1")
   // Import the BoM for the Firebase platform
-  implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+  implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
   // Declare the dependencies for the Crashlytics and Analytics libraries
   // When using the BoM, you don't specify versions in Firebase library dependencies
   implementation("com.google.firebase:firebase-crashlytics")

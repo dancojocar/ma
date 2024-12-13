@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">AdMob Interstitial Example</string>
     <string name="impossible_game">Impossible Game</string>
+    <string name="easy_game">Now, a little bit easier</string>
     <string name="retry_button_text">Retry</string>
+    <string name="even_harder">Game got even harder! Since you dismissed the ad :(</string>
+    <string name="timer_seconds">Seconds: %d</string>
+    <string name="timer_finished">Ready to play!</string>
 </resources>
