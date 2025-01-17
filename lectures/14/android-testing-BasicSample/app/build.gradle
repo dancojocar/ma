@@ -17,14 +17,14 @@
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 33
+  compileSdk 35
 //    buildToolsVersion rootProject.buildToolsVersion
   defaultConfig {
     applicationId "com.example.android.testing.unittesting.BasicSample"
     minSdkVersion 14
     versionCode 1
     versionName "1.0"
-    targetSdkVersion 33
+    targetSdkVersion 35
   }
   productFlavors {
   }

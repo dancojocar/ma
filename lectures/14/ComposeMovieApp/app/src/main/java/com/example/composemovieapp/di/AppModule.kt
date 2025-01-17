@@ -3,6 +3,8 @@ package com.example.composemovieapp.di
 import com.example.composemovieapp.movies.repo.MoviesRepository
 import com.example.composemovieapp.movies.repo.MoviesRepositoryImpl
 import com.example.composemovieapp.movies.service.MoviesService
+import com.example.composemovieapp.movies.usecase.AddMovieUseCase
+import com.example.composemovieapp.movies.usecase.AddMovieUseCaseImpl
 import com.example.composemovieapp.movies.usecase.GetMoviesUseCase
 import com.example.composemovieapp.movies.usecase.GetMoviesUseCaseImpl
 import dagger.Binds
@@ -16,6 +18,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Qualifier
 import javax.inject.Singleton
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 
 
 @Module
@@ -25,8 +29,17 @@ class AppModule {
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+
         return Retrofit.Builder()
             .baseUrl("http://10.0.2.2:3000")
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -52,6 +65,10 @@ class AppModule {
         @Binds
         @Singleton
         fun provideGetMoviesUseCase(uc: GetMoviesUseCaseImpl): GetMoviesUseCase
+
+        @Binds
+        @Singleton
+        fun provideAddMovieUseCase(uc: AddMovieUseCaseImpl): AddMovieUseCase
     }
 
     @Retention(AnnotationRetention.BINARY)

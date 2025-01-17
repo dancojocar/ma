@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.9.22'
+    ext.kotlin_version = '2.0.21'
 
     repositories {
         mavenCentral()
@@ -7,8 +7,8 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.20"
+        classpath 'com.android.tools.build:gradle:8.7.3'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
@@ -21,11 +21,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdk 35
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 33
+        targetSdk 35
         versionCode 2
         versionName "2.0.0"
         applicationId "com.example"
@@ -49,21 +49,25 @@ android {
             includeAndroidResources = true
         }
     }
-//    kotlinOptions {
-//        jvmTarget = JavaVersion.VERSION_1_8.toString()
-//    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
     namespace 'com.example'
 }
 
 dependencies {
     // Robolectric
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.11.1'
+    testImplementation 'org.robolectric:robolectric:4.13'
     testImplementation 'org.hamcrest:hamcrest-library:2.2'
     testImplementation "org.assertj:assertj-core:3.22.0"
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation('androidx.test.espresso:espresso-core:3.5.1') {
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.6.1') {
         exclude module: 'support-annotations'
     }
 }

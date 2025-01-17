@@ -3,16 +3,17 @@ plugins {
   id("org.jetbrains.kotlin.android")
   id("com.google.dagger.hilt.android")
   id("com.google.devtools.ksp")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
   namespace = "com.example.composemovieapp"
-  compileSdk = 34
+  compileSdk = 35
 
   defaultConfig {
     applicationId = "com.example.composemovieapp"
     minSdk = 33
-    targetSdk = 34
+    targetSdk = 35
     versionCode = 1
     versionName = "1.0"
 
@@ -29,11 +30,11 @@ android {
     }
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
   }
   buildFeatures {
     viewBinding = true
@@ -45,10 +46,10 @@ android {
 }
 
 dependencies {
-  implementation("androidx.core:core-ktx:1.12.0")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-  implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-  implementation("androidx.activity:activity-compose:1.8.2")
+  implementation("androidx.core:core-ktx:1.15.0")
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+  implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+  implementation("androidx.activity:activity-compose:1.10.0")
   val platform = platform("androidx.compose:compose-bom:2023.08.00")
   implementation(platform)
 
@@ -59,11 +60,11 @@ dependencies {
   implementation("androidx.compose.material:material")
   implementation("androidx.compose.runtime:runtime-livedata")
   implementation("androidx.compose.ui:ui-tooling")
-  implementation("androidx.navigation:navigation-compose:2.7.6")
+  implementation("androidx.navigation:navigation-compose:2.8.5")
 
   testImplementation("junit:junit:4.13.2")
-  androidTestImplementation("androidx.test.ext:junit:1.1.5")
-  androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+  androidTestImplementation("androidx.test.ext:junit:1.2.1")
+  androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
   androidTestImplementation(platform)
   androidTestImplementation("androidx.compose.ui:ui-test-junit4")
   debugImplementation("androidx.compose.ui:ui-tooling")
@@ -71,7 +72,7 @@ dependencies {
 
   // Hilt
   implementation("com.google.dagger:hilt-android:2.50")
-  implementation("androidx.hilt:hilt-navigation-compose:1.2.0-alpha01")
+  implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
   ksp("com.google.dagger:dagger-compiler:2.50") // Dagger compiler
   ksp("com.google.dagger:hilt-compiler:2.50")   // Hilt compiler
 
@@ -82,6 +83,10 @@ dependencies {
   implementation("com.squareup.retrofit2:converter-scalars:2.8.1")
 
   //Image lib
-  implementation("io.coil-kt:coil-compose:2.4.0")
+  implementation("io.coil-kt:coil-compose:2.7.0")
 
+  // Logging interceptor
+  implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
+
+  implementation("org.json:json:20240303")
 }
