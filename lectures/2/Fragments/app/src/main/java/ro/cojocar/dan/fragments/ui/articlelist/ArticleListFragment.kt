@@ -9,8 +9,8 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.article_list_fragment.*
 import ro.cojocar.dan.fragments.R
+import ro.cojocar.dan.fragments.databinding.ArticleListFragmentBinding
 import ro.cojocar.dan.fragments.logd
 
 class ArticleListFragment : Fragment() {
@@ -18,6 +18,9 @@ class ArticleListFragment : Fragment() {
   companion object {
     fun newInstance() = ArticleListFragment()
   }
+
+  private var _binding: ArticleListFragmentBinding? = null
+  private val binding get() = _binding!!
 
   private lateinit var listener: OnSelectionListener
 
@@ -39,7 +42,8 @@ class ArticleListFragment : Fragment() {
     inflater: LayoutInflater, container: ViewGroup?,
     savedInstanceState: Bundle?
   ): View {
-    return inflater.inflate(R.layout.article_list_fragment, container, false)
+    _binding = ArticleListFragmentBinding.inflate(inflater, container, false)
+    return binding.root
   }
 
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -54,7 +58,12 @@ class ArticleListFragment : Fragment() {
       button.text = getString(R.string.okButton, i)
       button.setOnClickListener { listener.onSelect(getString(R.string.onPressMessage, i)) }
       horizontalLayout.addView(button)
-      list_fragment?.addView(horizontalLayout)
+      binding.listFragment.addView(horizontalLayout)
     }
+  }
+
+  override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
   }
 }

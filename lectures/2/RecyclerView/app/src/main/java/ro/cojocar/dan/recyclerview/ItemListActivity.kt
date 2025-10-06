@@ -14,30 +14,38 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_item_list.*
-import kotlinx.android.synthetic.main.item_list.*
-import kotlinx.android.synthetic.main.item_list_content.view.*
+import ro.cojocar.dan.recyclerview.databinding.ActivityItemListBinding
+import ro.cojocar.dan.recyclerview.databinding.ItemListContentBinding
 import ro.cojocar.dan.recyclerview.dummy.DummyContent
 
 class ItemListActivity : AppCompatActivity() {
 
+  private lateinit var binding: ActivityItemListBinding
+  private var twoPane: Boolean = false
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_item_list)
+    binding = ActivityItemListBinding.inflate(layoutInflater)
+    setContentView(binding.root)
 
-    setSupportActionBar(toolbar)
-    toolbar.title = title
+    setSupportActionBar(binding.toolbar)
+    binding.toolbar.title = title
 
-    fab.setOnClickListener { view ->
+    binding.fab.setOnClickListener { view ->
       Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
         .setAction("Action", null).show()
     }
 
-    setupRecyclerView(item_list)
+    val itemListBinding = binding.itemListLayout
+    if (itemListBinding.itemDetailContainer != null) {
+      twoPane = true
+    }
+
+    val recyclerView: RecyclerView = itemListBinding.itemListRecyclerView
+    setupRecyclerView(recyclerView)
   }
 
   private fun setupRecyclerView(recyclerView: RecyclerView) {
-    recyclerView.adapter = SimpleItemRecyclerViewAdapter(DummyContent.ITEMS, startForResult)
+    recyclerView.adapter = SimpleItemRecyclerViewAdapter(DummyContent.ITEMS, startForResult, twoPane, supportFragmentManager)
   }
 
   private val startForResult = registerForActivityResult(
@@ -52,22 +60,33 @@ class ItemListActivity : AppCompatActivity() {
 
   class SimpleItemRecyclerViewAdapter(
     private val values: List<DummyContent.DummyItem>,
-    private val launcher: ActivityResultLauncher<Intent>
+    private val launcher: ActivityResultLauncher<Intent>,
+    private val twoPane: Boolean,
+    private val supportFragmentManager: androidx.fragment.app.FragmentManager
   ) : RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
 
     private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
       val item = v.tag as DummyContent.DummyItem
-      val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
-        putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)
+      if (twoPane) {
+        val fragment = ItemDetailFragment().apply {
+          arguments = Bundle().apply {
+            putString(ItemDetailFragment.ARG_ITEM_ID, item.id)
+          }
+        }
+        supportFragmentManager.beginTransaction()
+          .replace(R.id.item_detail_container, fragment)
+          .commit()
+      } else {
+        val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
+          putExtra(ItemDetailFragment.ARG_ITEM_ID, item.id)
+        }
+        launcher.launch(intent)
       }
-//      v.context.startActivity(intent)
-      launcher.launch(intent)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-      val view = LayoutInflater.from(parent.context)
-        .inflate(R.layout.item_list_content, parent, false)
-      return ViewHolder(view)
+      val binding = ItemListContentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+      return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -83,9 +102,9 @@ class ItemListActivity : AppCompatActivity() {
 
     override fun getItemCount() = values.size
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-      val idView: TextView = view.id_text
-      val contentView: TextView = view.content
+    inner class ViewHolder(binding: ItemListContentBinding) : RecyclerView.ViewHolder(binding.root) {
+      val idView: TextView = binding.idText
+      val contentView: TextView = binding.content
     }
   }
 }

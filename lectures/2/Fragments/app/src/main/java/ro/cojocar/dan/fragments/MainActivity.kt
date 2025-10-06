@@ -5,23 +5,27 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
-import kotlinx.android.synthetic.main.main_activity.*
+import ro.cojocar.dan.fragments.databinding.MainActivityBinding
 import ro.cojocar.dan.fragments.ui.articlelist.ArticleListFragment
 import ro.cojocar.dan.fragments.ui.articlereader.ArticleReaderFragment
 import ro.cojocar.dan.fragments.ui.articlereader.ArticleReaderFragment.Companion.MESSAGE
 
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+
 class MainActivity : FragmentActivity(), ArticleListFragment.OnSelectionListener {
+  private lateinit var binding: MainActivityBinding
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.main_activity)
+    binding = MainActivityBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+
     if (savedInstanceState == null) {
-      val mainFragment = findViewById<View>(R.id.container)
-      if (mainFragment != null) {
-        supportFragmentManager.beginTransaction()
-          .replace(mainFragment.id, ArticleListFragment.newInstance())
-          .commitNow()
-      }
-      val detailedContainer = findViewById<View>(R.id.detailedContainer)
+      val mainFragment = binding.container
+      supportFragmentManager.beginTransaction()
+        .replace(mainFragment.id, ArticleListFragment.newInstance())
+        .commitNow()
+      val detailedContainer = binding.detailedContainer
       if (detailedContainer != null) {
         supportFragmentManager.beginTransaction()
           .replace(detailedContainer.id, ArticleReaderFragment.newInstance())
@@ -31,6 +35,7 @@ class MainActivity : FragmentActivity(), ArticleListFragment.OnSelectionListener
   }
 
   override fun onSelect(message: String) {
+    val detailedContainer = binding.detailedContainer
     if (detailedContainer != null) {
       logd("send message: $message")
       val newFragment = ArticleReaderFragment.newInstance() as Fragment
@@ -38,7 +43,7 @@ class MainActivity : FragmentActivity(), ArticleListFragment.OnSelectionListener
       bundle.putString(MESSAGE, message)
       newFragment.arguments = bundle
       supportFragmentManager.beginTransaction()
-        .replace(R.id.detailedContainer, newFragment)
+        .replace(detailedContainer.id, newFragment)
         .commitNow()
     } else {
       Toast.makeText(

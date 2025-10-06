@@ -1,9 +1,7 @@
 package ro.cojocar.dan.myapplication
 
 import android.os.Bundle
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
 import ro.cojocar.dan.myapplication.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -14,12 +12,12 @@ class MainActivity : AppCompatActivity() {
     binding = ActivityMainBinding.inflate(layoutInflater)
     val view = binding.root
     setContentView(view)
-    button.setOnClickListener {
-      val message = getString(R.string.fromText, editText.text)
+    binding.button.setOnClickListener {
+      val message = getString(R.string.fromText, binding.editText.text)
       //initial api
-      findViewById<TextView>(R.id.text).text = message
+      binding.text.text = message
       //using synthetic import
-      button.text = getString(R.string.defaultText)
+      binding.button.text = getString(R.string.defaultText)
       //using new recommmended view binding way
       binding.text2.text = message
     }

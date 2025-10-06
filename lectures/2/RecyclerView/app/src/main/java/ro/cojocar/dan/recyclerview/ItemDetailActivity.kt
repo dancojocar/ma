@@ -6,17 +6,21 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NavUtils
-import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.activity_item_detail.*
+import ro.cojocar.dan.recyclerview.databinding.ActivityItemDetailBinding
+import ro.cojocar.dan.recyclerview.dummy.DummyContent
+//import kotlinx.android.synthetic.main.activity_item_detail.*
 
 class ItemDetailActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityItemDetailBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_item_detail)
-    setSupportActionBar(detail_toolbar)
+    binding = ActivityItemDetailBinding.inflate(layoutInflater)
+    val view = binding.root
+    setContentView(view)
+    setSupportActionBar(binding.detailToolbar)
 
-    fab.setOnClickListener {
+    binding.fab.setOnClickListener {
       val resultIntent = Intent()
       resultIntent.putExtra(
         "resultKey",
@@ -28,6 +32,11 @@ class ItemDetailActivity : AppCompatActivity() {
 
     // Show the Up button in the action bar.
     supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    val itemId = intent.getStringExtra(ItemDetailFragment.ARG_ITEM_ID)
+    if (itemId != null) {
+      val item = DummyContent.ITEM_MAP[itemId]
+      binding.toolbarLayout.title = item?.content
+    }
 
     if (savedInstanceState == null) {
       // Create the detail fragment and add it to the activity

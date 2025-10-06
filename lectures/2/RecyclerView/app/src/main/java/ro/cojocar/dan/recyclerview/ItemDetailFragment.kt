@@ -5,12 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import kotlinx.android.synthetic.main.activity_item_detail.*
-import kotlinx.android.synthetic.main.item_detail.view.*
+import ro.cojocar.dan.recyclerview.databinding.ItemDetailBinding
+//import kotlinx.android.synthetic.main.activity_item_detail.*
+//import kotlinx.android.synthetic.main.item_detail.view.*
 import ro.cojocar.dan.recyclerview.dummy.DummyContent
 
 class ItemDetailFragment : Fragment() {
-
+  private var _binding: ItemDetailBinding? = null
+  private val binding get() = _binding!!
   private var item: DummyContent.DummyItem? = null
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +24,6 @@ class ItemDetailFragment : Fragment() {
         // arguments. In a real-world scenario, use a Loader
         // to load content from a content provider.
         item = DummyContent.ITEM_MAP[it.getString(ARG_ITEM_ID)]
-        activity?.toolbar_layout?.title = item?.content
       }
     }
   }
@@ -30,14 +31,15 @@ class ItemDetailFragment : Fragment() {
   override fun onCreateView(
       inflater: LayoutInflater, container: ViewGroup?,
       savedInstanceState: Bundle?
-  ): View? {
-    val rootView = inflater.inflate(R.layout.item_detail, container, false)
+  ): View {
+    _binding = ItemDetailBinding.inflate(inflater, container, false)
+    val view = binding.root
 
     // Show the dummy content as text in a TextView.
     item?.let {
-      rootView.item_detail.text = it.details
+      binding.itemDetail.text = it.details
     }
-    return rootView
+    return view
   }
 
   companion object {

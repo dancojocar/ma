@@ -3,6 +3,7 @@ package com.example.lazycolumndemo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
@@ -28,7 +30,12 @@ class MainActivity : ComponentActivity() {
           modifier = Modifier.fillMaxSize(),
           color = MaterialTheme.colorScheme.background
         ) {
-          LazyColumnDemo()
+          Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+          ) {
+            LazyColumnDemo()
+          }
         }
       }
     }
@@ -56,17 +63,21 @@ private fun ListItem(item: String) {
     "A" -> {
       Text(text = item, style = TextStyle(fontSize = 80.sp))
     }
+
     "B" -> {
       Button(onClick = {}) {
         Text(text = item, style = TextStyle(fontSize = 80.sp))
       }
     }
+
     "C" -> {
       //Do Nothing
     }
+
     "D" -> {
       Text(text = item, style = LocalTextStyle.current)
     }
+
     else -> {
       Text(text = item, style = TextStyle(fontSize = 80.sp))
     }
