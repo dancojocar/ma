@@ -28,31 +28,35 @@ import android.widget.EditText
  * Activity for entering a word.
  */
 
-class NewWordActivity : AppCompatActivity() {
+import androidx.activity.compose.setContent
 
-  private lateinit var editWordView: EditText
+class NewWordActivity : AppCompatActivity() {
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_new_word)
-    editWordView = findViewById(R.id.edit_word)
 
-    val button = findViewById<Button>(R.id.button_save)
-    button.setOnClickListener {
-      val replyIntent = Intent()
-      if (TextUtils.isEmpty(editWordView.text)) {
-        setResult(Activity.RESULT_CANCELED, replyIntent)
-      } else {
-        val word = editWordView.text.toString()
-        replyIntent.putExtra(EXTRA_REPLY, word)
-        setResult(Activity.RESULT_OK, replyIntent)
+    val originalWord = intent.getStringExtra(EXTRA_REPLY)
+
+    setContent {
+      NewWordScreen(originalWord = originalWord) { word ->
+        val replyIntent = Intent()
+        if (word.isEmpty()) {
+          setResult(Activity.RESULT_CANCELED, replyIntent)
+        } else {
+          replyIntent.putExtra(EXTRA_REPLY, word)
+          if (originalWord != null) {
+            replyIntent.putExtra(EXTRA_ORIGINAL_WORD, originalWord)
+          }
+          setResult(Activity.RESULT_OK, replyIntent)
+        }
+        finish()
       }
-      finish()
     }
   }
 
   companion object {
     const val EXTRA_REPLY = "com.example.android.wordlistsql.REPLY"
+    const val EXTRA_ORIGINAL_WORD = "com.example.android.wordlistsql.ORIGINAL_WORD"
   }
 }
 

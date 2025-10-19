@@ -46,4 +46,21 @@ class UserViewModel(private val store: BoxStore) : ViewModel() {
       userDao.put(newUser)
     }
   }
+
+  fun removeUser(user: User) {
+    viewModelScope.launch {
+      userDao.remove(user)
+    }
+  }
+
+  fun getUser(userId: Long): User? {
+    return userDao.get(userId)
+  }
+
+  fun updateUser(userId: Long, name: String, email: String) {
+    viewModelScope.launch {
+      val user = User(id = userId, name = name, email = email)
+      userDao.put(user)
+    }
+  }
 }

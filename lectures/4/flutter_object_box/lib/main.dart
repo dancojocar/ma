@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart'; // For locating directories
+import 'package:path_provider/path_provider.dart';
+import 'objectbox.g.dart';
 import 'dog.dart';
-import 'objectbox.g.dart'; // Replace with the actual generated file for ObjectBox
+import 'dog_edit_screen.dart';
 
 late final Store store;
 late final Box<Dog> dogBox;
@@ -43,101 +43,79 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
+  List<Dog> _dogs = [];
 
-  Future<void> _addDog(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      final newDog = Dog(
-        name: _nameController.text,
-        age: int.parse(_ageController.text),
-      );
-      insertDog(newDog);
+  @override
+  void initState() {
+    super.initState();
+    _refreshDogs();
+  }
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added dog: ${newDog.name}')),
-        );
-      });
+  void _refreshDogs() async {
+    final dogs = await getDogs();
+    setState(() {
+      _dogs = dogs;
+    });
+  }
 
-      _nameController.clear();
-      _ageController.clear();
-      setState(() {});
+  void _navigateToScreen(BuildContext context, {Dog? dog}) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DogEditScreen(dog: dog)),
+    );
+
+    if (result != null) {
+      if (dog != null) {
+        await updateDog(result as Dog);
+      } else {
+        await insertDog(result as Dog);
+      }
+      _refreshDogs();
     }
   }
 
-  Future<List<Dog>> _fetchDogs() async {
-    return getDogs();
+  void _deleteDog(int id) async {
+    await deleteDog(id);
+    _refreshDogs();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Dog List'),
-        ),
-        body: Column(
-          children: [
-            Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Dog Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a name';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _ageController,
-                      decoration: const InputDecoration(labelText: 'Dog Age'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an age';
-                        }
-                        return null;
-                      },
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _addDog(context),
-                      child: const Text('Add Dog'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: FutureBuilder<List<Dog>>(
-                future: _fetchDogs(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(snapshot.data![index].name),
-                          subtitle: Text('Age: ${snapshot.data![index].age}'),
-                        );
-                      },
-                    );
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+      home: Builder(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Dog List')),
+          body: ListView.builder(
+            itemCount: _dogs.length,
+            itemBuilder: (context, index) {
+              final dog = _dogs[index];
+              return Dismissible(
+                key: Key(dog.id.toString()),
+                direction: DismissDirection.endToStart,
+                onDismissed: (_) {
+                  setState(() {
+                    _dogs.removeAt(index);
+                  });
+                  _deleteDog(dog.id);
                 },
-              ),
-            ),
-          ],
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                child: ListTile(
+                  title: Text(dog.name),
+                  subtitle: Text('Age: ${dog.age}'),
+                  onTap: () => _navigateToScreen(context, dog: dog),
+                ),
+              );
+            },
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _navigateToScreen(context),
+            child: const Icon(Icons.add),
+          ),
         ),
       ),
     );

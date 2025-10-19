@@ -1,4 +1,4 @@
-# flutter_db
+# flutter_object_box
 
 A new Flutter project.
 

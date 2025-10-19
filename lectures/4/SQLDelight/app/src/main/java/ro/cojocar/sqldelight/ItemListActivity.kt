@@ -2,114 +2,132 @@ package ro.cojocar.sqldelight
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.snackbar.Snackbar
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.squareup.sqldelight.android.AndroidSqliteDriver
-import ro.cojocar.sqldelight.databinding.ActivityItemListBinding
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
-/**
- * An activity representing a list of Pings. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a [ItemDetailActivity] representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
- */
+import androidx.compose.material.icons.filled.Refresh
+
+@OptIn(ExperimentalMaterial3Api::class)
 class ItemListActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityItemListBinding
 
-  private lateinit var queries: PlayerQueries
+    private lateinit var queries: PlayerQueries
+    private val playersFlow = MutableStateFlow<List<ChessPlayer>>(emptyList())
 
-  private lateinit var simpleItemRecyclerViewAdapter: SimpleItemRecyclerViewAdapter
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        queries = setupDatabase(applicationContext)
+        playersFlow.value = queries.selectAll().executeAsList()
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityItemListBinding.inflate(layoutInflater)
-    setContentView(binding.root)
+        setContent {
+            val players by playersFlow.collectAsState()
+            val context = LocalContext.current
 
-    queries = setupDatabase(applicationContext)
-
-    val toolbar = binding.toolbar
-    setSupportActionBar(toolbar)
-    toolbar.title = title
-
-    binding.fab.setOnClickListener { localView ->
-      val nextId = queries.countAll().executeAsOne() + 1
-      queries.insertPlayer(
-        nextId,
-        "Bobby Fischer",
-        "I don’t believe in psychology. I believe in good moves"
-      )
-      val updatedList = chessPlayers()
-      simpleItemRecyclerViewAdapter.updateList(updatedList)
-
-      Snackbar.make(localView, "The list was updated!", Snackbar.LENGTH_LONG)
-        .setAction("Action", null).show()
+            MaterialTheme {
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Chess Players") },
+                            actions = {
+                                IconButton(onClick = { reinsertData() }) {
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Re-insert Data")
+                                }
+                            }
+                        )
+                    },
+                    floatingActionButton = {
+                        FloatingActionButton(
+                            onClick = { context.startActivity(Intent(context, AddEditPlayerActivity::class.java)) }
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = "Add Player")
+                        }
+                    }
+                ) { paddingValues ->
+                    PlayerList(
+                        players = players,
+                        modifier = Modifier.padding(paddingValues),
+                        onEdit = {
+                            val intent = Intent(context, AddEditPlayerActivity::class.java).apply {
+                                putExtra(AddEditPlayerActivity.ARG_ITEM_ID, it.player_number)
+                            }
+                            context.startActivity(intent)
+                        },
+                        onDelete = { player ->
+                            queries.deletePlayer(player.player_number)
+                            playersFlow.value = queries.selectAll().executeAsList()
+                        }
+                    )
+                }
+            }
+        }
     }
 
-    val recyclerView: RecyclerView = findViewById(R.id.item_list)
-    setupRecyclerView(recyclerView)
-  }
-
-  private fun setupRecyclerView(recyclerView: RecyclerView) {
-
-    val values = chessPlayers()
-    simpleItemRecyclerViewAdapter =
-      SimpleItemRecyclerViewAdapter(values)
-    recyclerView.adapter = simpleItemRecyclerViewAdapter
-  }
-
-  private fun chessPlayers(): List<ChessPlayer> {
-    val values = queries.selectAll().executeAsList()
-    return values
-  }
-
-  class SimpleItemRecyclerViewAdapter(
-    private var values: List<ChessPlayer>
-  ) :
-    RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
-
-    private val onClickListener: View.OnClickListener = View.OnClickListener { v ->
-      val item = v.tag as ChessPlayer
-      val intent = Intent(v.context, ItemDetailActivity::class.java).apply {
-        putExtra(ItemDetailFragment.ARG_ITEM_ID, item.player_number)
-      }
-      v.context.startActivity(intent)
+    override fun onResume() {
+        super.onResume()
+        playersFlow.value = queries.selectAll().executeAsList()
     }
 
-    fun updateList(newValues: List<ChessPlayer>) {
-      val oldSize = values.size
-      values = newValues
-      notifyItemInserted(oldSize)
+    private fun reinsertData() {
+        queries.deleteAll()
+        queries.insertPlayer(15, "Mikhail Tal", "You must take your opponent into a deep dark forest where 2+2=5, and the path leading out is only wide enough for one!")
+        queries.insertPlayer(16, "Garry Kasparov", "I used to attack because it was the only thing I knew. Now I attack because I know it works best.")
+        queries.insertPlayer(17, "Emanuel Lasker", "When you see a good move, look for a better one.")
+        queries.insertPlayer(18, "H. G. Wells", "There is no remorse like the remorse of chess.")
+        queries.insertPlayer(19, "Garry Kasparov", "Chess is life in miniature. Chess is a struggle, chess battles.")
+        queries.insertPlayer(20, "Bill Hartston", "Chess doesn’t drive people mad, it keeps mad people sane.")
+        queries.insertPlayer(21, "José Raúl Capablanca", "You may learn much more from a game you lose than from a game you win.")
+        queries.insertPlayer(22, "Mikhail Chigorin", "Even a poor plan is better than no plan at all.")
+        playersFlow.value = queries.selectAll().executeAsList()
     }
+}
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-      val view = LayoutInflater.from(parent.context)
-        .inflate(R.layout.item_list_content, parent, false)
-      return ViewHolder(view)
+@Composable
+fun PlayerList(
+    players: List<ChessPlayer>,
+    modifier: Modifier = Modifier,
+    onEdit: (ChessPlayer) -> Unit,
+    onDelete: (ChessPlayer) -> Unit
+) {
+    LazyColumn(modifier = modifier) {
+        items(players) {
+            player ->
+            PlayerRow(player = player, onEdit = onEdit, onDelete = onDelete)
+        }
     }
+}
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-      val item = values[position]
-      holder.idView.text = "${item.full_name} (${item.player_number})"
-      holder.contentView.text = item.quotes
-
-      with(holder.itemView) {
-        tag = item
-        setOnClickListener(onClickListener)
-      }
+@Composable
+fun PlayerRow(player: ChessPlayer, onEdit: (ChessPlayer) -> Unit, onDelete: (ChessPlayer) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onEdit(player) }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(text = player.full_name, style = MaterialTheme.typography.headlineSmall)
+            Text(text = player.quotes, style = MaterialTheme.typography.bodyLarge)
+        }
+        IconButton(onClick = { onDelete(player) }) {
+            Icon(Icons.Filled.Delete, contentDescription = "Delete Player")
+        }
     }
-
-    override fun getItemCount() = values.size
-
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-      val idView: TextView = view.findViewById(R.id.id_text)
-      val contentView: TextView = view.findViewById(R.id.content)
-    }
-  }
 }

@@ -5,11 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import ro.cojocar.objectbox.store.ObjectBoxStore.store
 import ro.cojocar.objectbox.ui.users.AddUserScreen
+import ro.cojocar.objectbox.ui.users.EditUserScreen
 import ro.cojocar.objectbox.ui.users.UserListScreen
 import ro.cojocar.objectbox.ui.users.viewmodel.UserViewModel
 import ro.cojocar.objectbox.ui.users.viewmodel.UserViewModelFactory
@@ -38,12 +41,25 @@ fun MainScreen(viewModel: UserViewModel) {
     composable("userList") {
       UserListScreen(viewModel, goToAddUser = {
         navController.navigate("addUser")
+      }, goToEditUser = { userId ->
+        navController.navigate("editUser/$userId")
       })
     }
     composable("addUser") {
       AddUserScreen(viewModel, goBack = {
-        navController.navigate("userList")
+        navController.popBackStack()
       })
+    }
+    composable(
+      "editUser/{userId}",
+      arguments = listOf(navArgument("userId") { type = NavType.LongType })
+    ) { backStackEntry ->
+      val userId = backStackEntry.arguments?.getLong("userId")
+      if (userId != null) {
+        EditUserScreen(viewModel, userId, goBack = {
+          navController.popBackStack()
+        })
+      }
     }
   }
 }

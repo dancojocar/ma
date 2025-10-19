@@ -37,4 +37,22 @@ class WordRepository(private val wordDao: WordDao) {
   suspend fun insert(word: Word) {
     wordDao.insert(word)
   }
+
+  @Suppress("RedundantSuspendModifier")
+  @WorkerThread
+  suspend fun delete(word: String) {
+    wordDao.delete(word)
+  }
+
+  @Suppress("RedundantSuspendModifier")
+  @WorkerThread
+  suspend fun update(word: String, originalWord: String) {
+    wordDao.update(word, originalWord)
+  }
+
+  @Suppress("RedundantSuspendModifier")
+  @WorkerThread
+  suspend fun deleteAll() {
+    wordDao.deleteAll()
+  }
 }

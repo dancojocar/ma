@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-  compileSdk 34
+  compileSdk=36
   defaultConfig {
     applicationId "com.example.android.roomwordssample"
     minSdkVersion 24
-    targetSdkVersion 34
+    targetSdk=36
     versionCode 1
     versionName "1.0"
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -17,7 +17,7 @@ android {
   buildTypes {
     release {
       minifyEnabled false
-      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
   packagingOptions {
@@ -32,6 +32,12 @@ android {
   kotlinOptions {
     jvmTarget = "17"
   }
+  buildFeatures {
+    compose true
+  }
+  composeOptions {
+    kotlinCompilerExtensionVersion '1.5.14'
+  }
   namespace 'com.example.android.roomwordssample'
 }
 
@@ -40,17 +46,27 @@ dependencies {
   implementation 'androidx.appcompat:appcompat:1.7.0'
   implementation 'com.google.android.material:material:1.12.0'
   implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+  implementation(platform("androidx.compose:compose-bom:2024.04.01"))
+  implementation("androidx.compose.ui:ui")
+  implementation("androidx.compose.ui:ui-graphics")
+  implementation("androidx.compose.ui:ui-tooling-preview")
+  implementation("androidx.compose.material3:material3")
+  implementation("androidx.activity:activity-compose:1.9.0")
+  implementation "androidx.compose.runtime:runtime-livedata:1.6.8"
+  implementation "androidx.compose.material:material-icons-extended:1.6.8"
 
   // Dependencies for working with Architecture components
   // You'll probably have to update the version numbers in build.gradle (Project)
 
   // Room components
   implementation "androidx.room:room-runtime:2.6.1"
+  implementation "androidx.room:room-ktx:2.6.1"
   ksp 'androidx.room:room-compiler:2.6.1'
 
   // Lifecycle components
   implementation "androidx.lifecycle:lifecycle-extensions:2.2.0"
   implementation "androidx.lifecycle:lifecycle-common-java8:2.8.6"
   implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6"
+  implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6"
 
 }

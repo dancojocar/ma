@@ -27,34 +27,26 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
+import androidx.activity.compose.setContent
+
 class MainActivity : AppCompatActivity() {
 
   private lateinit var wordViewModel: WordViewModel
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
 
-    val recyclerView = findViewById<RecyclerView>(R.id.recyclerview)
-    val adapter = WordListAdapter(this)
-    recyclerView.adapter = adapter
-    recyclerView.layoutManager = LinearLayoutManager(this)
-
-    // Get a new or existing ViewModel from the ViewModelProvider.
     wordViewModel = ViewModelProvider(this).get(WordViewModel::class.java)
 
-    // Add an observer on the LiveData returned by getAlphabetizedWords.
-    // The onChanged() method fires when the observed data changes and the activity is
-    // in the foreground.
-    wordViewModel.allWords.observe(this) { words ->
-      // Update the cached copy of the words in the adapter.
-      words?.let { adapter.setWords(it) }
-    }
-
-    val fab = findViewById<FloatingActionButton>(R.id.fab)
-    fab.setOnClickListener {
-      val intent = Intent(this@MainActivity, NewWordActivity::class.java)
-      newWordActivityLauncher.launch(intent)
+    setContent {
+      MainScreen(wordViewModel = wordViewModel, onAddWord = {
+        val intent = Intent(this@MainActivity, NewWordActivity::class.java)
+        newWordActivityLauncher.launch(intent)
+      }, onEditWord = {
+        val intent = Intent(this@MainActivity, NewWordActivity::class.java)
+        intent.putExtra(NewWordActivity.EXTRA_REPLY, it)
+        updateWordActivityLauncher.launch(intent)
+      })
     }
   }
 
@@ -65,6 +57,24 @@ class MainActivity : AppCompatActivity() {
         if (data != null) {
           val word = Word(data.getStringExtra(NewWordActivity.EXTRA_REPLY)!!)
           wordViewModel.insert(word)
+        }
+      } else {
+        Toast.makeText(
+          applicationContext,
+          R.string.empty_not_saved,
+          Toast.LENGTH_LONG
+        ).show()
+      }
+    }
+
+  private val updateWordActivityLauncher =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode == Activity.RESULT_OK) {
+        val data = result.data
+        if (data != null) {
+          val word = data.getStringExtra(NewWordActivity.EXTRA_REPLY)!!
+          val originalWord = data.getStringExtra(NewWordActivity.EXTRA_ORIGINAL_WORD)!!
+          wordViewModel.update(word, originalWord)
         }
       } else {
         Toast.makeText(

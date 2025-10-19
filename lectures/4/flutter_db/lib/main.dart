@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_db/add_edit_dog_screen.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -39,43 +40,26 @@ void main() async {
 
   Future<void> updateDog(Dog dog) async {
     final db = await database;
-    await db.update(
-      'dogs',
-      dog.toMap(),
-      where: 'id = ?',
-      whereArgs: [dog.id],
-    );
+    await db.update('dogs', dog.toMap(), where: 'id = ?', whereArgs: [dog.id!]);
   }
 
   Future<void> deleteDog(int id) async {
     final db = await database;
-    await db.delete(
-      'dogs',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.delete('dogs', where: 'id = ?', whereArgs: [id]);
   }
 
-  var fido = const Dog(
-    id: 0,
-    name: 'Fido',
-    age: 35,
-  );
+  var fido = const Dog(id: 0, name: 'Fido', age: 35);
 
   await insertDog(fido);
 
   print(await dogs()); // Prints a list that include Fido.
 
-  fido = Dog(
-    id: fido.id,
-    name: fido.name,
-    age: fido.age + 7,
-  );
+  fido = Dog(id: fido.id, name: fido.name, age: fido.age + 7);
   await updateDog(fido);
 
   print(await dogs()); // Prints Fido with age 42.
 
-  await deleteDog(fido.id);
+  await deleteDog(fido.id!);
 
   await insertDog(fido);
   print(await dogs());
@@ -93,106 +77,65 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _ageController = TextEditingController();
-
-  Future<void> _addDog(BuildContext context) async {
-    if (_formKey.currentState!.validate()) {
-      final db = await widget.database;
-      final id = await db.insert('dogs', {
-        'name': _nameController.text,
-        'age': int.parse(_ageController.text),
-      });
-      final newDog = Dog(
-        id: id,
-        name: _nameController.text,
-        age: int.parse(_ageController.text),
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added dog: ${newDog.name}')),
-        );
-      });
-      _nameController.clear();
-      _ageController.clear();
-      setState(() {}); // Refresh the UI
-    }
-  }
-
   Future<List<Dog>> _fetchDogs() => dogs(widget.database);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Dog List'),
-        ),
-        body: Column(
-          children: [
-            Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Dog Name'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a name';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _ageController,
-                      decoration: const InputDecoration(labelText: 'Dog Age'),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter an age';
-                        }
-                        return null;
-                      },
-                    ),
-                    ElevatedButton(
-                      onPressed: () => {
-                        setState(() {
-                          _addDog(context);
-                        })
-                      },
-                      child: const Text('Add Dog'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Expanded(
-              child: FutureBuilder<List<Dog>>(
-                future: _fetchDogs(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(snapshot.data![index].name),
-                          subtitle: Text('Age: ${snapshot.data![index].age}'),
+      home: Builder(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Dog List')),
+          body: FutureBuilder<List<Dog>>(
+            future: _fetchDogs(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return ListView.builder(
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    final dog = snapshot.data![index];
+                    return ListTile(
+                      title: Text(dog.name),
+                      subtitle: Text('Age: ${dog.age}'),
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => AddEditDogScreen(
+                              database: widget.database,
+                              dog: dog,
+                            ),
+                          ),
                         );
+                        setState(() {});
                       },
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () async {
+                          final db = await widget.database;
+                          await db.delete('dogs', where: 'id = ?', whereArgs: [dog.id!]);
+                          setState(() {});
+                        },
+                      ),
                     );
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                },
-              ),
-            ),
-          ],
+                  },
+                );
+              } else if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => AddEditDogScreen(database: widget.database),
+                ),
+              );
+              setState(() {});
+            },
+            child: const Icon(Icons.add),
+          ),
         ),
       ),
     );
@@ -212,19 +155,14 @@ Future<List<Dog>> dogs(Future<Database> database) async {
 }
 
 class Dog {
-  final int id;
+  final int? id;
   final String name;
   final int age;
 
-  const Dog({
-    required this.id,
-    required this.name,
-    required this.age,
-  });
+  const Dog({this.id, required this.name, required this.age});
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'age': age,
     };

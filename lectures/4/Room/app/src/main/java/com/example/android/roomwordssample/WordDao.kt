@@ -47,4 +47,10 @@ interface WordDao {
 
   @Query("DELETE FROM word_table")
   fun deleteAll()
+
+  @Query("DELETE FROM word_table WHERE word = :word")
+  fun delete(word: String)
+
+  @Query("UPDATE word_table SET word = :word WHERE word = :originalWord")
+  fun update(word: String, originalWord: String)
 }

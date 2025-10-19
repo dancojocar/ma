@@ -30,10 +30,13 @@ insertPlayer:
 INSERT INTO chessPlayer(player_number, full_name, quotes) VALUES (?, ?, ?);
 
 updatePlayer:
-INSERT OR REPLACE INTO chessPlayer(player_number, full_name, quotes) VALUES (?, ?, ?);
+UPDATE chessPlayer SET full_name = ?, quotes = ? WHERE player_number = ?;
 
 deletePlayer:
 DELETE FROM chessPlayer WHERE player_number = ?;
 
 countAll:
 SELECT count(*) FROM chessPlayer;
+
+deleteAll:
+DELETE FROM chessPlayer;

@@ -2,22 +2,26 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.jetbrains.kotlin.android)
   id("io.objectbox")
+  id("org.jetbrains.kotlin.plugin.compose") version "2.2.20"
 }
 
 android {
   namespace = "ro.cojocar.objectbox"
-  compileSdk = 34
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "ro.cojocar.objectbox"
     minSdk = 34
-    targetSdk = 34
+    targetSdk = 36
     versionCode = 1
     versionName = "1.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     vectorDrawables {
       useSupportLibrary = true
+    }
+    ndk {
+      abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
     }
   }
 
@@ -28,11 +32,11 @@ android {
     }
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "17"
   }
   buildFeatures {
     compose = true
@@ -62,6 +66,7 @@ dependencies {
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.androidx.material3)
   implementation(libs.androidx.navigation.compose)
+  implementation(libs.androidx.compose.material.icons.extended)
 
   releaseImplementation(libs.objectbox.android)
 

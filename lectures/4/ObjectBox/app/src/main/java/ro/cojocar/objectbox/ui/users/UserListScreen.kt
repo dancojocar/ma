@@ -1,13 +1,19 @@
 package ro.cojocar.objectbox.ui.users
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,36 +27,43 @@ import ro.cojocar.objectbox.domain.User
 import ro.cojocar.objectbox.ui.users.viewmodel.UserViewModel
 
 @Composable
-fun UserListScreen(viewModel: UserViewModel, goToAddUser: () -> Unit) {
+fun UserListScreen(
+  viewModel: UserViewModel,
+  goToAddUser: () -> Unit,
+  goToEditUser: (Long) -> Unit
+) {
   val users: List<User> by viewModel.users.observeAsState(emptyList())
 
-  Box(
-    modifier = Modifier.fillMaxSize(),
-    contentAlignment = Alignment.Center
-  ) {
-    Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.fillMaxWidth()
-    ) {
-      // Button to navigate to AddUserScreen
-      Button(
-        onClick = { goToAddUser() },
-        modifier = Modifier.padding(16.dp)
-      ) {
-        Text("Add User")
+  Scaffold(
+    floatingActionButton = {
+      FloatingActionButton(onClick = { goToAddUser() }) {
+        Icon(Icons.Default.Add, contentDescription = "Add User")
       }
-
-      LazyColumn(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        items(users) { user ->
+    }
+  ) { paddingValues ->
+    LazyColumn(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier
+        .fillMaxWidth()
+        .padding(paddingValues)
+    ) {
+      items(users) { user ->
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable { goToEditUser(user.id) }
+            .padding(16.dp),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
           Text(
             text = "Name: ${user.name}, Email: ${user.email}",
-            fontSize = 24.sp,
-            modifier = Modifier.padding(16.dp),
+            fontSize = 20.sp,
             textAlign = TextAlign.Center
           )
+          IconButton(onClick = { viewModel.removeUser(user) }) {
+            Icon(Icons.Default.Delete, contentDescription = "Delete User")
+          }
         }
       }
     }

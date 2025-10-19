@@ -20,8 +20,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ItemDetailActivity"
-            android:label="@string/title_item_detail"
+            android:name=".AddEditPlayerActivity"
+            android:label="Add/Edit Player"
             android:parentActivityName=".ItemListActivity"
             android:theme="@style/Theme.SQLDelight.NoActionBar">
             <meta-data
