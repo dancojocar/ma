@@ -1,7 +1,10 @@
 <resources>
   <string name="app_name">RxDemo</string>
+  <string name="hello_world">Hello World!</string>
+  <string name="search">Search</string>
   <string name="hello_completed">%1$s\nHelloWorld Completed\n\n</string>
   <string name="message">%1$s\nMessages: %2$s</string>
   <string name="operator">%1$s\nOperator: %2$d</string>
   <string name="fetch">%1$s\n\nFetch result:\n%2$s</string>
+  <string name="search_debounce">%1$s\n\nSearch result:\n%2$s</string>
 </resources>

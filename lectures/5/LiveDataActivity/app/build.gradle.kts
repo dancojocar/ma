@@ -1,16 +1,17 @@
 plugins {
   id("com.android.application")
   id("org.jetbrains.kotlin.android")
+  id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
   namespace = "com.example.livedataactivity"
-  compileSdk = 35
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "com.example.livedataactivity"
     minSdk = 33
-    targetSdk = 35
+    targetSdk = 36
     versionCode = 1
     versionName = "1.0"
 
@@ -37,7 +38,7 @@ android {
     compose = true
   }
   composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.13"
+    kotlinCompilerExtensionVersion = "1.5.14"
   }
   packaging {
     resources {
@@ -65,8 +66,6 @@ dependencies {
   implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
   implementation("com.squareup.picasso:picasso:2.71828")
-
-  implementation("androidx.compose.material:material:1.7.5")
 
   testImplementation("junit:junit:4.13.2")
   androidTestImplementation("androidx.test.ext:junit:1.2.1")

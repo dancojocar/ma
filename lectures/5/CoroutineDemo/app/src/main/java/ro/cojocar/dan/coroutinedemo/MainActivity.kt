@@ -1,142 +1,118 @@
 package ro.cojocar.dan.coroutinedemo
 
 import android.os.Bundle
-import android.view.View
-import android.widget.SeekBar
-import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.*
-import ro.cojocar.dan.coroutinedemo.databinding.ActivityMainBinding
-import java.lang.Thread.sleep
-import kotlin.concurrent.thread
-import kotlin.coroutines.suspendCoroutine
-import kotlin.random.Random
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import ro.cojocar.dan.coroutinedemo.ui.theme.CoroutineDemoTheme
 
-class MainActivity : AppCompatActivity(), CoroutineScope by MainScope() {
+class MainActivity : ComponentActivity() {
 
-  private lateinit var binding: ActivityMainBinding
+  private val viewModel: MainViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-    var numberOfWorkers = 1_000
-    var delayArray = initDelay(numberOfWorkers)
-    binding.workers.text = "$numberOfWorkers"
-    binding.seekBar.min = numberOfWorkers
-    binding.seekBar.max = 10_000
-    binding.seekBar.progress = numberOfWorkers
-    binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-      override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        numberOfWorkers = progress
-        binding.workers.text = "$numberOfWorkers"
-      }
-
-      override fun onStartTrackingTouch(seekBar: SeekBar?) {
-      }
-
-      override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        delayArray = initDelay(numberOfWorkers)
-      }
-    })
-
-//    logd(delayArray.contentToString())
-
-    binding.buttonCoroutines.setOnClickListener {
-      binding.myProgress.visibility = View.VISIBLE
-      lifecycleScope.launch {
-        captureRunningTimes("coroutines") {
-          createCoroutines(delayArray)
+    setContent {
+      CoroutineDemoTheme {
+        Surface(
+          modifier = Modifier.fillMaxSize(),
+          color = MaterialTheme.colorScheme.background
+        ) {
+          MainScreen(viewModel)
         }
       }
     }
+  }
+}
 
-    binding.buttonThreads.setOnClickListener {
-      binding.myProgress.visibility = View.VISIBLE
-      lifecycleScope.launch {
-        captureRunningTimes("threads") {
-          createThreads(delayArray)
+@Composable
+fun MainScreen(viewModel: MainViewModel) {
+  val scrollState = rememberScrollState()
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(16.dp)
+      .windowInsetsPadding(WindowInsets.systemBars),
+    horizontalAlignment = Alignment.CenterHorizontally
+  ) {
+    val radioOptions = listOf(100, 500, 1000, 5000, 10000, 20000)
+    val (selectedOption, onOptionSelected) = remember { mutableIntStateOf(radioOptions[0]) }
+
+    Column {
+      Text(text = "Workers: ${viewModel.workers.intValue}")
+      radioOptions.forEach { workers ->
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+              selected = (workers == selectedOption),
+              onClick = {
+                onOptionSelected(workers)
+                viewModel.onWorkersChange(workers)
+              }
+            )
+            .padding(horizontal = 16.dp)
+        ) {
+          RadioButton(
+            selected = (workers == selectedOption),
+            onClick = {
+              onOptionSelected(workers)
+              viewModel.onWorkersChange(workers)
+            }
+          )
+          Text(
+            text = workers.toString(),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = 16.dp)
+          )
         }
       }
     }
-
-    val fibonacci: Sequence<Long> = sequence {
-      var current = 1L
-      var next = 1L
-      while (true) {
-        yield(current)
-        logd("Fib body")
-        val new = current + next
-        current = next
-        next = new
+    Spacer(modifier = Modifier.height(16.dp))
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+      Button(onClick = { viewModel.onCoroutinesClick() }) {
+        Text(text = "Coroutines")
+      }
+      Button(onClick = { viewModel.onThreadsClick() }) {
+        Text(text = "Threads")
       }
     }
-
-    val iterator = fibonacci.iterator()
-    binding.buttonFibonacci.setOnClickListener {
-      binding.textView.text =
-        getString(R.string.fibMessage, binding.textView.text, iterator.next().toString())
-      binding.scrollView.fullScroll(View.FOCUS_DOWN)
+    Spacer(modifier = Modifier.height(16.dp))
+    if (viewModel.progressVisible.value) {
+      CircularProgressIndicator()
     }
-
+    Spacer(modifier = Modifier.height(16.dp))
+    Text(
+      text = viewModel.resultText.value,
+      modifier = Modifier
+        .weight(1f)
+        .verticalScroll(scrollState)
+    )
   }
+}
 
-  private fun initDelay(numberOfWorkers: Int): LongArray {
-    val delayArray = LongArray(numberOfWorkers)
-    val random = Random(numberOfWorkers)
-    for (i in 0 until numberOfWorkers) {
-      delayArray[i] = random.nextLong(4000, 5000)
-    }
-    return delayArray
-  }
-
-
-  private suspend fun captureRunningTimes(name: String, block: suspend () -> Unit) {
-    val start = System.currentTimeMillis() / 1000
-    binding.textView.text =
-      getString(R.string.startMessage, binding.textView.text, name, start.toString())
-    block()
-    val end = System.currentTimeMillis() / 1000
-    binding.textView.text = getString(R.string.endMessage, binding.textView.text, end.toString())
-    binding.textView.text =
-      getString(R.string.diffMessage, binding.textView.text, "" + (end - start))
-    binding.scrollView.fullScroll(View.FOCUS_DOWN)
-  }
-
-  private suspend fun createCoroutines(delayArray: LongArray) {
-    try {
-      logd("Started")
-      coroutineScope {
-        val jobs = List(delayArray.size) {
-          launch(Dispatchers.IO) {
-            delay(delayArray[it])
-          }
-        }
-        jobs.forEach { it.join() }
-        logd("Completed: ${jobs.size}")
-      }
-    } catch (e: Exception) {
-      loge("Error while executing the workers", e)
-    } finally {
-      binding.myProgress.visibility = View.GONE
-    }
-  }
-
-  private fun createThreads(delayArray: LongArray) {
-    try {
-      logd("Started")
-      val jobs = delayArray.map { delay ->
-        thread {
-          sleep(delay)
-        }
-      }
-      jobs.forEach { it.join() }
-      logd("Completed: ${jobs.size}")
-    } catch (e: Exception) {
-      loge("Error while executing the workers", e)
-    } finally {
-      binding.myProgress.visibility = View.GONE
-    }
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+  CoroutineDemoTheme {
+    MainScreen(MainViewModel())
   }
 }

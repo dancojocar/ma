@@ -2,51 +2,66 @@ package com.example.livedataactivity
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ListItem
-import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import android.app.Activity
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import com.example.livedataactivity.core.Person
-import com.example.livedataactivity.core.getSuperheroList
 import com.example.livedataactivity.image.NetworkImageComponentPicasso
 import com.example.livedataactivity.state.SuperheroesViewModel
+import com.example.livedataactivity.ui.theme.LiveDataActivityTheme
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     val viewModel = ViewModelProvider(this)[SuperheroesViewModel::class.java]
 
     setContent {
+      val view = LocalView.current
+      if (!view.isInEditMode) {
+        SideEffect {
+          val window = (view.context as Activity).window
+          WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
+      }
+      EdgeToEdgeContent(viewModel)
+    }
+  }
+}
+
+@Composable
+fun EdgeToEdgeContent(viewModel: SuperheroesViewModel) {
+  LiveDataActivityTheme {
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .systemBarsPadding(),
+    ) {
       LiveDataComponent(viewModel.superheroes)
     }
   }
@@ -62,7 +77,6 @@ fun LiveDataComponent(personListLiveData: LiveData<List<Person>>) {
   }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun LiveDataComponentList(personList: List<Person>) {
   LazyColumn {
@@ -71,30 +85,27 @@ fun LiveDataComponentList(personList: List<Person>) {
     ) { person ->
       Card(
         shape = RoundedCornerShape(4.dp),
-        backgroundColor = Color.White,
-        modifier = Modifier.fillParentMaxWidth().padding(8.dp)
+        modifier = Modifier
+          .fillParentMaxWidth()
+          .padding(8.dp)
       ) {
-        ListItem(text = {
+        ListItem(headlineContent = {
           Text(
             text = person.name,
-            style = TextStyle(
-              fontFamily = FontFamily.Serif, fontSize = 25.sp,
-              fontWeight = FontWeight.Bold
-            )
+            style = MaterialTheme.typography.headlineLarge
           )
-        }, secondaryText = {
+        }, supportingContent = {
           Text(
             text = "Age: ${person.age}",
-            style = TextStyle(
-              fontFamily = FontFamily.Serif, fontSize = 15.sp,
-              fontWeight = FontWeight.Light, color = Color.DarkGray
-            )
+            style = MaterialTheme.typography.bodyLarge
           )
-        }, icon = {
+        }, leadingContent = {
           person.profilePictureUrl?.let { imageUrl ->
             NetworkImageComponentPicasso(
               url = imageUrl,
-              modifier = Modifier.width(60.dp).height(60.dp)
+              modifier = Modifier
+                .width(60.dp)
+                .height(60.dp)
             )
           }
         })
@@ -110,6 +121,6 @@ fun LiveDataLoadingComponent() {
     verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
   ) {
-    CircularProgressIndicator(modifier = Modifier.wrapContentWidth(CenterHorizontally))
+    CircularProgressIndicator(modifier = Modifier.wrapContentSize(Alignment.Center))
   }
 }

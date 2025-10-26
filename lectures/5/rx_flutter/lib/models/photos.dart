@@ -16,17 +16,18 @@ class Photos {
   String toRawJson() => json.encode(toJson());
 
   factory Photos.fromJson(Map<String, dynamic> json) => Photos(
-        total: json["total"],
-        totalPages: json["total_pages"],
-        results:
-            List<Result>.from(json["results"].map((x) => Result.fromJson(x))),
-      );
+    total: (json["total"] as num?)?.toInt() ?? 0,
+    totalPages: (json["total_pages"] as num?)?.toInt() ?? 1,
+    results: json["results"] is List
+        ? List<Result>.from(json["results"].map((x) => Result.fromJson(x)))
+        : <Result>[],
+  );
 
   Map<String, dynamic> toJson() => {
-        "total": total,
-        "total_pages": totalPages,
-        "results": List<dynamic>.from(results.map((x) => x.toJson())),
-      };
+    "total": total,
+    "total_pages": totalPages,
+    "results": List<dynamic>.from(results.map((x) => x.toJson())),
+  };
 }
 
 class Result {
@@ -77,50 +78,62 @@ class Result {
   String toRawJson() => json.encode(toJson());
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(
-        id: json["id"],
-        createdAt: DateTime.parse(json["created_at"]),
-        updatedAt: DateTime.parse(json["updated_at"]),
-        width: json["width"],
-        height: json["height"],
-        color: json["color"],
-        description: json["description"] ?? "",
-        altDescription: json["alt_description"] ?? "",
-        urls: Urls.fromJson(json["urls"]),
-        links: ResultLinks.fromJson(json["links"]),
-        // categories: List<dynamic>.from(json["categories"].map((x) => x)),
-        sponsored: json["sponsored"] ?? false,
-        sponsoredBy: json["sponsored_by"],
-        sponsoredImpressionsId: json["sponsored_impressions_id"],
-        likes: json["likes"],
-        likedByUser: json["liked_by_user"],
-        currentUserCollections:
-            List<dynamic>.from(json["current_user_collections"].map((x) => x)),
-        user: User.fromJson(json["user"]),
-        tags: List<Tag>.from(json["tags"].map((x) => Tag.fromJson(x))),
-      );
+    id: json["id"]?.toString() ?? "",
+    createdAt:
+        DateTime.tryParse(json["created_at"]?.toString() ?? "") ??
+        DateTime.now(),
+    updatedAt:
+        DateTime.tryParse(json["updated_at"]?.toString() ?? "") ??
+        DateTime.now(),
+    width: (json["width"] as num?)?.toInt() ?? 0,
+    height: (json["height"] as num?)?.toInt() ?? 0,
+    color: json["color"]?.toString() ?? "#000000",
+    description: json["description"]?.toString() ?? "",
+    altDescription: json["alt_description"]?.toString() ?? "",
+    urls: Urls.fromJson(json["urls"] is Map ? json["urls"] : {}),
+    links: ResultLinks.fromJson(json["links"] is Map ? json["links"] : {}),
+    sponsored: json["sponsored"] == true,
+    sponsoredBy: json["sponsored_by"],
+    sponsoredImpressionsId: json["sponsored_impressions_id"],
+    likes: (json["likes"] as num?)?.toInt() ?? 0,
+    likedByUser: json["liked_by_user"] == true,
+    currentUserCollections: json["current_user_collections"] is List
+        ? List<dynamic>.from(json["current_user_collections"].map((x) => x))
+        : <dynamic>[],
+    user: User.fromJson(json["user"] is Map ? json["user"] : {}),
+    tags: json["tags"] is List
+        ? List<Tag>.from(
+            json["tags"].map(
+              (x) =>
+                  x is Map<String, dynamic> ? Tag.fromJson(x) : Tag(title: ""),
+            ),
+          )
+        : <Tag>[],
+  );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "created_at": createdAt.toIso8601String(),
-        "updated_at": updatedAt.toIso8601String(),
-        "width": width,
-        "height": height,
-        "color": color,
-        "description": description ?? "empty",
-        "alt_description": altDescription,
-        "urls": urls.toJson(),
-        "links": links.toJson(),
-        // "categories": List<dynamic>.from(categories.map((x) => x)),
-        "sponsored": sponsored,
-        "sponsored_by": sponsoredBy,
-        "sponsored_impressions_id": sponsoredImpressionsId,
-        "likes": likes,
-        "liked_by_user": likedByUser,
-        "current_user_collections":
-            List<dynamic>.from(currentUserCollections.map((x) => x)),
-        "user": user.toJson(),
-        "tags": List<dynamic>.from(tags.map((x) => x.toJson())),
-      };
+    "id": id,
+    "created_at": createdAt.toIso8601String(),
+    "updated_at": updatedAt.toIso8601String(),
+    "width": width,
+    "height": height,
+    "color": color,
+    "description": description,
+    "alt_description": altDescription,
+    "urls": urls.toJson(),
+    "links": links.toJson(),
+    // "categories": List<dynamic>.from(categories.map((x) => x)),
+    "sponsored": sponsored,
+    "sponsored_by": sponsoredBy,
+    "sponsored_impressions_id": sponsoredImpressionsId,
+    "likes": likes,
+    "liked_by_user": likedByUser,
+    "current_user_collections": List<dynamic>.from(
+      currentUserCollections.map((x) => x),
+    ),
+    "user": user.toJson(),
+    "tags": List<dynamic>.from(tags.map((x) => x.toJson())),
+  };
 }
 
 class ResultLinks {
@@ -142,38 +155,34 @@ class ResultLinks {
   String toRawJson() => json.encode(toJson());
 
   factory ResultLinks.fromJson(Map<String, dynamic> json) => ResultLinks(
-        self: json["self"],
-        html: json["html"],
-        download: json["download"],
-        downloadLocation: json["download_location"],
-      );
+    self: json["self"],
+    html: json["html"],
+    download: json["download"],
+    downloadLocation: json["download_location"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "self": self,
-        "html": html,
-        "download": download,
-        "download_location": downloadLocation,
-      };
+    "self": self,
+    "html": html,
+    "download": download,
+    "download_location": downloadLocation,
+  };
 }
 
 class Tag {
   String title;
 
-  Tag({
-    required this.title,
-  });
+  Tag({required this.title});
 
   factory Tag.fromRawJson(String str) => Tag.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory Tag.fromJson(Map<String, dynamic> json) => Tag(
-        title: json["title"],
-      );
+    title: json["title"] ?? "", // Add null safety
+  );
 
-  Map<String, dynamic> toJson() => {
-        "title": title,
-      };
+  Map<String, dynamic> toJson() => {"title": title};
 }
 
 class Urls {
@@ -196,20 +205,20 @@ class Urls {
   String toRawJson() => json.encode(toJson());
 
   factory Urls.fromJson(Map<String, dynamic> json) => Urls(
-        raw: json["raw"],
-        full: json["full"],
-        regular: json["regular"],
-        small: json["small"],
-        thumb: json["thumb"],
-      );
+    raw: json["raw"],
+    full: json["full"],
+    regular: json["regular"],
+    small: json["small"],
+    thumb: json["thumb"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "raw": raw,
-        "full": full,
-        "regular": regular,
-        "small": small,
-        "thumb": thumb,
-      };
+    "raw": raw,
+    "full": full,
+    "regular": regular,
+    "small": small,
+    "thumb": thumb,
+  };
 }
 
 class User {
@@ -256,44 +265,44 @@ class User {
   String toRawJson() => json.encode(toJson());
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-        id: json["id"],
-        updatedAt: DateTime.parse(json["updated_at"]),
-        username: json["username"],
-        name: json["name"],
-        firstName: json["first_name"],
-        lastName: json["last_name"] ?? "",
-        twitterUsername: json["twitter_username"] ?? "",
-        portfolioUrl: json["portfolio_url"] ?? "",
-        bio: json["bio"] ?? "",
-        location: json["location"] ?? "",
-        links: UserLinks.fromJson(json["links"]),
-        profileImage: ProfileImage.fromJson(json["profile_image"]),
-        instagramUsername: json["instagram_username"] ?? "",
-        totalCollections: json["total_collections"],
-        totalLikes: json["total_likes"],
-        totalPhotos: json["total_photos"],
-        acceptedTos: json["accepted_tos"],
-      );
+    id: json["id"],
+    updatedAt: DateTime.parse(json["updated_at"]),
+    username: json["username"],
+    name: json["name"],
+    firstName: json["first_name"],
+    lastName: json["last_name"] ?? "",
+    twitterUsername: json["twitter_username"] ?? "",
+    portfolioUrl: json["portfolio_url"] ?? "",
+    bio: json["bio"] ?? "",
+    location: json["location"] ?? "",
+    links: UserLinks.fromJson(json["links"]),
+    profileImage: ProfileImage.fromJson(json["profile_image"]),
+    instagramUsername: json["instagram_username"] ?? "",
+    totalCollections: json["total_collections"],
+    totalLikes: json["total_likes"],
+    totalPhotos: json["total_photos"],
+    acceptedTos: json["accepted_tos"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
-        "updated_at": updatedAt.toIso8601String(),
-        "username": username,
-        "name": name,
-        "first_name": firstName,
-        "last_name": lastName,
-        "twitter_username": twitterUsername ?? "",
-        "portfolio_url": portfolioUrl ?? "",
-        "bio": bio,
-        "location": location ?? "",
-        "links": links.toJson(),
-        "profile_image": profileImage.toJson(),
-        "instagram_username": instagramUsername ?? "",
-        "total_collections": totalCollections,
-        "total_likes": totalLikes,
-        "total_photos": totalPhotos,
-        "accepted_tos": acceptedTos,
-      };
+    "id": id,
+    "updated_at": updatedAt.toIso8601String(),
+    "username": username,
+    "name": name,
+    "first_name": firstName,
+    "last_name": lastName,
+    "twitter_username": twitterUsername,
+    "portfolio_url": portfolioUrl,
+    "bio": bio,
+    "location": location,
+    "links": links.toJson(),
+    "profile_image": profileImage.toJson(),
+    "instagram_username": instagramUsername,
+    "total_collections": totalCollections,
+    "total_likes": totalLikes,
+    "total_photos": totalPhotos,
+    "accepted_tos": acceptedTos,
+  };
 }
 
 class UserLinks {
@@ -321,24 +330,24 @@ class UserLinks {
   String toRawJson() => json.encode(toJson());
 
   factory UserLinks.fromJson(Map<String, dynamic> json) => UserLinks(
-        self: json["self"],
-        html: json["html"],
-        photos: json["photos"],
-        likes: json["likes"],
-        portfolio: json["portfolio"],
-        following: json["following"],
-        followers: json["followers"],
-      );
+    self: json["self"] ?? "",
+    html: json["html"] ?? "",
+    photos: json["photos"] ?? "",
+    likes: json["likes"] ?? "",
+    portfolio: json["portfolio"] ?? "",
+    following: json["following"] ?? "",
+    followers: json["followers"] ?? "",
+  );
 
   Map<String, dynamic> toJson() => {
-        "self": self,
-        "html": html,
-        "photos": photos,
-        "likes": likes,
-        "portfolio": portfolio,
-        "following": following,
-        "followers": followers,
-      };
+    "self": self,
+    "html": html,
+    "photos": photos,
+    "likes": likes,
+    "portfolio": portfolio,
+    "following": following,
+    "followers": followers,
+  };
 }
 
 class ProfileImage {
@@ -358,14 +367,14 @@ class ProfileImage {
   String toRawJson() => json.encode(toJson());
 
   factory ProfileImage.fromJson(Map<String, dynamic> json) => ProfileImage(
-        small: json["small"],
-        medium: json["medium"],
-        large: json["large"],
-      );
+    small: json["small"],
+    medium: json["medium"],
+    large: json["large"],
+  );
 
   Map<String, dynamic> toJson() => {
-        "small": small,
-        "medium": medium,
-        "large": large,
-      };
+    "small": small,
+    "medium": medium,
+    "large": large,
+  };
 }

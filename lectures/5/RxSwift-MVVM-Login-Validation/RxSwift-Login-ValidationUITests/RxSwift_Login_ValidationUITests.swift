@@ -2,9 +2,6 @@
 //  RxSwift_Login_ValidationUITests.swift
 //  RxSwift-Login-ValidationUITests
 //
-//  Created by Nipuna's MacMini on 7/12/17.
-//  Copyright © 2017 Nipuna H Herath. All rights reserved.
-//
 
 import XCTest
 
