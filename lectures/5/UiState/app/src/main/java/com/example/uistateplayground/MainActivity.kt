@@ -1,6 +1,7 @@
 package com.example.uistateplayground
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
@@ -52,9 +53,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     setContent {
       val navController = rememberNavController()
-      UiStatePlaygroundTheme() {
-        Surface(color = Color.Blue) {
-        }
+      UiStatePlaygroundTheme {
         Scaffold { paddingValues ->
           UiStatePlaygroundNavHost(
             navController = navController,
@@ -179,11 +178,13 @@ fun TopRatedMovieList(uiState: TopRatedMoviesUiState) {
       TopRatedMoviesUiState.Error -> {
         homeSectionErrorText(R.string.section_error_top_rated)
       }
+
       TopRatedMoviesUiState.Loading -> {
         item {
           LoadingIndicator()
         }
       }
+
       is TopRatedMoviesUiState.Success -> {
         items(uiState.movies) { movie ->
           HomePosterImage(movie)
@@ -208,11 +209,13 @@ fun ActionMovieList(uiState: ActionMoviesUiState) {
       ActionMoviesUiState.Error -> {
         homeSectionErrorText(R.string.section_error_action)
       }
+
       ActionMoviesUiState.Loading -> {
         item {
           LoadingIndicator()
         }
       }
+
       is ActionMoviesUiState.Success -> {
         items(uiState.movies) { movie ->
           HomePosterImage(movie)
@@ -240,11 +243,13 @@ fun AnimationMovieList(uiState: AnimationMoviesUiState) {
       AnimationMoviesUiState.Error -> {
         homeSectionErrorText(R.string.section_error_animation)
       }
+
       AnimationMoviesUiState.Loading -> {
         item {
           LoadingIndicator()
         }
       }
+
       is AnimationMoviesUiState.Success -> {
         items(uiState.movies) { movie ->
           HomePosterImage(movie)
@@ -335,11 +340,20 @@ fun HomePosterImage(movie: Movie) {
     model = ImageRequest.Builder(LocalContext.current)
       .data(movie.posterUrl)
       .crossfade(true)
+      .listener( // <-- ADD THIS
+        onStart = { request ->
+          Log.d("CoilDebug", "Request started: ${request.data}")
+        },
+        onError = { request, result ->
+          Log.e("CoilDebug", "Request failed: ${result.throwable.message}")
+        }
+      )
       .build(),
     contentDescription = movie.title,
     contentScale = ContentScale.Crop,
     placeholder = painterResource(id = R.drawable.poster_placeholder),
     modifier = Modifier
+      .size(100.dp, 150.dp)
       .clip(shape = RoundedCornerShape(16.dp))
   )
 }
@@ -353,7 +367,9 @@ fun GenrePosterImage(movie: Movie) {
       .build(),
     contentDescription = movie.title,
     contentScale = ContentScale.Crop,
-    placeholder = painterResource(id = R.drawable.poster_placeholder)
+    placeholder = painterResource(id = R.drawable.poster_placeholder),
+    modifier = Modifier
+      .size(100.dp, 150.dp)
   )
 }
 
@@ -389,11 +405,13 @@ fun ActionMoviesScreen(viewModel: GenreViewModel = hiltViewModel()) {
           )
         }
       }
+
       GenreUiState.Loading -> {
         item(span = { GridItemSpan(maxLineSpan) }) {
           LoadingIndicator()
         }
       }
+
       is GenreUiState.Success -> {
         items(genreState.movies) { movie ->
           GenrePosterImage(movie)
@@ -439,11 +457,13 @@ fun AnimationMoviesScreen(viewModel: GenreViewModel = hiltViewModel()) {
           )
         }
       }
+
       GenreUiState.Loading -> {
         item(span = { GridItemSpan(maxLineSpan) }) {
           LoadingIndicator()
         }
       }
+
       is GenreUiState.Success -> {
         items(genreState.movies) { movie ->
           GenrePosterImage(movie)
@@ -509,6 +529,6 @@ private fun getAnimationMovieUiState(): AnimationMoviesUiState {
 private fun getFakeMovieList() = List(10) { index ->
   Movie(
     title = index.toString(),
-    posterPath = "",
+    posterPath = "/fYia3d9A7bX1g8b0g00000000000.jpg", // Placeholder image for testing
   )
 }
