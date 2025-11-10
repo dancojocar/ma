@@ -17,67 +17,41 @@ package com.example.biometricloginsample
 
 import android.content.Context
 import android.os.Bundle
-import android.view.inputmethod.EditorInfo
+import androidx.activity.compose.setContent
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.biometric.BiometricPrompt
-import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Observer
-import com.example.biometricloginsample.databinding.ActivityEnableBiometricLoginBinding
+import com.example.biometricloginsample.ui.EnableBiometricLoginScreen
+import com.example.biometricloginsample.ui.theme.BiometricLoginTheme
 import logd
 
-class EnableBiometricLoginActivity : AppCompatActivity() {
+class EnableBiometricLoginActivity : FragmentActivity() {
   private lateinit var cryptographyManager: CryptographyManager
   private val loginViewModel by viewModels<LoginViewModel>()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    val binding = ActivityEnableBiometricLoginBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-    binding.cancel.setOnClickListener { finish() }
-
-    loginViewModel.loginWithPasswordFormState.observe(this, Observer { formState ->
-      val loginState = formState ?: return@Observer
-      when (loginState) {
-        is SuccessfulLoginFormState -> binding.authorize.isEnabled = loginState.isDataValid
-        is FailedLoginFormState -> {
-          loginState.usernameError?.let { binding.username.error = getString(it) }
-          loginState.passwordError?.let { binding.password.error = getString(it) }
-        }
-      }
-    })
+    
     loginViewModel.loginResult.observe(this, Observer {
       val loginResult = it ?: return@Observer
       if (loginResult.success) {
         showBiometricPromptForEncryption()
       }
     })
-    binding.username.doAfterTextChanged {
-      loginViewModel.onLoginDataChanged(
-        binding.username.text.toString(),
-        binding.password.text.toString()
-      )
-    }
-    binding.password.doAfterTextChanged {
-      loginViewModel.onLoginDataChanged(
-        binding.username.text.toString(),
-        binding.password.text.toString()
-      )
-    }
-    binding.password.setOnEditorActionListener { _, actionId, _ ->
-      when (actionId) {
-        EditorInfo.IME_ACTION_DONE ->
-          loginViewModel.login(
-            binding.username.text.toString(),
-            binding.password.text.toString()
-          )
+    
+    setContent {
+      BiometricLoginTheme {
+        EnableBiometricLoginScreen(
+          viewModel = loginViewModel,
+          onCancelClick = { finish() },
+          onAuthorizeClick = { username, password ->
+            loginViewModel.login(username, password)
+          }
+        )
       }
-      false
-    }
-    binding.authorize.setOnClickListener {
-      loginViewModel.login(binding.username.text.toString(), binding.password.text.toString())
     }
   }
 

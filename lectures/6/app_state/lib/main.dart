@@ -12,9 +12,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: MyHomePage(title: 'Product layout demo home page'),
     );
   }
@@ -29,13 +27,14 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(title: const Text("Product Navigation")),
-        body: ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            return ProductBox(item: items[index]);
-          },
-        ));
+      appBar: AppBar(title: const Text("Product Navigation")),
+      body: ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          return ProductBox(item: items[index]);
+        },
+      ),
+    );
   }
 }
 
@@ -80,14 +79,8 @@ class RatingBoxState extends State<RatingBox> {
           padding: const EdgeInsets.all(0),
           child: IconButton(
             icon: (_rating >= 1
-                ? Icon(
-                    Icons.star,
-                    size: size,
-                  )
-                : Icon(
-                    Icons.star_border,
-                    size: size,
-                  )),
+                ? Icon(Icons.star, size: size)
+                : Icon(Icons.star_border, size: size)),
             color: Colors.red[500],
             onPressed: _setRatingAsOne,
             iconSize: size,
@@ -97,14 +90,8 @@ class RatingBoxState extends State<RatingBox> {
           padding: const EdgeInsets.all(0),
           child: IconButton(
             icon: (_rating >= 2
-                ? Icon(
-                    Icons.star,
-                    size: size,
-                  )
-                : Icon(
-                    Icons.star_border,
-                    size: size,
-                  )),
+                ? Icon(Icons.star, size: size)
+                : Icon(Icons.star_border, size: size)),
             color: Colors.red[500],
             onPressed: _setRatingAsTwo,
             iconSize: size,
@@ -114,14 +101,8 @@ class RatingBoxState extends State<RatingBox> {
           padding: const EdgeInsets.all(0),
           child: IconButton(
             icon: (_rating >= 3
-                ? Icon(
-                    Icons.star,
-                    size: size,
-                  )
-                : Icon(
-                    Icons.star_border,
-                    size: size,
-                  )),
+                ? Icon(Icons.star, size: size)
+                : Icon(Icons.star_border, size: size)),
             color: Colors.red[500],
             onPressed: _setRatingAsThree,
             iconSize: size,
@@ -139,33 +120,40 @@ class ProductBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding: const EdgeInsets.all(2),
-        height: 140,
-        child: Card(
-          child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Image.asset("assets/${item.image}"),
-                Expanded(
-                    child: Container(
-                        padding: const EdgeInsets.all(0),
-                        child: ScopedModel<Product>(
-                            model: item,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: <Widget>[
-                                Text(item.name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                Text(item.description),
-                                Text("Price: ${item.price}"),
-                                ScopedModelDescendant<Product>(
-                                    builder: (context, child, item) {
-                                  return RatingBox(item: item);
-                                })
-                              ],
-                            ))))
-              ]),
-        ));
+      padding: const EdgeInsets.all(2),
+      height: 140,
+      child: Card(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Image.asset("assets/${item.image}"),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(0),
+                child: ScopedModel<Product>(
+                  model: item,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      Text(
+                        item.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(item.description),
+                      Text("Pret: ${item.price}"),
+                      ScopedModelDescendant<Product>(
+                        builder: (context, child, item) {
+                          return RatingBox(item: item);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

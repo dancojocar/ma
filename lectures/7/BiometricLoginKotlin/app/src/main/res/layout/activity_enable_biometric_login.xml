@@ -22,16 +22,22 @@
     tools:context=".EnableBiometricLoginActivity">
 
     <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/title"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/standard_padding"
-        android:fontFamily="sans-serif-condensed-light"
         android:text="@string/enable_biometric_login"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        app:layout_constraintBottom_toBottomOf="@id/guideline"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.2" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/description"
@@ -39,9 +45,10 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/standard_padding"
         android:text="@string/desc_biometrics_authorization"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
+        app:layout_constraintTop_toBottomOf="@id/guideline" />
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/username"
@@ -60,7 +67,7 @@
         android:layout_margin="@dimen/standard_padding"
         android:hint="@string/password"
         android:imeOptions="actionDone"
-        android:inputType="textPassword"
+        android.inputType="textPassword"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/username" />
@@ -69,20 +76,17 @@
         android:id="@+id/cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/standard_padding"
+        android:layout_margin="@dimen/standard_padding"
         android:text="@string/cancel"
-        app:layout_constraintHorizontal_chainStyle="spread"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/authorize"
+        app:layout_constraintRight_toLeftOf="@id/authorize"
         app:layout_constraintTop_toBottomOf="@id/password" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/authorize"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/standard_padding"
+        android:layout_margin="@dimen/standard_padding"
         android:text="@string/btn_authorize"
-        app:layout_constraintLeft_toRightOf="@+id/cancel"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/password" />
 

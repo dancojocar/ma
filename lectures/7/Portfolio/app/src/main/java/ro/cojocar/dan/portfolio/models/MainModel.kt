@@ -1,11 +1,12 @@
 package ro.cojocar.dan.portfolio.models
 
 import android.util.SparseArray
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ro.cojocar.dan.portfolio.domain.Portfolio
@@ -19,35 +20,54 @@ class MainModel : ViewModel() {
   private var authToken: String? = null
   private val cache = SparseArray<List<Portfolio>>(10)
 
-  private val mutablePortfolios = MutableLiveData<List<Portfolio>>().apply { value = emptyList() }
-  private val mutableLoading = MutableLiveData<Boolean>().apply { value = false }
-  private val mutableMessage = MutableLiveData<String>()
+  private val _portfolios = MutableStateFlow<List<Portfolio>>(emptyList())
+  val portfolios: StateFlow<List<Portfolio>> = _portfolios.asStateFlow()
 
-  val portfolios: LiveData<List<Portfolio>> = mutablePortfolios
-  val loading: LiveData<Boolean> = mutableLoading
-  val message: LiveData<String> = mutableMessage
+  private val _loading = MutableStateFlow(false)
+  val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+  private val _message = MutableStateFlow<String?>(null)
+  val message: StateFlow<String?> = _message.asStateFlow()
 
 
   fun fetchData() {
     viewModelScope.launch {
-      mutableLoading.value = true
+      _loading.value = true
       try {
-        mutablePortfolios.value =
+        _portfolios.value =
           cache.getFreshPortfolios(0) ?: getNewPortfolios(0)
+        _message.value = "Data loaded successfully"
+      } catch (e: java.net.ConnectException) {
+        _message.value = "Server is not available. Please check your connection and ensure the server is running."
+        logd("Connection failed: ${e.message}")
+      } catch (e: java.net.SocketTimeoutException) {
+        _message.value = "Request timed out. Please try again."
+        logd("Timeout: ${e.message}")
       } catch (e: Exception) {
-        mutableMessage.value = "Received an error while retrieving the data: ${e.message}"
+        _message.value = "Error retrieving data: ${e.message}"
+        logd("Error: ${e.message}")
       } finally {
-        mutableLoading.value = false
+        _loading.value = false
       }
     }
   }
 
   suspend fun auth(): Boolean {
-    if (authToken == null || authToken?.isEmpty() == true) {
-      authToken = NetworkRepository.auth(LoginCredentials("test", "test1"))
-      NetworkRepository.setToken(authToken)
+    return try {
+      if (authToken == null || authToken?.isEmpty() == true) {
+        authToken = NetworkRepository.auth(LoginCredentials("test", "test1"))
+        NetworkRepository.setToken(authToken)
+      }
+      authToken?.isNotEmpty() ?: false
+    } catch (e: java.net.ConnectException) {
+      _message.value = "Server is not available. Please check your connection and ensure the server is running at http://10.0.2.2:8080"
+      logd("Connection failed: ${e.message}")
+      false
+    } catch (e: Exception) {
+      _message.value = "Authentication failed: ${e.message}"
+      logd("Auth error: ${e.message}")
+      false
     }
-    return authToken?.isNotEmpty() ?: false
   }
 
   /**

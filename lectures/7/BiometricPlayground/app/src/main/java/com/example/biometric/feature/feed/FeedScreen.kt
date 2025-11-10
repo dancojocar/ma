@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.CircularProgressIndicator
@@ -17,14 +18,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.biometric.data.FeedItem
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 
-@Destination
+@Destination<RootGraph>
 @Composable
 fun FeedScreen(viewModel: FeedViewModel = hiltViewModel()) {
     val screenState = viewModel.feed.collectAsState()
 
     Surface {
-        Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+        Box(modifier = Modifier.fillMaxSize().systemBarsPadding().padding(12.dp)) {
             when (val state = screenState.value) {
                 FeedState.Loading -> LoadingContent(modifier = Modifier.align(Alignment.Center))
                 is FeedState.Failure -> ErrorContent(

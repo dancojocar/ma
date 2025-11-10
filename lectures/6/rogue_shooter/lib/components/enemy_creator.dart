@@ -2,8 +2,10 @@ import 'dart:math';
 
 import 'package:flame/components.dart';
 import 'package:rogue_shooter/components/enemy_component.dart';
+import 'package:rogue_shooter/rogue_shooter_game.dart';
 
-class EnemyCreator extends TimerComponent with HasGameRef {
+class EnemyCreator extends TimerComponent
+    with HasGameReference<RogueShooterGame> {
   final Random random = Random();
   final _halfWidth = EnemyComponent.initialSize.x / 2;
 

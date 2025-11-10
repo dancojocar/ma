@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multi_provider/color_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:multi_provider/counter.dart';
 
@@ -13,9 +14,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(
-          value: Counter(),
-        ),
+        ChangeNotifierProvider(create: (context) => Counter()),
+        ChangeNotifierProvider(create: (context) => ColorProvider()),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
@@ -33,35 +33,42 @@ class MyHomePage extends StatelessWidget {
   final String title;
   const MyHomePage({super.key, required this.title});
 
-  void _incrementCounter(BuildContext context) {
-    Provider.of<Counter>(context, listen: false).incrementCounter();
-  }
-
   @override
   Widget build(BuildContext context) {
-    var counter = Provider.of<Counter>(context).getCounter;
+    var counter = context.watch<Counter>().getCounter;
+    var color = context.watch<ColorProvider>().getColor;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
+            const Text('You have pushed the button this many times:'),
             Text(
               '$counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(color: color),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _incrementCounter(context),
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () => context.read<Counter>().incrementCounter(),
+            tooltip: 'Increment',
+            child: const Icon(Icons.add),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () => context.read<ColorProvider>().changeColor(),
+            tooltip: 'Change Color',
+            child: const Icon(Icons.color_lens),
+          ),
+        ],
       ),
     );
   }

@@ -3,17 +3,18 @@ import 'package:flame/components.dart';
 import 'package:rogue_shooter/components/bullet_component.dart';
 import 'package:rogue_shooter/components/enemy_component.dart';
 import 'package:rogue_shooter/components/explosion_component.dart';
+import 'package:rogue_shooter/rogue_shooter_game.dart';
 
 class PlayerComponent extends SpriteAnimationComponent
-    with HasGameRef, CollisionCallbacks {
+    with HasGameReference<RogueShooterGame>, CollisionCallbacks {
   late TimerComponent bulletCreator;
 
   PlayerComponent()
-      : super(
-          size: Vector2(50, 75),
-          position: Vector2(100, 500),
-          anchor: Anchor.center,
-        );
+    : super(
+        size: Vector2(50, 75),
+        position: Vector2(100, 500),
+        anchor: Anchor.center,
+      );
 
   @override
   Future<void> onLoad() async {

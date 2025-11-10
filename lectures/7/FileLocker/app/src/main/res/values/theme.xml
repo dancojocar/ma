@@ -14,18 +14,9 @@
   ~ limitations under the License.
   -->
 
-<resources xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Top level application theme. -->
-    <style name="AppTheme" parent="Base.AppTheme">
-        <item name="android:navigationBarColor">#33000000</item>
-        <item name="android:windowLightNavigationBar" tools:ignore="NewApi">true</item>
-    </style>
-
-    <!-- Base application theme. -->
-    <style name="Base.AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar.PrimarySurface</item>
+<resources>
+    <!-- Base application theme for Compose -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
-
 </resources>

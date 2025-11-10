@@ -16,8 +16,9 @@
   -->
 
 <resources>
-    <!-- Top level application theme. -->
-    <style name="AppTheme" parent="Base.AppTheme">
+    <!-- Application theme for API 29+ -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 </resources>

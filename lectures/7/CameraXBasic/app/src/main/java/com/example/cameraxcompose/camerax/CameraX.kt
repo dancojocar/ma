@@ -61,27 +61,42 @@ class CameraX(
   fun capturePhoto() = owner.lifecycleScope.launch {
     val imageCapture = imageCapture ?: return@launch
 
-    imageCapture.takePicture(ContextCompat.getMainExecutor(context), object :
-      ImageCapture.OnImageCapturedCallback(), ImageCapture.OnImageSavedCallback {
-      override fun onCaptureSuccess(image: ImageProxy) {
-        super.onCaptureSuccess(image)
-        owner.lifecycleScope.launch {
-          saveMediaToStorage(
-            imageProxyToBitmap(image),
-            System.currentTimeMillis().toString()
-          )
+    // Since you are saving to storage, you don't need the ImageProxy.
+    // Therefore, OnImageSavedCallback is the correct choice.
+
+    val contentValues = ContentValues().apply {
+      put(MediaStore.MediaColumns.DISPLAY_NAME, "${System.currentTimeMillis()}.jpg")
+      put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM)
+      }
+    }
+
+    val outputOptions = ImageCapture.OutputFileOptions.Builder(
+      context.contentResolver,
+      MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+      contentValues
+    ).build()
+
+    imageCapture.takePicture(
+      outputOptions,
+      ContextCompat.getMainExecutor(context),
+      object : ImageCapture.OnImageSavedCallback {
+        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+          logd("onCaptureSuccess: Uri  ${outputFileResults.savedUri}")
+          Toast.makeText(context, "Saved Successfully", Toast.LENGTH_SHORT).show()
         }
-      }
 
-      override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-        logd("onCaptureSuccess: Uri  ${outputFileResults.savedUri}")
-      }
+        override fun onError(exception: ImageCaptureException) {
+          loge("Image capture failed: ${exception.message}", exception)
+        }
 
-      override fun onError(exception: ImageCaptureException) {
-        super.onError(exception)
-        logd("onCaptureSuccess: onError")
-      }
-    })
+        // Explicitly override onCaptureStarted
+        override fun onCaptureStarted() {
+          super.onCaptureStarted()
+          // You can add UI cues like a shutter sound here if needed.
+        }
+      })
 
 
   }

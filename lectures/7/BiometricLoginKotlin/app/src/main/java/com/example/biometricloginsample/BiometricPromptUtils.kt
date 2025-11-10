@@ -16,15 +16,15 @@
 
 package com.example.biometricloginsample
 
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import logd
 
 // Since we are using the same methods in more than one Activity, better give them their own file.
 object BiometricPromptUtils {
   fun createBiometricPrompt(
-    activity: AppCompatActivity,
+    activity: FragmentActivity,
     processSuccess: (BiometricPrompt.AuthenticationResult) -> Unit
   ): BiometricPrompt {
     val executor = ContextCompat.getMainExecutor(activity)
@@ -50,7 +50,7 @@ object BiometricPromptUtils {
     return BiometricPrompt(activity, executor, callback)
   }
 
-  fun createPromptInfo(activity: AppCompatActivity): BiometricPrompt.PromptInfo =
+  fun createPromptInfo(activity: FragmentActivity): BiometricPrompt.PromptInfo =
     BiometricPrompt.PromptInfo.Builder().apply {
       setTitle(activity.getString(R.string.prompt_info_title))
       setSubtitle(activity.getString(R.string.prompt_info_subtitle))

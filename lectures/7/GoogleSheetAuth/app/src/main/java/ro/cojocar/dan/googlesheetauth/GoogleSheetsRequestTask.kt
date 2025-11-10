@@ -1,12 +1,11 @@
 package ro.cojocar.dan.googlesheetauth
 
 import android.util.Log
-import com.google.api.client.extensions.android.http.AndroidHttp
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
+import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.sheets.v4.Sheets
-import java.io.IOException
 
 /**
  * An asynchronous task that handles the Google Sheets API call.
@@ -16,7 +15,7 @@ class GoogleSheetsRequestTask(credentials: GoogleAccountCredential) {
   private val service: Sheets
 
   init {
-    val transport = AndroidHttp.newCompatibleTransport()
+    val transport = NetHttpTransport()
     val jsonFactory = GsonFactory.getDefaultInstance()
     service = Sheets.Builder(
       transport, jsonFactory, credentials

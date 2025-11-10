@@ -19,15 +19,16 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import android.view.inputmethod.EditorInfo
+import androidx.activity.compose.setContent
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
-import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.Observer
-import com.example.biometricloginsample.databinding.ActivityLoginBinding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.example.biometricloginsample.ui.LoginScreen
+import com.example.biometricloginsample.ui.theme.BiometricLoginTheme
 
 /**
  * 1) after entering "valid" username and password, login button becomes enabled
@@ -35,7 +36,7 @@ import com.example.biometricloginsample.databinding.ActivityLoginBinding
  *   - a) if no template exists, then ask user to register template
  *   - b) if template exists, ask user to confirm by entering username & password
  */
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : FragmentActivity() {
   private val TAG = "LoginActivity"
   private lateinit var biometricPrompt: BiometricPrompt
   private val cryptographyManager = CryptographyManager()
@@ -46,31 +47,36 @@ class LoginActivity : AppCompatActivity() {
       Context.MODE_PRIVATE,
       CIPHERTEXT_WRAPPER
     )
-  private lateinit var binding: ActivityLoginBinding
   private val loginWithPasswordViewModel by viewModels<LoginViewModel>()
+  private var successMessage by mutableStateOf<String?>(null)
+  private var showBiometricButton by mutableStateOf(false)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityLoginBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-
+    
     val canAuthenticate = BiometricManager.from(applicationContext)
       .canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
     Log.d(TAG, "canAuthenticate: $canAuthenticate")
-    if (canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS) {
-      binding.useBiometrics.visibility = View.VISIBLE
-      binding.useBiometrics.setOnClickListener {
-        if (ciphertextWrapper != null) {
-          showBiometricPromptForDecryption()
-        } else {
-          startActivity(Intent(this, EnableBiometricLoginActivity::class.java))
-        }
+    showBiometricButton = canAuthenticate == BiometricManager.BIOMETRIC_SUCCESS
+    
+    setContent {
+      BiometricLoginTheme {
+        LoginScreen(
+          viewModel = loginWithPasswordViewModel,
+          showBiometricButton = showBiometricButton,
+          successMessage = successMessage,
+          onUseBiometricsClick = {
+            if (ciphertextWrapper != null) {
+              showBiometricPromptForDecryption()
+            } else {
+              startActivity(Intent(this, EnableBiometricLoginActivity::class.java))
+            }
+          },
+          onLoginClick = { username, password ->
+            loginWithPasswordViewModel.login(username, password)
+          }
+        )
       }
-    } else {
-      binding.useBiometrics.visibility = View.INVISIBLE
-    }
-    if (ciphertextWrapper == null) {
-      setupForLoginWithPassword()
     }
   }
 
@@ -87,7 +93,7 @@ class LoginActivity : AppCompatActivity() {
       } else {
         // The user has already logged in, so proceed to the rest of the app
         // this is a todo for you, the developer
-        updateApp(getString(R.string.already_signedin))
+        successMessage = getString(R.string.already_signedin)
       }
     }
   }
@@ -121,64 +127,9 @@ class LoginActivity : AppCompatActivity() {
         // the server. In your case, you will have gotten it from the server the first time
         // and therefore, it's a real token.
 
-        updateApp(getString(R.string.already_signedin))
+        successMessage = getString(R.string.already_signedin)
       }
     }
   }
 
-  // USERNAME + PASSWORD SECTION
-  private fun setupForLoginWithPassword() {
-    loginWithPasswordViewModel.loginWithPasswordFormState.observe(this, Observer { formState ->
-      val loginState = formState ?: return@Observer
-      when (loginState) {
-        is SuccessfulLoginFormState -> binding.login.isEnabled = loginState.isDataValid
-        is FailedLoginFormState -> {
-          loginState.usernameError?.let { binding.username.error = getString(it) }
-          loginState.passwordError?.let { binding.password.error = getString(it) }
-        }
-      }
-    })
-    loginWithPasswordViewModel.loginResult.observe(this, Observer {
-      val loginResult = it ?: return@Observer
-      if (loginResult.success) {
-        updateApp(
-          "You successfully signed up using password as: user " +
-              "${SampleAppUser.username} with fake token ${SampleAppUser.fakeToken}"
-        )
-      }
-    })
-    binding.username.doAfterTextChanged {
-      loginWithPasswordViewModel.onLoginDataChanged(
-        binding.username.text.toString(),
-        binding.password.text.toString()
-      )
-    }
-    binding.password.doAfterTextChanged {
-      loginWithPasswordViewModel.onLoginDataChanged(
-        binding.username.text.toString(),
-        binding.password.text.toString()
-      )
-    }
-    binding.password.setOnEditorActionListener { _, actionId, _ ->
-      when (actionId) {
-        EditorInfo.IME_ACTION_DONE ->
-          loginWithPasswordViewModel.login(
-            binding.username.text.toString(),
-            binding.password.text.toString()
-          )
-      }
-      false
-    }
-    binding.login.setOnClickListener {
-      loginWithPasswordViewModel.login(
-        binding.username.text.toString(),
-        binding.password.text.toString()
-      )
-    }
-    Log.d(TAG, "Username ${SampleAppUser.username}; fake token ${SampleAppUser.fakeToken}")
-  }
-
-  private fun updateApp(successMsg: String) {
-    binding.success.text = successMsg
-  }
 }

@@ -80,18 +80,17 @@ class _TitleText extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Gap(20),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Transform.translate(
-              offset: Offset(-(TextStyles.h1.letterSpacing! * .5), 0),
-              child: Text('UBB IE', style: TextStyles.h1),
-            ),
-            Image.asset(AssetPaths.titleSelectedLeft, height: 65),
-            Text('3', style: TextStyles.h2),
-            Image.asset(AssetPaths.titleSelectedRight, height: 65),
-          ],
+        const Gap(15),
+        FittedBox(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('UBB IE', style: TextStyles.h1),
+              Image.asset(AssetPaths.titleSelectedLeft, height: 65),
+              Text('3', style: TextStyles.h2),
+              Image.asset(AssetPaths.titleSelectedRight, height: 65),
+            ],
+          ),
         ).animate().fadeIn(delay: .8.seconds, duration: .7.seconds),
         Text('INTO THE UNKNOWN', style: TextStyles.h3)
             .animate()
@@ -138,7 +137,8 @@ class _DifficultyBtns extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return FittedBox(
+      child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         _DifficultyBtn(
@@ -168,9 +168,9 @@ class _DifficultyBtns extends StatelessWidget {
             .animate()
             .fadeIn(delay: 1.7.seconds, duration: .35.seconds)
             .slide(begin: const Offset(0, .2)),
-        const Gap(20),
+        const Gap(10),
       ],
-    );
+    ));
   }
 }
 
@@ -196,7 +196,7 @@ class _DifficultyBtn extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: SizedBox(
             width: 250,
-            height: 60,
+            height: 50,
             child: Stack(
               children: [
                 /// Bg with fill and outline
@@ -279,13 +279,15 @@ class _StartBtnState extends State<_StartBtn> {
                     child: Image.asset(AssetPaths.titleStartBtnHover)),
               ],
               Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text('START MISSION',
-                        style: TextStyles.btn
-                            .copyWith(fontSize: 24, letterSpacing: 18)),
-                  ],
+                child: FittedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('START MISSION',
+                          style: TextStyles.btn
+                              .copyWith(fontSize: 24, letterSpacing: 16)),
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
 
 part 'main.g.dart';
 
 @collection
 class Count {
-  final int id;
+  Id id = Isar.autoIncrement;
 
-  final int step;
+  int step;
 
-  Count(this.id, this.step);
+  Count(this.step);
 }
 
 void main() async {
-  await Isar.initialize();
   runApp(const CounterApp());
 }
 
@@ -29,21 +29,20 @@ class _CounterAppState extends State<CounterApp> {
 
   @override
   void initState() {
-    // Open Isar instance
-    _isar = Isar.open(
-      schemas: [CountSchema],
-      directory: Isar.sqliteInMemory,
-      engine: IsarEngine.sqlite,
-    );
     super.initState();
+    _openIsar();
+  }
+
+  Future<void> _openIsar() async {
+    final dir = await getApplicationDocumentsDirectory();
+    _isar = await Isar.open([CountSchema], directory: dir.path);
+    setState(() {});
   }
 
   void _incrementCounter() {
     // Persist counter value to database
-    _isar.write((isar) async {
-      isar.counts.put(
-        Count(isar.counts.autoIncrement(), 1),
-      );
+    _isar.writeTxnSync(() {
+      _isar.counts.putSync(Count(1));
     });
 
     setState(() {});
@@ -53,7 +52,7 @@ class _CounterAppState extends State<CounterApp> {
   Widget build(BuildContext context) {
     // This is just for demo purposes. You shouldn't perform database queries
     // in the build method.
-    final count = _isar.counts.where().stepProperty().sum();
+    final count = _isar.counts.where().stepProperty().sumSync();
     final theme = ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
       useMaterial3: true,
@@ -67,9 +66,7 @@ class _CounterAppState extends State<CounterApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              const Text(
-                'You have pushed the button this many times:',
-              ),
+              const Text('You have pushed the button this many times:'),
               Text('$count', style: theme.textTheme.headlineMedium),
             ],
           ),

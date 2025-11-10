@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
@@ -46,13 +47,14 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.example.biometric.R
 import com.example.biometric.data.model.Password
 import com.example.biometric.data.model.Username
-import com.example.biometric.feature.destinations.FeedScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.FeedScreenDestination
 import com.ramcosta.composedestinations.annotation.Destination
+import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-@Destination(start = true)
+@Destination<RootGraph>(start = true)
 @Composable
 fun LoginScreen(
     navigator: DestinationsNavigator,
@@ -60,7 +62,7 @@ fun LoginScreen(
 ) {
     val screenState = viewModel.loginState.collectAsState()
 
-    Box {
+    Box(modifier = Modifier.systemBarsPadding()) {
         val snackbarState = remember { SnackbarHostState() }
         val scope = rememberCoroutineScope()
 

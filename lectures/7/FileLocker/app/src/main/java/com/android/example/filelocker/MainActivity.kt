@@ -17,22 +17,24 @@
 package com.android.example.filelocker
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.databinding.DataBindingUtil
-import com.android.example.filelocker.databinding.ActivityMainBinding
-
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.core.view.WindowCompat
+import com.android.example.filelocker.ui.FileLockerApp
 
 /**
  * MainActivity to show a list of encrypted files as well as options to set a master password
  * to be required when opening files and the option to add new files by downloading and
  * encrypting them.
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    DataBindingUtil.setContentView<ActivityMainBinding>(this, R.layout.activity_main).apply {
-      lifecycleOwner = this@MainActivity
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        
+        setContent {
+            FileLockerApp()
+        }
     }
-  }
 }

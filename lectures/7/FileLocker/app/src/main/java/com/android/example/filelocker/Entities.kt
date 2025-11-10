@@ -16,7 +16,6 @@
 
 package com.android.example.filelocker
 
-import androidx.recyclerview.widget.DiffUtil
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -27,11 +26,6 @@ data class FileEntity(
     val title: String,
     val path: String
 )
-
-object FileEntityDiff : DiffUtil.ItemCallback<FileEntity>() {
-  override fun areItemsTheSame(oldItem: FileEntity, newItem: FileEntity) = oldItem == newItem
-  override fun areContentsTheSame(oldItem: FileEntity, newItem: FileEntity) = oldItem == newItem
-}
 
 /**
  * Extension method to decode a URL encoded a string.

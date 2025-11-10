@@ -27,8 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               flex: 8,
               child: PlayerListWidget(mediaList!, (Media media) {
-                Provider.of<MediaViewModel>(context, listen: false)
-                    .setSelectedMedia(media);
+                Provider.of<MediaViewModel>(
+                  context,
+                  listen: false,
+                ).setSelectedMedia(media);
               }),
             ),
             Expanded(
@@ -45,14 +47,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         );
       case Status.ERROR:
-        return const Center(
-          child: Text('Please try again latter!!!'),
-        );
+        return const Center(child: Text('Please try again latter!!!'));
       case Status.INITIAL:
-      default:
-        return const Center(
-          child: Text('Search the song by Artist'),
-        );
+        return const Center(child: Text('Search the song by Artist'));
     }
   }
 
@@ -61,9 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final _inputController = TextEditingController();
     ApiResponse apiResponse = Provider.of<MediaViewModel>(context).response;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Media Player'),
-      ),
+      appBar: AppBar(title: const Text('Media Player')),
       body: Column(
         children: <Widget>[
           Padding(
@@ -74,35 +69,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20.0),
                     decoration: BoxDecoration(
-                      color:
-                          Theme.of(context).colorScheme.primary.withAlpha(50),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(50),
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                     child: TextField(
-                        style: const TextStyle(
-                          fontSize: 15.0,
-                          color: Colors.grey,
-                        ),
-                        controller: _inputController,
-                        onChanged: (value) {},
-                        onSubmitted: (value) {
-                          if (value.isNotEmpty) {
-                            Provider.of<MediaViewModel>(context, listen: false)
-                                .setSelectedMedia(null);
-                            Provider.of<MediaViewModel>(context, listen: false)
-                                .fetchMediaData(value);
-                          }
-                        },
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Colors.grey,
-                          ),
-                          hintText: 'Enter Artist Name',
-                        )),
+                      style: const TextStyle(
+                        fontSize: 15.0,
+                        color: Colors.grey,
+                      ),
+                      controller: _inputController,
+                      onChanged: (value) {},
+                      onSubmitted: (value) {
+                        if (value.isNotEmpty) {
+                          Provider.of<MediaViewModel>(
+                            context,
+                            listen: false,
+                          ).setSelectedMedia(null);
+                          Provider.of<MediaViewModel>(
+                            context,
+                            listen: false,
+                          ).fetchMediaData(value);
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        prefixIcon: Icon(Icons.search, color: Colors.grey),
+                        hintText: 'Enter Artist Name',
+                      ),
+                    ),
                   ),
                 ),
               ],

@@ -9,9 +9,17 @@ import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
-import android.view.View
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
@@ -23,7 +31,7 @@ import com.google.api.client.util.ExponentialBackOff
 import com.google.api.services.sheets.v4.SheetsScopes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import ro.cojocar.dan.googlesheetauth.databinding.ActivityMainBinding
+import ro.cojocar.dan.googlesheetauth.ui.theme.GoogleSheetsAuthTheme
 
 /**
  * Enable the api using:
@@ -34,30 +42,124 @@ import ro.cojocar.dan.googlesheetauth.databinding.ActivityMainBinding
  * <p>
  * keytool -exportcert -keystore ~/.android/debug.keystore -list -v
  */
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
   private lateinit var credentials: GoogleAccountCredential
-
   private val scopes = arrayOf(SheetsScopes.SPREADSHEETS_READONLY)
+  
+  private lateinit var accountPickerLauncher: ActivityResultLauncher<Intent>
+  private lateinit var authorizationLauncher: ActivityResultLauncher<Intent>
+  private lateinit var playServicesLauncher: ActivityResultLauncher<Intent>
+  private lateinit var permissionLauncher: ActivityResultLauncher<String>
+  
+  private val outputTextState = mutableStateOf("")
+  private val isLoadingState = mutableStateOf(false)
+  private val isButtonEnabledState = mutableStateOf(true)
+  
+  private var outputText: String
+    get() = outputTextState.value
+    set(value) { outputTextState.value = value }
+  
+  private var isLoading: Boolean
+    get() = isLoadingState.value
+    set(value) { isLoadingState.value = value }
+  
+  private var isButtonEnabled: Boolean
+    get() = isButtonEnabledState.value
+    set(value) { isButtonEnabledState.value = value }
 
-  /**
-   * Create the main activity.
-   *
-   * @param savedInstanceState previously saved instance data.
-   */
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-
-    binding.button.setOnClickListener {
-      binding.button.isEnabled = false
-      binding.output.text = ""
-      getResultsFromApi()
-    }
-
+    
     credentials = GoogleAccountCredential.usingOAuth2(this, scopes.toList())
       .setBackOff(ExponentialBackOff())
+    
+    // Register activity result launchers
+    accountPickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+        val accountName = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
+        if (accountName != null) {
+          val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+          prefs.edit().putString(PREF_ACCOUNT_NAME, accountName).apply()
+          credentials.selectedAccountName = accountName
+          getResultsFromApi()
+        }
+      }
+    }
+    
+    authorizationLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode == Activity.RESULT_OK) {
+        getResultsFromApi()
+      }
+    }
+    
+    playServicesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode != Activity.RESULT_OK) {
+        outputText = getString(R.string.installGooglePlay)
+      } else {
+        getResultsFromApi()
+      }
+    }
+    
+    permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+      if (isGranted) {
+        chooseAccount()
+      } else {
+        outputText = getString(R.string.permissionDenied)
+      }
+    }
+    
+    setContent {
+      GoogleSheetsAuthTheme {
+        GoogleSheetsAuthScreen()
+      }
+    }
+  }
+  
+  @Composable
+  fun GoogleSheetsAuthScreen() {
+    val outputTextValue by outputTextState
+    val isLoadingValue by isLoadingState
+    val isButtonEnabledValue by isButtonEnabledState
+    
+    Surface(
+      modifier = Modifier.fillMaxSize(),
+      color = MaterialTheme.colorScheme.background
+    ) {
+      Column(
+        modifier = Modifier
+          .fillMaxSize()
+          .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+      ) {
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Button(
+          onClick = {
+            isButtonEnabled = false
+            outputText = ""
+            getResultsFromApi()
+          },
+          enabled = isButtonEnabledValue,
+          modifier = Modifier.padding(top = 16.dp)
+        ) {
+          Text("Connect")
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        if (isLoadingValue) {
+          CircularProgressIndicator()
+        }
+        
+        Text(
+          text = outputTextValue,
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+        )
+      }
+    }
   }
 
 
@@ -69,24 +171,47 @@ class MainActivity : AppCompatActivity() {
    * appropriate.
    */
   private fun getResultsFromApi() {
+    Log.d(TAG, "getResultsFromApi called")
+    Log.d(TAG, "Current account: ${credentials.selectedAccountName}")
+    
     if (!isGooglePlayServicesAvailable()) {
+      Log.d(TAG, "Google Play Services not available")
       acquireGooglePlayServices()
-    } else if (credentials.selectedAccountName == null) {
+      return
+    }
+    
+    if (credentials.selectedAccountName == null) {
+      Log.d(TAG, "No account selected, calling chooseAccount")
       chooseAccount()
-    } else if (!isDeviceOnline(this)) {
-      binding.output.text = getString(R.string.noConnection)
-    } else {
-      binding.progressBar.visibility = View.VISIBLE
-      lifecycleScope.launch(Dispatchers.IO) {
-        try {
-          val values = GoogleSheetsRequestTask(credentials).dataFromApi()
-          launch(Dispatchers.Main) {
-            binding.progressBar.visibility = View.GONE
-            binding.output.text = values
-            binding.button.isEnabled = true
-          }
-        } catch (e: UserRecoverableAuthIOException) {
-          startActivityForResult(e.intent, REQUEST_AUTHORIZATION)
+      // Check if account was set synchronously from preferences
+      if (credentials.selectedAccountName == null) {
+        Log.d(TAG, "Account not set, waiting for user action")
+        return
+      }
+      Log.d(TAG, "Account was set from preferences, continuing...")
+    }
+    
+    if (!isDeviceOnline(this)) {
+      Log.d(TAG, "Device is offline")
+      outputText = getString(R.string.noConnection)
+      isButtonEnabled = true
+      return
+    }
+    
+    Log.d(TAG, "All checks passed, making API call")
+    isLoading = true
+    lifecycleScope.launch(Dispatchers.IO) {
+      try {
+        val values = GoogleSheetsRequestTask(credentials).dataFromApi()
+        launch(Dispatchers.Main) {
+          isLoading = false
+          outputText = values
+          isButtonEnabled = true
+        }
+      } catch (e: UserRecoverableAuthIOException) {
+        launch(Dispatchers.Main) {
+          isLoading = false
+          authorizationLauncher.launch(e.intent)
         }
       }
     }
@@ -98,73 +223,40 @@ class MainActivity : AppCompatActivity() {
    * picker dialog will be shown to the user. Note that the setting the
    * account to use with the credentials object requires the app to have the
    * GET_ACCOUNTS permission, which is requested here if it is not already
-   * present. The AfterPermissionGranted annotation indicates that this
-   * function will be rerun automatically whenever the GET_ACCOUNTS permission
-   * is granted.
+   * present.
    */
   private fun chooseAccount() {
+    Log.d(TAG, "chooseAccount called")
     if (ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS) == PackageManager.PERMISSION_GRANTED) {
       val prefs = PreferenceManager.getDefaultSharedPreferences(this)
       val accountName = prefs.getString(PREF_ACCOUNT_NAME, null)
+      Log.d(TAG, "Saved account name: $accountName")
       if (accountName != null) {
-        credentials.selectedAccountName = accountName
-        getResultsFromApi()
+        Log.d(TAG, "Attempting to set account: $accountName")
+        try {
+          credentials.selectedAccountName = accountName
+          Log.d(TAG, "Credentials object after setting: ${credentials.selectedAccountName}")
+          
+          // The account might not exist on the device anymore, so clear preferences and show picker
+          if (credentials.selectedAccountName == null) {
+            Log.w(TAG, "Account was not accepted by credentials, clearing preferences and showing picker")
+            prefs.edit().remove(PREF_ACCOUNT_NAME).apply()
+            accountPickerLauncher.launch(credentials.newChooseAccountIntent())
+          }
+        } catch (e: Exception) {
+          Log.e(TAG, "Error setting account: ${e.message}", e)
+          accountPickerLauncher.launch(credentials.newChooseAccountIntent())
+        }
       } else {
-        startActivityForResult(credentials.newChooseAccountIntent(), REQUEST_ACCOUNT_PICKER)
+        Log.d(TAG, "No saved account, launching account picker")
+        accountPickerLauncher.launch(credentials.newChooseAccountIntent())
       }
     } else {
-      ActivityCompat.requestPermissions(
-        this,
-        arrayOf(Manifest.permission.GET_ACCOUNTS),
-        REQUEST_PERMISSION_GET_ACCOUNTS
-      )
+      Log.d(TAG, "Permission not granted, requesting permission")
+      permissionLauncher.launch(Manifest.permission.GET_ACCOUNTS)
     }
   }
 
-  /**
-   * Called when an activity launched here (specifically, AccountPicker
-   * and authorization) exits, giving you the requestCode you started it with,
-   * the resultCode it returned, and any additional data from it.
-   *
-   * @param requestCode code indicating which activity result is incoming.
-   * @param resultCode  code indicating the result of the incoming
-   * activity result.
-   * @param data        Intent (containing result data) returned by incoming
-   * activity result.
-   */
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    when (requestCode) {
-      REQUEST_GOOGLE_PLAY_SERVICES -> if (resultCode != Activity.RESULT_OK) {
-        binding.output.text = getString(R.string.installGooglePlay)
-      } else {
-        getResultsFromApi()
-      }
-      REQUEST_ACCOUNT_PICKER -> if (resultCode == Activity.RESULT_OK && data != null) {
-        val accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
-        if (accountName != null) {
-          val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-          prefs.edit().putString(PREF_ACCOUNT_NAME, accountName).apply()
-          credentials.selectedAccountName = accountName
-          getResultsFromApi()
-        }
-      }
-      REQUEST_AUTHORIZATION -> if (resultCode == Activity.RESULT_OK) {
-        getResultsFromApi()
-      }
-    }
-  }
-
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-    if (requestCode == REQUEST_PERMISSION_GET_ACCOUNTS) {
-      if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-        chooseAccount()
-      } else {
-        binding.output.text = getString(R.string.permissionDenied)
-      }
-    }
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-  }
 
   private fun isDeviceOnline(context: Context): Boolean {
     val connectivityManager =
@@ -194,11 +286,13 @@ class MainActivity : AppCompatActivity() {
 
   private fun showGooglePlayServicesAvailabilityErrorDialog(connectionStatusCode: Int) {
     val apiAvailability = GoogleApiAvailability.getInstance()
-    val dialog = apiAvailability.getErrorDialog(this, connectionStatusCode, REQUEST_GOOGLE_PLAY_SERVICES)
-    dialog?.show()
+    apiAvailability.showErrorDialogFragment(this, connectionStatusCode, REQUEST_GOOGLE_PLAY_SERVICES) {
+      outputText = getString(R.string.installGooglePlay)
+    }
   }
 
   companion object {
+    private const val TAG = "MainActivity"
     const val REQUEST_ACCOUNT_PICKER = 1000
     const val REQUEST_AUTHORIZATION = 1001
     const val REQUEST_GOOGLE_PLAY_SERVICES = 1002

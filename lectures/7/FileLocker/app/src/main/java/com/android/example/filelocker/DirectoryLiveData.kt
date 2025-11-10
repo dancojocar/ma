@@ -35,7 +35,9 @@ class DirectoryLiveData(
   }
 
   private fun dispatchFilesChanged() {
-    postValue(observationDir.listFiles()?.map { FileEntity(it.name.urlDecode(), it.path) }
+    postValue(observationDir.listFiles()
+        ?.filter { it.isFile && !it.name.startsWith(".") }
+        ?.map { FileEntity(it.name.urlDecode(), it.path) }
         ?: emptyList())
   }
 

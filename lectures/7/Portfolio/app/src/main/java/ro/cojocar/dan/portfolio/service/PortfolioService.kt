@@ -34,7 +34,6 @@ object PortfolioApi {
 
 
   private var gson = GsonBuilder()
-    .setLenient()
     .create()
 
   private val retrofit = Retrofit.Builder()
