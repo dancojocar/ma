@@ -38,7 +38,8 @@
         android:theme="@style/AppTheme">
 
         <activity android:name=".BlurActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowLayoutInDisplayCutoutMode="shortEdges">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

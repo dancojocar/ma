@@ -25,6 +25,7 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.example.background.KEY_IMAGE_URI
+import com.example.background.KEY_BLUR_LEVEL
 
 private const val TAG = "BlurWorker"
 class BlurWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
@@ -33,6 +34,7 @@ class BlurWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
         val appContext = applicationContext
 
         val resourceUri = inputData.getString(KEY_IMAGE_URI)
+        val blurLevel = inputData.getInt(KEY_BLUR_LEVEL, 1)
 
         makeStatusNotification("Blurring image", appContext)
 
@@ -50,7 +52,7 @@ class BlurWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
             val picture = BitmapFactory.decodeStream(
                     resolver.openInputStream(Uri.parse(resourceUri)))
 
-            val output = blurBitmap(picture, appContext)
+            val output = blurBitmap(picture, appContext, blurLevel)
 
             // Write bitmap to a temp file
             val outputUri = writeBitmapToFile(appContext, output)

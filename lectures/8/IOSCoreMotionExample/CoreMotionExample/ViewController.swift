@@ -17,7 +17,7 @@ class ViewController: UIViewController {
         let scene = SCNScene()
         sceneView.scene = scene
         sceneView.allowsCameraControl = true
-        sceneView.backgroundColor = .black
+        sceneView.backgroundColor = .white
         
         // Add a camera
         let cameraNode = SCNNode()

@@ -20,9 +20,9 @@ import android.app.Application
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asFlow
 import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
@@ -30,36 +30,49 @@ import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import kotlinx.coroutines.flow.Flow
 import com.example.background.workers.BlurWorker
 import com.example.background.workers.CleanupWorker
 import com.example.background.workers.SaveImageToFileWorker
+import androidx.core.net.toUri
 
 class BlurViewModel(application: Application) : ViewModel() {
 
     private var imageUri: Uri? = null
-    internal var outputUri: Uri? = null
     private val workManager = WorkManager.getInstance(application)
-    internal val outputWorkInfos: LiveData<List<WorkInfo>> = workManager.getWorkInfosByTagLiveData(TAG_OUTPUT)
+    internal val outputWorkInfos: Flow<List<WorkInfo>> =
+        workManager.getWorkInfosByTagLiveData(TAG_OUTPUT).asFlow()
 
     init {
         // This transformation makes sure that whenever the current work Id changes the WorkInfo
         // the UI is listening to changes
         imageUri = getImageUri(application.applicationContext)
+
+        // On app/process restart, clear out finished work so we don't show stale blur outputs
+        workManager.pruneWork()
     }
 
     internal fun cancelWork() {
         workManager.cancelUniqueWork(IMAGE_MANIPULATION_WORK_NAME)
     }
 
+    internal fun updateImageUriFromOutput(uriString: String?) {
+        val newUri = uriOrNull(uriString)
+        if (newUri != null) {
+            imageUri = newUri
+        }
+    }
+
     /**
      * Creates the input data bundle which includes the Uri to operate on
      * @return Data which contains the Image Uri as a String
      */
-    private fun createInputDataForUri(): Data {
+    private fun createInputDataForUri(blurLevel: Int): Data {
         val builder = Data.Builder()
         imageUri?.let {
             builder.putString(KEY_IMAGE_URI, imageUri.toString())
         }
+        builder.putInt(KEY_BLUR_LEVEL, blurLevel)
         return builder.build()
     }
 
@@ -76,23 +89,15 @@ class BlurViewModel(application: Application) : ViewModel() {
                 OneTimeWorkRequest.from(CleanupWorker::class.java)
             )
 
-        // Add WorkRequests to blur the image the number of times requested
-        for (i in 0 until blurLevel) {
-            val blurBuilder = OneTimeWorkRequestBuilder<BlurWorker>()
+        // Add a single WorkRequest to blur the image, with the blur radius depending on the selected level
+        val blurBuilder = OneTimeWorkRequestBuilder<BlurWorker>()
+            .setInputData(createInputDataForUri(blurLevel))
 
-            // Input the Uri if this is the first blur operation
-            // After the first blur operation the input will be the output of previous
-            // blur operations.
-            if (i == 0) {
-                blurBuilder.setInputData(createInputDataForUri())
-            }
+        continuation = continuation.then(blurBuilder.build())
 
-            continuation = continuation.then(blurBuilder.build())
-        }
-
-        // Create charging constraint
+        // Constraints for the final save step. For demo purposes we allow it to run
+        // even when the device is not charging so the UI can always show a result.
         val constraints = Constraints.Builder()
-            .setRequiresCharging(true)
             .build()
 
         // Add WorkRequest to save the image to the filesystem
@@ -108,7 +113,7 @@ class BlurViewModel(application: Application) : ViewModel() {
 
     private fun uriOrNull(uriString: String?): Uri? {
         return if (!uriString.isNullOrEmpty()) {
-            Uri.parse(uriString)
+          uriString.toUri()
         } else {
             null
         }
@@ -123,10 +128,6 @@ class BlurViewModel(application: Application) : ViewModel() {
             .appendPath(resources.getResourceTypeName(R.drawable.android_cupcake))
             .appendPath(resources.getResourceEntryName(R.drawable.android_cupcake))
             .build()
-    }
-
-    internal fun setOutputUri(outputImageUri: String?) {
-        outputUri = uriOrNull(outputImageUri)
     }
 }
 

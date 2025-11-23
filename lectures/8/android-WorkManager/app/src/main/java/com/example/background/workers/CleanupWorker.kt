@@ -39,15 +39,7 @@ class CleanupWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
             val outputDirectory = File(applicationContext.filesDir, OUTPUT_PATH)
             if (outputDirectory.exists()) {
                 val entries = outputDirectory.listFiles()
-                if (entries != null) {
-                    for (entry in entries) {
-                        val name = entry.name
-                        if (name.isNotEmpty() && name.endsWith(".png")) {
-                            val deleted = entry.delete()
-                            Log.i(TAG, "Deleted $name - $deleted")
-                        }
-                    }
-                }
+                Log.i(TAG, "CleanupWorker found ${entries?.size ?: 0} files in $outputDirectory but will not delete them to allow chaining blurs.")
             }
             Result.success()
         } catch (exception: Exception) {

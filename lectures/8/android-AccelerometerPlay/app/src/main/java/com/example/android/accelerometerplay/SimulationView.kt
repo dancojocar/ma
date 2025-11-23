@@ -38,6 +38,8 @@ class SimulationView(context: Context) : FrameLayout(context), SensorEventListen
   private val mParticleSystem: ParticleSystem
 
   init {
+    // Enable drawing for this ViewGroup so onDraw() is called
+    setWillNotDraw(false)
 
     val metrics = resources.displayMetrics
     mXDpi = metrics.xdpi

@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+
+PKG="com.example.flutter_background_fetch"
+JOB_ID=999   # default BackgroundFetch jobId from logs
+
+if ! command -v adb >/dev/null 2>&1; then
+  echo "adb not found. Install Android platform-tools and ensure adb is in PATH." >&2
+  exit 1
+fi
+
+# Optionally target a specific device/emulator:
+# ADB_ARGS="-s <device-id>"
+ADB_ARGS=""
+
+echo "Forcing JobScheduler job ${JOB_ID} for package ${PKG}..."
+adb ${ADB_ARGS} shell cmd jobscheduler run -f "${PKG}" "${JOB_ID}"
+
+echo "Done. Check 'flutter run' logcat for:"
+echo "  [BackgroundFetch] Event received: flutter_background_fetch"

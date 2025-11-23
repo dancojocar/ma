@@ -37,6 +37,9 @@ class SnakeBoardPainter extends CustomPainter {
     final Paint blackFilled = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.fill;
+    final Paint redFilled = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
     canvas.drawRect(
       Rect.fromPoints(Offset.zero, size.bottomLeft(Offset.zero)),
       blackLine,
@@ -47,6 +50,11 @@ class SnakeBoardPainter extends CustomPainter {
 
       canvas.drawRect(Rect.fromPoints(a, b), blackFilled);
     }
+
+    final math.Point<int> food = state.food;
+    final Offset fa = Offset(cellSize * food.x, cellSize * food.y);
+    final Offset fb = Offset(cellSize * (food.x + 1), cellSize * (food.y + 1));
+    canvas.drawRect(Rect.fromPoints(fa, fb), redFilled);
   }
 
   @override
@@ -62,7 +70,13 @@ class SnakeState extends State<Snake> {
 
   double cellSize;
   late GameState state;
-  late AccelerometerEvent acceleration;
+  AccelerometerEvent? acceleration;
+  GyroscopeEvent? gyroscope;
+  math.Point<int>? manualDirection;
+
+  Timer? _timer;
+  double _speed = 1.0; // 1.0x base speed
+
 
   @override
   Widget build(BuildContext context) {
@@ -72,34 +86,100 @@ class SnakeState extends State<Snake> {
   @override
   void initState() {
     super.initState();
-    accelerometerEvents.listen((AccelerometerEvent event) {
-      setState(() {
-        acceleration = event;
-      });
+    print('SnakeState initState called');
+
+    accelerometerEventStream().listen((AccelerometerEvent event) {
+      acceleration = event;
+      // Debug: print a few samples
+      // print('acc: x=${event.x}, y=${event.y}, z=${event.z}');
     });
 
-    Timer.periodic(const Duration(milliseconds: 200), (_) {
+    gyroscopeEventStream().listen((GyroscopeEvent event) {
+      gyroscope = event;
+      // Debug: print a few samples
+      // print('gyro: x=${event.x}, y=${event.y}, z=${event.z}');
+    });
+
+    _restartTimer();
+  }
+
+  void _step() {
+    // print('SnakeState _step tick, gyro=$gyroscope');
+    final gyro = gyroscope;
+
+    const double rotThreshold = 0.5; // rad/s, adjust to tune sensitivity
+
+    math.Point<int>? newDirection;
+
+    if (manualDirection != null) {
+      // Manual direction from on-screen controls takes priority.
+      newDirection = manualDirection;
+      manualDirection = null; // one-shot override
+    } else if (gyro != null &&
+        (gyro.x.abs() > rotThreshold || gyro.y.abs() > rotThreshold)) {
+      // X rotation controls up/down
+      // Y rotation controls left/right
+      if (gyro.x.abs() > gyro.y.abs()) {
+        // More rotation around X: up/down
+        newDirection = const math.Point<int>(0, -1);
+      } else {
+        // More rotation around Y: left/right
+        newDirection = math.Point<int>(gyro.y > 0 ? 1 : -1, 0);
+      }
+    } else {
+      // No strong rotation and no manual input – keep current direction.
+      newDirection = null;
+    }
+
+    state.step(newDirection);
+  }
+
+  // Manual control methods for on-screen buttons
+  void moveUp() {
+    manualDirection = const math.Point<int>(0, -1);
+  }
+
+  void moveDown() {
+    manualDirection = const math.Point<int>(0, 1);
+  }
+
+  void moveLeft() {
+    manualDirection = const math.Point<int>(-1, 0);
+  }
+
+  void moveRight() {
+    manualDirection = const math.Point<int>(1, 0);
+  }
+
+  int get foodCount => state.foodEaten;
+
+  void updateSpeed(double newSpeed) {
+    _speed = newSpeed;
+    _restartTimer();
+  }
+
+  void _restartTimer() {
+    _timer?.cancel();
+    final double factor = _speed.clamp(0.2, 5.0);
+    final int millis = (200 ~/ factor).clamp(50, 1000);
+    _timer = Timer.periodic(Duration(milliseconds: millis), (_) {
       setState(() {
         _step();
       });
     });
   }
 
-  void _step() {
-    final math.Point<int>? newDirection = acceleration == null
-        ? null
-        : acceleration.x.abs() < 1.0 && acceleration.y.abs() < 1.0
-            ? null
-            : (acceleration.x.abs() < acceleration.y.abs())
-                ? math.Point<int>(0, acceleration.y.sign.toInt())
-                : math.Point<int>(-acceleration.x.sign.toInt(), 0);
-    state.step(newDirection);
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 }
 
 class GameState {
   GameState(this.rows, this.columns) {
     snakeLength = math.min(rows, columns) - 5;
+    _spawnFood();
   }
 
   int rows;
@@ -109,9 +189,26 @@ class GameState {
   List<math.Point<int>> body = <math.Point<int>>[const math.Point<int>(0, 0)];
   math.Point<int> direction = const math.Point<int>(1, 0);
 
+  late math.Point<int> food;
+  int foodEaten = 0;
+  final math.Random _random = math.Random();
+
+  void _spawnFood() {
+    math.Point<int> candidate;
+    do {
+      candidate = math.Point<int>(_random.nextInt(columns), _random.nextInt(rows));
+    } while (body.contains(candidate));
+    food = candidate;
+  }
+
   void step(math.Point<int>? newDirection) {
     math.Point<int> next = body.last + direction;
     next = math.Point<int>(next.x % columns, next.y % rows);
+
+    if (next == food) {
+      foodEaten++;
+      _spawnFood();
+    }
 
     body.add(next);
     if (body.length > snakeLength) body.removeAt(0);

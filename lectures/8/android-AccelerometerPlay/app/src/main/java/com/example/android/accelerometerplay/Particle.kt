@@ -30,11 +30,30 @@ class Particle : View {
     val ax = -sx / 5
     val ay = -sy / 5
 
+    // Integrate position
     mPosX += mVelX * dT + ax * dT * dT / 2
     mPosY += mVelY * dT + ay * dT * dT / 2
 
+    // Integrate velocity
     mVelX += ax * dT
     mVelY += ay * dT
+
+    // Apply simple friction so motion dies out when nearly at rest
+    val friction = 0.98f
+    mVelX *= friction
+    mVelY *= friction
+
+    // Snap very small velocities to zero to avoid jitter when particles are resting
+    val velThreshold = 0.01f
+    if (kotlin.math.abs(mVelX) < velThreshold) mVelX = 0f
+    if (kotlin.math.abs(mVelY) < velThreshold) mVelY = 0f
+  }
+
+  fun dampenVelocityOnCollision() {
+    // Stronger damping on impact so bouncing energy is reduced quickly
+    val collisionFriction = 0.5f
+    mVelX *= collisionFriction
+    mVelY *= collisionFriction
   }
 
   /*

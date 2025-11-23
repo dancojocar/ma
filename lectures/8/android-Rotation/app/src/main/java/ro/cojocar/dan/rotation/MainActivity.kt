@@ -1,6 +1,5 @@
 package ro.cojocar.dan.rotation
 
-import android.app.Activity
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -8,6 +7,14 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -25,20 +32,27 @@ import javax.microedition.khronos.opengles.GL10
  *
  * @see SensorManager
  */
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
   private lateinit var mGLSurfaceView: GLSurfaceView
   private lateinit var mSensorManager: SensorManager
   private lateinit var mRenderer: MyRenderer
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+
     // Get an instance of the SensorManager
     mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
     // Create our Preview view and set it as the content of our
     // Activity
     mRenderer = MyRenderer()
     mGLSurfaceView = GLSurfaceView(this)
     mGLSurfaceView.setRenderer(mRenderer)
-    setContentView(mGLSurfaceView)
+
+    setContent {
+      MainScreen(mGLSurfaceView)
+    }
   }
 
   override fun onResume() {
@@ -60,9 +74,9 @@ class MainActivity : Activity() {
   internal inner class MyRenderer : GLSurfaceView.Renderer, SensorEventListener {
     private val mCube: Cube
     private val mRotationVectorSensor: Sensor =
-        mSensorManager.getDefaultSensor(
-            Sensor.TYPE_ROTATION_VECTOR
-        )!!
+      mSensorManager.getDefaultSensor(
+        Sensor.TYPE_ROTATION_VECTOR
+      )!!
     private val mRotationMatrix = FloatArray(16)
 
     init {
@@ -94,7 +108,7 @@ class MainActivity : Activity() {
         // is interpreted by Open GL as the inverse of the
         // rotation-vector, which is what we want.
         SensorManager.getRotationMatrixFromVector(
-            mRotationMatrix, event.values
+          mRotationMatrix, event.values
         )
       }
     }
@@ -138,24 +152,24 @@ class MainActivity : Activity() {
 
       init {
         val vertices = floatArrayOf(
-            -1f, -1f, -1f, 1f, -1f, -1f,
-            1f, 1f, -1f, -1f, 1f, -1f,
-            -1f, -1f, 1f, 1f, -1f, 1f,
-            1f, 1f, 1f, -1f, 1f, 1f
+          -1f, -1f, -1f, 1f, -1f, -1f,
+          1f, 1f, -1f, -1f, 1f, -1f,
+          -1f, -1f, 1f, 1f, -1f, 1f,
+          1f, 1f, 1f, -1f, 1f, 1f
         )
         val colors = floatArrayOf(
-            0f, 0f, 0f, 1f, 1f, 0f, 0f, 1f,
-            1f, 1f, 0f, 1f, 0f, 1f, 0f, 1f,
-            0f, 0f, 1f, 1f, 1f, 0f, 1f, 1f,
-            1f, 1f, 1f, 1f, 0f, 1f, 1f, 1f
+          0f, 0f, 0f, 1f, 1f, 0f, 0f, 1f,
+          1f, 1f, 0f, 1f, 0f, 1f, 0f, 1f,
+          0f, 0f, 1f, 1f, 1f, 0f, 1f, 1f,
+          1f, 1f, 1f, 1f, 0f, 1f, 1f, 1f
         )
         val indices = byteArrayOf(
-            0, 4, 5, 0, 5, 1,
-            1, 5, 6, 1, 6, 2,
-            2, 6, 7, 2, 7, 3,
-            3, 7, 4, 3, 4, 0,
-            4, 7, 6, 4, 6, 5,
-            3, 0, 1, 3, 1, 2
+          0, 4, 5, 0, 5, 1,
+          1, 5, 6, 1, 6, 2,
+          2, 6, 7, 2, 7, 3,
+          3, 7, 4, 3, 4, 0,
+          4, 7, 6, 4, 6, 5,
+          3, 0, 1, 3, 1, 2
         )
         val vbb = ByteBuffer.allocateDirect(vertices.size * 4)
         vbb.order(ByteOrder.nativeOrder())
@@ -184,4 +198,14 @@ class MainActivity : Activity() {
 
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
   }
+}
+
+@Composable
+fun MainScreen(glSurfaceView: GLSurfaceView) {
+  AndroidView(
+    factory = { glSurfaceView },
+    modifier = Modifier
+      .fillMaxSize()
+      .statusBarsPadding()
+  )
 }

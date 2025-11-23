@@ -17,9 +17,6 @@
 package com.example.background.workers
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.provider.MediaStore
 import android.util.Log
 import androidx.work.workDataOf
 import androidx.work.Worker
@@ -28,6 +25,7 @@ import com.example.background.KEY_IMAGE_URI
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.net.toUri
 
 /**
  * Saves the image to a permanent file
@@ -47,23 +45,13 @@ class SaveImageToFileWorker(ctx: Context, params: WorkerParameters) : Worker(ctx
         makeStatusNotification("Saving image", applicationContext)
         sleep()
 
-        val resolver = applicationContext.contentResolver
         return try {
-            val resourceUri = inputData.getString(KEY_IMAGE_URI)
-            val bitmap = BitmapFactory.decodeStream(
-                    resolver.openInputStream(Uri.parse(resourceUri)))
-            val imageUrl = MediaStore.Images.Media.insertImage(
-                    resolver, bitmap, Title, dateFormatter.format(Date()))
-            if (!imageUrl.isNullOrEmpty()) {
-                val output = workDataOf(KEY_IMAGE_URI to imageUrl)
-                Log.i(TAG, "Writing to MediaStore success")
-                Result.success(output)
-            } else {
-                Log.e(TAG, "Writing to MediaStore failed")
-                Result.failure()
-            }
+            val resourceUri = inputData.getString(KEY_IMAGE_URI)!!
+            val output = workDataOf(KEY_IMAGE_URI to resourceUri)
+            Log.i(TAG, "Propagating blurred image uri without saving to MediaStore: $resourceUri")
+            Result.success(output)
         } catch (exception: Exception) {
-            exception.printStackTrace()
+            Log.e(TAG, "Failed to propagate blurred image uri", exception)
             Result.failure()
         }
     }

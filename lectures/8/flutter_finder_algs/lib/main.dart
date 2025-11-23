@@ -20,12 +20,20 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Offset startPosition = Offset(
-        Random().nextInt(size).toDouble(), Random().nextInt(size).toDouble());
+      Random().nextInt(size).toDouble(),
+      Random().nextInt(size).toDouble(),
+    );
     final Offset endPosition = Offset(
-        Random().nextInt(size).toDouble(), Random().nextInt(size).toDouble());
+      Random().nextInt(size).toDouble(),
+      Random().nextInt(size).toDouble(),
+    );
 
-    final List<List<Node>> nodes =
-        _generateNodes(size, walls, startPosition, endPosition);
+    final List<List<Node>> nodes = _generateNodes(
+      size,
+      walls,
+      startPosition,
+      endPosition,
+    );
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -81,24 +89,32 @@ class MainApp extends StatelessWidget {
     final Node start = nodes[startX][startY];
     final Node end = nodes[endX][endY];
 
+    // Create the streams once and make them broadcast
+    final Stream<List<List<Node>>> finderStream =
+        pathFinder(nodes, start, end).asBroadcastStream();
+    final Stream<List<Node>> pathStream =
+        pathFinder.getPath(end).asBroadcastStream();
+
     return Column(
       children: <Widget>[
         const SizedBox(height: 8),
         Text(
-          '${pathFinder.name}',
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          pathFinder.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         StreamBuilder<List<List<Node>>>(
-          stream: pathFinder(nodes, start, end),
+          stream: finderStream,
           initialData: nodes,
           builder: (
             BuildContext context,
             AsyncSnapshot<List<List<Node>>> finderSnapshot,
           ) =>
               StreamBuilder<List<Node>>(
-            stream: pathFinder.getPath(end),
+            stream: pathStream,
             initialData: const <Node>[],
             builder: (
               BuildContext context,

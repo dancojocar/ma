@@ -3,6 +3,7 @@ package com.example.android.repeatingalarm
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -26,11 +27,23 @@ class MyBroadcastReceiver: BroadcastReceiver() {
 
     Toast.makeText(context, "Alarm....", Toast.LENGTH_LONG).show()
 
+    val mainIntent = Intent(context, MainActivity::class.java).apply {
+      flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+    }
+    val contentPendingIntent = PendingIntent.getActivity(
+      context,
+      0,
+      mainIntent,
+      PendingIntent.FLAG_IMMUTABLE
+    )
+
     val builder: NotificationCompat.Builder = NotificationCompat.Builder(context!!, CHANNEL_ID)
       .setSmallIcon(R.drawable.ic_launcher)
-      .setContentTitle("Sample Not. Title")
-      .setContentText("Sample Notification Text")
+      .setContentTitle("Alarm Triggered")
+      .setContentText("Tap to open the app")
       .setStyle(NotificationCompat.BigTextStyle())
+      .setContentIntent(contentPendingIntent)
+      .setAutoCancel(true)
 
     val notificationManager = NotificationManagerCompat.from(context)
 

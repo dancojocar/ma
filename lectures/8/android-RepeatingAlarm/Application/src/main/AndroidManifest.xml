@@ -32,7 +32,8 @@
       android:name=".MainActivity"
       android:label="@string/app_name"
       android:uiOptions="splitActionBarWhenNarrow"
-      android:exported="true">
+      android:exported="true"
+      android:windowLayoutInDisplayCutoutMode="shortEdges">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />

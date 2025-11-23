@@ -17,8 +17,14 @@ class ParticleSystem(context: Context) {
     // diameter of the balls in meters
     private const val sBallDiameter = SimulationView.sBallDiameter
     private const val sBallDiameter2 = sBallDiameter * sBallDiameter
-    private const val NUM_MAX_ITERATIONS = 10
+
+    // Reasonable number of iterations to resolve overlaps without excessive chattering
+    private const val NUM_MAX_ITERATIONS = 6
+
+    // Fixed minimum penetration depth (in meters) required before we resolve a collision
+    private const val MIN_PENETRATION_FOR_RESOLVE = 0.05f * sBallDiameter
   }
+
 
 
   init {
@@ -74,28 +80,28 @@ class ParticleSystem(context: Context) {
         for (j in 0 until count) {
           if (i != j) {
             val ball = mBalls[j]
-            var dx = ball.mPosX - currBall.mPosX
-            var dy = ball.mPosY - currBall.mPosY
-            var dd = dx * dx + dy * dy
+            val dx = ball.mPosX - currBall.mPosX
+            val dy = ball.mPosY - currBall.mPosY
+            val dd = dx * dx + dy * dy
             // Check for collisions
-            if (dd < sBallDiameter2) {
-              /*
-             * add a little entropy, after nothing is
-             * perfect in the universe.
-             */
-              dx += (Math.random().toFloat() - 0.5f) * 0.0001f
-              dy += (Math.random().toFloat() - 0.5f) * 0.0001f
-              dd = dx * dx + dy * dy
-              // simulate the spring
+            if (dd < sBallDiameter2 && dd > 0f) {
               val d = sqrt(dd.toDouble()).toFloat()
-              val c = 0.5f * (sBallDiameter - d) / d
-              val effectX = dx * c
-              val effectY = dy * c
-              currBall.mPosX -= effectX
-              currBall.mPosY -= effectY
-              ball.mPosX += effectX
-              ball.mPosY += effectY
-              more = true
+              val penetration = sBallDiameter - d
+              if (penetration > MIN_PENETRATION_FOR_RESOLVE) {
+                val c = 0.5f * penetration / d
+                val effectX = dx * c
+                val effectY = dy * c
+                currBall.mPosX -= effectX
+                currBall.mPosY -= effectY
+                ball.mPosX += effectX
+                ball.mPosY += effectY
+
+                // Damp velocities on collision so balls slow down and settle
+                currBall.dampenVelocityOnCollision()
+                ball.dampenVelocityOnCollision()
+
+                more = true
+              }
             }
           }
         }
