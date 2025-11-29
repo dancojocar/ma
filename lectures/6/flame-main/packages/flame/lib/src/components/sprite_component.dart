@@ -123,6 +123,7 @@ class SpriteComponent extends PositionComponent
     sprite?.render(
       canvas,
       size: size,
+      anchor: anchor,
       overridePaint: paint,
     );
   }
