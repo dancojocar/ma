@@ -1,2 +1,0 @@
-rootProject.name='Memory Leak Example'
-include ':app'

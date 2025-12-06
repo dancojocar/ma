@@ -1,0 +1,84 @@
+[versions]
+agp = "8.13.1"
+kotlin = "2.0.21"
+coreKtx = "1.15.0"
+appcompat = "1.7.0"
+material = "1.12.0"
+constraintlayout = "2.2.0"
+junit = "4.13.2"
+androidxTestExtJunit = "1.2.1"
+espressoCore = "3.6.1"
+picasso = "2.71828"
+compileSdk = "35"
+minSdk = "33"
+targetSdk = "35"
+lifecycleRuntimeKtx = "2.8.7"
+activityCompose = "1.9.3"
+composeBom = "2024.11.00"
+kotlinCompilerExtension = "1.4.3"
+desugarJdkLibs = "2.0.4"
+kotlinxCoroutines = "1.7.3"
+lifecycleViewModelCompose = "2.8.0"
+lifecycleRuntimeCompose = "2.8.0"
+navigationCompose = "2.7.7"
+constraintlayoutCompose = "1.0.1"
+composeMaterialWindow = "1.2.1"
+composeUiGoogleFonts = "1.6.6"
+accompanistFlowlayout = "0.34.0"
+coil = "2.6.0"
+androidxTestCore = "1.5.0"
+androidxTestRunner = "1.5.2"
+androidxTestRules = "1.5.0"
+glide = "4.13.0"
+
+[libraries]
+android-gradle-plugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+coreKtx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidxTestExtJunit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExtJunit" }
+espressoCore = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+picasso = { group = "com.squareup.picasso", name = "picasso", version.ref = "picasso" }
+lifecycleRuntimeKtx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+activityCompose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+composeBom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+composeUi = { group = "androidx.compose.ui", name = "ui" }
+composeUiGraphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+composeUiToolingPreview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+composeMaterial3 = { group = "androidx.compose.material3", name = "material3" }
+composeUiTestJunit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+composeUiTooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+composeUiTestManifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+composeMaterial = { group = "androidx.compose.material", name = "material" }
+composeMaterialIconsExtended = { group = "androidx.compose.material", name = "material-icons-extended" }
+desugarJdkLibs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugarJdkLibs" }
+kotlinxCoroutinesAndroid = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
+kotlinxCoroutinesTest = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+lifecycleViewModelCompose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleViewModelCompose" }
+lifecycleRuntimeCompose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
+navigationCompose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+constraintlayoutCompose = { group = "androidx.constraintlayout", name = "constraintlayout-compose", version.ref = "constraintlayoutCompose" }
+composeAnimation = { group = "androidx.compose.animation", name = "animation" }
+composeFoundation = { group = "androidx.compose.foundation", name = "foundation" }
+composeFoundationLayout = { group = "androidx.compose.foundation", name = "foundation-layout" }
+composeUiUtil = { group = "androidx.compose.ui", name = "ui-util" }
+composeRuntime = { group = "androidx.compose.runtime", name = "runtime" }
+composeMaterialWindow = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "composeMaterialWindow" }
+composeUiGoogleFonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "composeUiGoogleFonts" }
+accompanistFlowlayout = { group = "com.google.accompanist", name = "accompanist-flowlayout", version.ref = "accompanistFlowlayout" }
+coilCompose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+androidxTestCore = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+androidxTestRunner = { group = "androidx.test", name = "runner", version.ref = "androidxTestRunner" }
+androidxTestRules = { group = "androidx.test", name = "rules", version.ref = "androidxTestRules" }
+composeUiTest = { group = "androidx.compose.ui", name = "ui-test" }
+glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinParcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }

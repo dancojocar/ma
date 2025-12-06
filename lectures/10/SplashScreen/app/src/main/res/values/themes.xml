@@ -26,9 +26,9 @@
         screen.
     -->
     <style name="Theme.App" parent="Base.Theme.App">
-        <item name="colorPrimary">@color/lime_500</item>
-        <item name="colorPrimaryVariant">@color/lime_700</item>
-        <item name="colorOnPrimary">@android:color/black</item>
+        <item name="colorPrimary">@color/indigo_500</item>
+        <item name="colorPrimaryVariant">@color/indigo_700</item>
+        <item name="colorOnPrimary">@android:color/white</item>
         <item name="colorSecondary">@color/blue_gray_500</item>
         <item name="colorSecondaryVariant">@color/blue_gray_700</item>
         <item name="colorOnSecondary">@android:color/black</item>
@@ -59,7 +59,7 @@
         -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_hourglass_animated</item>
         <!-- The background color behind the icon. -->
-        <item name="windowSplashScreenIconBackgroundColor">@color/lime_700</item>
+        <item name="windowSplashScreenIconBackgroundColor">@color/indigo_700</item>
         <!-- The background color for the splash screen. -->
         <item name="windowSplashScreenBackground">@color/splash_screen_background</item>
         <!-- The duration, in milliseconds, of the icon animation of the splash screen. -->

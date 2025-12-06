@@ -33,37 +33,38 @@ import com.example.jetlagged.ui.theme.YellowVariant
 import org.intellij.lang.annotations.Language
 
 fun Modifier.yellowBackground(): Modifier = this.composed {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        // produce updating time in seconds variable to pass into shader
-        val time by produceState(0f) {
-            while (true) {
-                withInfiniteAnimationFrameMillis {
-                    value = it / 1000f
-                }
-            }
+  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    // produce updating time in seconds variable to pass into shader
+    val time by produceState(0f) {
+      while (true) {
+        withInfiniteAnimationFrameMillis {
+          value = it / 1000f
         }
-        Modifier.drawWithCache {
-            val shader = RuntimeShader(SHADER)
-            val shaderBrush = ShaderBrush(shader)
-            shader.setFloatUniform("iResolution", size.width, size.height)
-            shader.setFloatUniform("iTime", time)
-            // Pass the color to support color space automatically
-            shader.setColorUniform(
-                "iColor",
-                Color.valueOf(Yellow.red, Yellow.green, Yellow.blue, Yellow.alpha)
-            )
-            onDrawBehind {
-                drawRect(shaderBrush)
-            }
-        }
-    } else {
-        Modifier.drawWithCache {
-            val gradientBrush = Brush.verticalGradient(listOf(Yellow, YellowVariant, White))
-            onDrawBehind {
-                drawRect(gradientBrush)
-            }
-        }
+      }
     }
+    Modifier.drawWithCache {
+      val shader = RuntimeShader(SHADER)
+      val shaderBrush = ShaderBrush(shader)
+      shader.setFloatUniform("iResolution", size.width, size.height)
+      shader.setFloatUniform("iTime", time)
+      // Pass the color to support color space automatically
+      val color = Yellow
+      shader.setColorUniform(
+        "iColor",
+        Color.valueOf(color.red, color.green, color.blue, color.alpha)
+      )
+      onDrawBehind {
+        drawRect(shaderBrush)
+      }
+    }
+  } else {
+    Modifier.drawWithCache {
+      val gradientBrush = Brush.verticalGradient(listOf(Yellow, YellowVariant, White))
+      onDrawBehind {
+        drawRect(gradientBrush)
+      }
+    }
+  }
 }
 
 @Language("AGSL")

@@ -15,22 +15,11 @@
  */
 package com.example.android.memoryoverload
 
-import android.graphics.Color
 import android.os.Bundle
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import com.example.android.memoryoverload.databinding.ActivityMainBinding
-import java.util.*
-import com.google.android.flexbox.FlexDirection
-
-import android.R
-import com.google.android.flexbox.FlexWrap
-
-import com.google.android.flexbox.FlexboxLayout
-
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 
 /**
  * Demo app to fill up available memory.
@@ -38,48 +27,14 @@ import com.google.android.flexbox.FlexboxLayout
  * When the memory available to the app is used up, the app will crash.
  * Used for demonstrating Android Profiler tools.
  */
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-    setSupportActionBar(binding.toolbar)
-  }
-
-  /**
-   * Adds a new row of text views when the floating action button is pressed.
-   */
-  fun addRowOfTextViews(view: View?) {
-    val root = binding.contentMain.rootLinearLayout
-    val flexboxLayout = FlexboxLayout(view?.context)
-    flexboxLayout.flexDirection = FlexDirection.ROW
-    flexboxLayout.flexWrap = FlexWrap.WRAP
-    val textViews = mutableListOf<TextView>()
-    for (i in 0 until NO_OF_TEXTVIEWS_ADDED) {
-      val tv = TextView(this)
-      textViews.add(tv)
-      tv.text = i.toString()
-      tv.setBackgroundColor(randomColor)
-      flexboxLayout.addView(tv)
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                MainScreen()
+            }
+        }
     }
-    root.addView(flexboxLayout)
-  }
-
-  /**
-   * Creates a random color for background color of the text view.
-   */
-  private val randomColor: Int
-    get() {
-      val r = Random()
-      val red = r.nextInt(255)
-      val green = r.nextInt(255)
-      val blue = r.nextInt(255)
-      return Color.rgb(red, green, blue)
-    }
-
-  companion object {
-    const val NO_OF_TEXTVIEWS_ADDED = 10000
-  }
 }

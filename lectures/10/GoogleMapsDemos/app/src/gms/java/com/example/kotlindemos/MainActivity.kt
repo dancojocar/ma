@@ -16,63 +16,30 @@
 
 package com.example.kotlindemos
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.view.ViewGroup
-import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 
 /**
  * The main activity of the API library demo gallery.
  * The main layout lists the demonstrated features, with buttons to launch them.
  */
-class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
-
-    override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        val demo: DemoDetails = parent?.adapter?.getItem(position) as DemoDetails
-        startActivity(Intent(this, demo.activityClass))
-    }
+class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        val listAdapter: ListAdapter = CustomArrayAdapter(this, DemoDetailsList.DEMOS)
-
-        // Find the view that will show empty message if there is no demo in DemoDetailsList.DEMOS
-        val emptyMessage = findViewById<View>(R.id.empty)
-        with(findViewById<ListView>(R.id.list)) {
-            adapter = listAdapter
-            onItemClickListener = this@MainActivity
-            emptyView = emptyMessage
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                MainScreen()
+            }
         }
 
         if (BuildConfig.MAPS_API_KEY.isEmpty()) {
             Toast.makeText(this, "Add your own API key in local.properties as MAPS_API_KEY=YOUR_API_KEY", Toast.LENGTH_LONG).show()
-        }
-    }
-
-    /**
-     * A custom array adapter that shows a {@link FeatureView} containing details about the demo.
-     *
-     * @property context current activity
-     * @property demos An array containing the details of the demos to be displayed.
-     */
-    @SuppressLint("ResourceType")
-    class CustomArrayAdapter(context: Context, demos: List<DemoDetails>) :
-            ArrayAdapter<DemoDetails>(context, R.layout.feature, demos) {
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val demo: DemoDetails? = getItem(position)
-            return (convertView as? FeatureView ?: FeatureView(context)).apply {
-                if (demo != null) {
-                    setTitleId(demo.titleId)
-                    setDescriptionId(demo.descriptionId)
-                    contentDescription = resources.getString(demo.titleId)
-                }
-            }
         }
     }
 }

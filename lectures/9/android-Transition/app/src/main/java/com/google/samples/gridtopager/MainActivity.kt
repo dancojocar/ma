@@ -17,6 +17,9 @@ package com.google.samples.gridtopager
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.samples.gridtopager.databinding.ActivityMainBinding
 import com.google.samples.gridtopager.fragment.GridFragment
 
@@ -28,9 +31,17 @@ class MainActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
     binding = ActivityMainBinding.inflate(layoutInflater)
     val view = binding.root
     setContentView(view)
+
+    ViewCompat.setOnApplyWindowInsetsListener(binding.fragmentContainer) { v, insets ->
+        val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+        insets
+    }
+
     if (savedInstanceState != null) {
       currentPosition = savedInstanceState.getInt(KEY_CURRENT_POSITION, 0)
       // Return here to prevent adding additional GridFragments when changing orientation.

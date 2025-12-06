@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hello World</string>
+    <string name="greeting">Die Welt ist schön</string>
+    <string name="language">Deutsch</string>
+</resources>

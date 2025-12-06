@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright 2021 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,30 +14,31 @@
   ~ limitations under the License.
 -->
 <resources>
-    <string name="app_name">AnimationCodelab</string>
-    <string name="home">Home</string>
-    <string name="work">Work</string>
-    <string name="weather">Weather</string>
-    <string name="temperature">18 ℃</string>
-    <string name="tasks">Tasks</string>
-    <string name="add_tasks">ADD TASKS</string>
-    <string-array name="tasks">
-        <item>Buy milk</item>
-        <item>Choose curtain</item>
-        <item>Plant rosemary</item>
-        <item>Finish the essay</item>
-        <item>Receive new packages</item>
-        <item>Take a photo</item>
-    </string-array>
-    <string name="topics">Topics</string>
-    <string-array name="topics">
-        <item>2 new packages arrived</item>
-        <item>DIY project recommendation</item>
-        <item>Festival next month</item>
-        <item>New flower seeds available</item>
-    </string-array>
-    <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
-    <string name="edit">EDIT</string>
-    <string name="edit_message">Edit feature is not supported</string>
-    <string name="refresh">Refresh</string>
+  <string name="app_name">AnimationCodelab</string>
+  <string name="home">Home</string>
+  <string name="work">Work</string>
+  <string name="weather">Weather</string>
+  <string name="temperature">18 ℃</string>
+  <string name="tasks">Tasks</string>
+  <string name="add_tasks">ADD TASKS</string>
+  <string-array name="tasks">
+    <item>Buy milk</item>
+    <item>Choose curtain</item>
+    <item>Plant rosemary</item>
+    <item>Finish the essay</item>
+    <item>Receive new packages</item>
+    <item>Take a photo</item>
+    <item>Finish the CRUD project</item>
+  </string-array>
+  <string name="topics">Topics</string>
+  <string-array name="topics">
+    <item>2 new packages arrived</item>
+    <item>DIY project recommendation</item>
+    <item>Festival next month</item>
+    <item>New flower seeds available</item>
+  </string-array>
+  <string name="lorem_ipsum">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</string>
+  <string name="edit">EDIT</string>
+  <string name="edit_message">Edit feature is not supported</string>
+  <string name="refresh">Refresh</string>
 </resources>

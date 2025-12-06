@@ -1,18 +1,19 @@
 package ro.cojocar.viewbindingdemo
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import ro.cojocar.viewbindingdemo.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-
-    binding.mainTitle.text = getString(R.string.mainTitle)
-    binding.subTitle.text = getString(R.string.subTitle)
-  }
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                MainScreen()
+            }
+        }
+    }
 }

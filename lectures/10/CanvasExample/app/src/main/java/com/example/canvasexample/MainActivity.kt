@@ -16,19 +16,22 @@
 package com.example.canvasexample
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 
 /**
  * CanvasExample shows how to create a custom view and draw on its canvas.
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    // No XML file; just one custom view created programmatically.
-    val myCanvasView = MyCanvasView(this)
-    // Request the full available screen for layout.
-//    myCanvasView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-    window.setDecorFitsSystemWindows(false)
-    setContentView(myCanvasView)
+    enableEdgeToEdge()
+    setContent {
+      MaterialTheme {
+        DrawingScreen()
+      }
+    }
   }
 }

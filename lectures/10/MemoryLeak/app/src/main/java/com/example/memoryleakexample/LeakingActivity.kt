@@ -1,15 +1,23 @@
 package com.example.memoryleakexample
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 
-class LeakingActivity : AppCompatActivity() {
+class LeakingActivity : ComponentActivity() {
 
     private val listener = Listener()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_leaking)
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                LeakingScreen()
+            }
+        }
     }
 
     override fun onStart() {

@@ -1,26 +1,35 @@
+/*
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.example.android.splashscreen
 
-import android.app.UiModeManager
-import android.os.Build
 import android.os.Bundle
-import android.os.Process
-import android.view.View
-import androidx.activity.OnBackPressedCallback
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.material3.MaterialTheme
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
-import com.example.android.splashscreen.databinding.MainActivityBinding
 
 /**
  * Shows the app content that is commonly used in all of [DefaultActivity], [AnimatedActivity], and
  * [CustomActivity]. This also handles the custom dark mode on API level 31 and above.
  */
-abstract class MainActivity : AppCompatActivity() {
+open class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
@@ -34,56 +43,11 @@ abstract class MainActivity : AppCompatActivity() {
         splashScreen.setKeepOnScreenCondition { !viewModel.isReady }
 
         super.onCreate(savedInstanceState)
-
-        val binding = MainActivityBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
-
-        // Configure edge-to-edge display.
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { _, insets ->
-            binding.appBar.updatePadding(
-                top = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-            )
-            insets
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                MainScreen(viewModel)
+            }
         }
-
-        // Show the in-app dark theme settings. This is available on API level 31 and above.
-        if (Build.VERSION.SDK_INT >= 31) {
-            viewModel.nightMode.observe(this) { nightMode ->
-                val radioButtonId = radioButtonId(nightMode)
-                if (binding.theme.checkedRadioButtonId != radioButtonId) {
-                    binding.theme.check(radioButtonId)
-                }
-            }
-            binding.theme.setOnCheckedChangeListener { _, checkedId ->
-                viewModel.updateNightMode(nightMode(checkedId))
-            }
-        } else {
-            binding.content.visibility = View.INVISIBLE
-        }
-
-        onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                // For the sake of this demo app, we kill the app process when the back button is
-                // pressed so we see a cold start animation for each launch.
-                finishAndRemoveTask()
-                Process.killProcess(Process.myPid())
-            }
-        })
-    }
-
-    private fun radioButtonId(nightMode: Int) = when (nightMode) {
-        UiModeManager.MODE_NIGHT_AUTO -> R.id.theme_system
-        UiModeManager.MODE_NIGHT_NO -> R.id.theme_light
-        UiModeManager.MODE_NIGHT_YES -> R.id.theme_dark
-        else -> R.id.theme_system
-    }
-
-    private fun nightMode(radioButtonId: Int) = when (radioButtonId) {
-        R.id.theme_system -> UiModeManager.MODE_NIGHT_AUTO
-        R.id.theme_light -> UiModeManager.MODE_NIGHT_NO
-        R.id.theme_dark -> UiModeManager.MODE_NIGHT_YES
-        else -> throw RuntimeException("Unknown view ID: $radioButtonId")
     }
 }

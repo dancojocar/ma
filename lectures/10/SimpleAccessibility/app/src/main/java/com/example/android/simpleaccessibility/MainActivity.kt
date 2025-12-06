@@ -16,19 +16,22 @@
 package com.example.android.simpleaccessibility
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.example.android.simpleaccessibility.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
 
 /**
- * Main activity.  All the functionality of this sample is in
- * res/layout/activity_main.xml.
+ * Main activity.
  */
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-  }
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                MainScreen()
+            }
+        }
+    }
 }

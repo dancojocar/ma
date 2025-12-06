@@ -1,17 +1,17 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.kotlinCompose)
 }
 
 android {
     namespace = "com.example.android.animation"
-    compileSdk = 35
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.example.android.animation"
-        minSdk = 33
-        targetSdk = 35
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
 
@@ -22,7 +22,7 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -38,20 +38,21 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtension.get()
     }
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes.add("/META-INF/{AL2.0,LGPL2.1}")
         }
     }
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.compose.ui:ui:1.7.5")
-    implementation("androidx.compose.material:material:1.7.5")
-    implementation("androidx.compose.material:material-icons-extended:1.7.5")
-    implementation("androidx.compose.ui:ui-tooling:1.7.5")
-    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation(libs.coreKtx)
+    implementation(platform(libs.composeBom))
+    implementation(libs.composeUi)
+    implementation(libs.composeMaterial)
+    implementation(libs.composeMaterialIconsExtended)
+    implementation(libs.composeUiTooling)
+    implementation(libs.activityCompose)
 }

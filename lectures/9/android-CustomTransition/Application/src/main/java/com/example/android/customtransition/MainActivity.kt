@@ -18,7 +18,11 @@
 package com.example.android.customtransition
 
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 
 /**
  * A simple launcher activity containing a summary sample description.
@@ -26,11 +30,19 @@ import androidx.fragment.app.FragmentActivity
  * For devices with displays with a width of 720dp or greater, the sample log is always visible,
  * on other devices it's visibility is controlled by an item on the Action Bar.
  */
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
     setContentView(R.layout.activity_main)
+
+    val rootView = findViewById<View>(R.id.sample_main_layout)
+    ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+        val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+        insets
+    }
 
     if (savedInstanceState == null) {
       val transaction = supportFragmentManager.beginTransaction()

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Salutare lume</string>
+  <string name="language">Română</string>
+  <string name="greeting">Lumea este minunată</string>
+</resources>

@@ -1,24 +1,19 @@
-# JetLagged sample
+# Compose Animation Codelab
 
-JetLagged is a sample sleep tracking app built with [Jetpack Compose][compose].
+This folder contains the source code for the
+[Compose Animation](https://developer.android.com/codelabs/android-compose-animation)
+codelab.
 
-To try out this sample app, you need to use 
-[Android Studio](https://developer.android.com/studio).
-You can clone this repository or import the
-project from Android Studio following the steps
-[here](https://developer.android.com/jetpack/compose/setup#sample).
+In this codelab, you will learn how to use some Animation APIs in Jetpack Compose.
 
-Features:
-* Custom Layouts
-* Graphics: Custom Paths, Gradients, AGSL shaders
-* Animations
+## Screenshot
 
-<img src="screenshots/JetLagged_Full.png" alt="JetLagged" width="200"/>
+![Screenshot](screenshots/app.png)
 
 ## License
 
 ```
-Copyright 2022 The Android Open Source Project
+Copyright 2021 The Android Open Source Project
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,5 +27,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-[compose]: https://developer.android.com/jetpack/compose

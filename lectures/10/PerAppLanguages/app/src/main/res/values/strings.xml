@@ -21,4 +21,11 @@
     <string name="fr" translatable="false">Français</string>
     <string name="ja" translatable="false">日本語</string>
     <string name="language">English</string>
+    <string name="ro" translatable="false">Română</string>
+    <string name="ru" translatable="false">Русский</string>
+    <string name="uk" translatable="false">Українська</string>
+    <string name="es" translatable="false">Español</string>
+    <string name="it" translatable="false">Italiano</string>
+    <string name="de" translatable="false">Deutsch</string>
+    <string name="hu" translatable="false">Magyar</string>
 </resources>

@@ -13,49 +13,67 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.example.android.largeimages
 
 import android.os.Bundle
-import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 
-class MainActivity : AppCompatActivity() {
-  private var toggle = 0
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
-  }
-
-  /**
-   * Click handler that swaps between a large and smaller image.
-   * Used with performance tools to show memory and GPU performance.
-   *
-   *
-   * There are two "dinosaur" images in res/drawable.
-   * - dinosaur_medium is about 495K and the default
-   * - dinosaur_large is about 1M and you should use it if your device
-   * can handle it as you will get clearer profiling results.
-   *
-   * @param view
-   */
-  fun changeImage(view: View) {
-    toggle = if (toggle == 0) {
-      view.setBackgroundResource(R.drawable.dinosaur_large)
-      1
-    } else {
-      // Add code to let your app sleep for two screen refreshes
-      // before switching the background to the smaller image.
-      // This means that instead of refreshing the screen every 16 ms,
-      // your app now refreshes every 48 ms with new content.
-      // This will be reflected in the bars displayed by the
-      // Profile GPU Rendering tool.
-      try {
-        Thread.sleep(3200) // two refreshes
-      } catch (e: InterruptedException) {
-        loge("Interrupted while sleeping", e)
-      }
-      view.setBackgroundResource(R.drawable.ankylo)
-      0
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                MainScreen()
+            }
+        }
     }
-  }
+}
+
+@Composable
+fun MainScreen() {
+    var toggle by remember { mutableStateOf(0) }
+    // Default image as per original comment
+    var currentImageRes by remember { mutableStateOf(R.drawable.dinosaur_medium) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = currentImageRes),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable {
+                    if (toggle == 0) {
+                        currentImageRes = R.drawable.dinosaur_large
+                        toggle = 1
+                    } else {
+                        try {
+                            Thread.sleep(3200) // Simulate heavy work/jank
+                        } catch (e: InterruptedException) {
+                            Log.e("MainActivity", "Interrupted", e)
+                        }
+                        currentImageRes = R.drawable.ankylo
+                        toggle = 0
+                    }
+                }
+        )
+    }
 }

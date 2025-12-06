@@ -3,9 +3,11 @@
   android:layout_width="wrap_content"
   android:layout_height="wrap_content"
   android:layout_gravity="center"
+  android:layout_marginStart="24dp"
   android:button="@drawable/fill_in_heart"
-  android:gravity="center"
-  android:paddingStart="16dp"
+  android:gravity="center_vertical"
+  android:paddingStart="8dp"
+  android:paddingEnd="16dp"
   android:text="@string/love_it"
   android:textColor="@color/colorAccent"
-  android:textSize="64sp" /><!--android:background="@null"/>-->
+  android:textSize="64sp" />

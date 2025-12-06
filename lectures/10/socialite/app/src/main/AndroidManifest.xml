@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (C) 2023 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        minSdk for this project is 21, but the PlayServicesDevicePerformance from the
+        core-performance-play-services dependency requires minSdk 24. We fall back to using
+        DefaultDevicePerformance from the core-performance dependency (minSdk 19) if the SDK level
+        is <24.
+    -->
+    <uses-sdk tools:overrideLibrary="androidx.core.performance.play.services" />
+
+    <application
+        android:name=".SocialApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Social"
+        tools:targetApi="34">
+
+        <receiver
+            android:name=".widget.SociaLiteAppWidgetReceiver"
+            android:exported="true"
+            android:label="@string/favorite_contact_widget_name">
+
+
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/socialite_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenLayout|screenSize|smallestScreenSize"
+            android:exported="true"
+            android:supportsPictureInPicture="true"
+            android:theme="@style/Theme.Social.SplashScreen"
+            android:windowSoftInputMode="adjustResize">
+
+
+            <!-- This activity is the one that's shown in the launcher. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!--
+                This is used as the content URI of notifications. It navigates directly to the
+                specified chat screen.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="socialite.google.com"
+                    android:pathPattern="/chat/*"
+                    android:scheme="https" />
+            </intent-filter>
+            <!--
+                This opens the chat screen with the message field filled with the passed text.
+                This is necessary for making our dynamic shortcuts appear in Direct Share.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/sharing_shortcuts" />
+
+            <property
+                android:name="android.window.PROPERTY_SUPPORTS_MULTI_INSTANCE_SYSTEM_UI"
+                android:value="true" />
+        </activity>
+        <!--
+            This Activity is the expanded Bubble. For that, this Activity has to have several
+            attributes.
+            - allowEmbedded="true": The expanded Bubble is embedded in the System UI.
+            - resizeableActivity="true": The expanded Bubble is resized by the System UI.
+            - documentLaunchMode="always": We show multiple bubbles in this sample. There will be
+                                           multiple instances of this Activity.
+        -->
+        <activity
+            android:name=".BubbleActivity"
+            android:allowEmbedded="true"
+            android:documentLaunchMode="always"
+            android:exported="true"
+            android:resizeableActivity="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="socialite.google.com"
+                    android:pathPattern="/chat/*"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+
+        <activity
+            android:name=".widget.SociaLiteAppWidgetConfigActivity"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+
+        <provider
+            android:name="com.google.android.samples.socialite.AssetFileProvider"
+            android:authorities="com.google.android.samples.socialite"
+            android:exported="false"
+            android:grantUriPermissions="true"
+            tools:ignore="ExportedContentProvider">
+            <grant-uri-permission android:pathPattern="/photo/.*" />
+            <grant-uri-permission android:pathPattern="/video/.*" />
+            <grant-uri-permission android:pathPattern="/icon/.*" />
+        </provider>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.google.android.samples.socialite.file_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/shared_paths" />
+
+        </provider>
+
+        <receiver android:name="com.google.android.samples.socialite.ReplyReceiver" />
+
+        <!-- Trigger Google Play services to install the backported photo picker module.
+         Refer https://developer.android.com/training/data-storage/shared/photopicker#device-availability -->
+        <service
+            android:name="com.google.android.gms.metadata.ModuleDependencies"
+            android:enabled="false"
+            android:exported="false"
+            tools:ignore="MissingClass">
+            <intent-filter>
+                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+            </intent-filter>
+            <meta-data
+                android:name="photopicker_activity:0:required"
+                android:value="" />
+        </service>
+
+    </application>
+
+</manifest>

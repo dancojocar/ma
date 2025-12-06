@@ -15,11 +15,11 @@
   ~ limitations under the License.
 -->
 <resources>
-    <color name="lime_500">#CDDC39</color>
-    <color name="lime_700">#AFB42B</color>
+    <color name="indigo_500">#3F51B5</color>
+    <color name="indigo_700">#303F9F</color>
     <color name="blue_gray_500">#607D8B</color>
     <color name="blue_gray_700">#455A64</color>
     <color name="blue_gray_900">#263238</color>
 
-    <color name="splash_screen_background">@color/lime_500</color>
+    <color name="splash_screen_background">@color/indigo_500</color>
 </resources>

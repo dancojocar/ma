@@ -19,13 +19,16 @@ package ro.cojocar.dan.listviewanimations
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
-import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import ro.cojocar.dan.listviewanimations.databinding.ActivityListViewAnimationsBinding
 import java.util.*
 
@@ -33,78 +36,85 @@ import java.util.*
  * This example shows how animating ListView items can lead to problems as views are recycled,
  * and how to perform these types of animations correctly with new API added in Jellybean.
  */
-class ListViewAnimations : Activity() {
+class ListViewAnimations : AppCompatActivity() {
   private lateinit var binding: ActivityListViewAnimationsBinding
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
     binding = ActivityListViewAnimationsBinding.inflate(layoutInflater)
     val rootView = binding.root
     setContentView(rootView)
+
+    ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+      val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+      v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+      insets
+    }
 
     val cheeseList = ArrayList<String>()
     for (i in Cheeses.sCheeseStrings.indices) {
       cheeseList.add("$i ${Cheeses.sCheeseStrings[i]}")
     }
     val adapter = StableArrayAdapter(
-        this,
-        android.R.layout.simple_list_item_1, cheeseList
+      this,
+      android.R.layout.simple_list_item_1, cheeseList
     )
     binding.listview.adapter = adapter
 
     val duration = 5000L
     binding.listview.onItemClickListener =
-        AdapterView.OnItemClickListener { parent, view, position, _ ->
-          view.setBackgroundColor(Color.RED)
-          val item = parent.getItemAtPosition(position) as String
-          if (binding.vpaCB.isChecked) {
-            view.animate().setDuration(duration).alpha(0f).withEndAction {
-              removeElement(cheeseList, item, adapter)
-              view.setBackgroundColor(Color.WHITE)
-              view.alpha = 1f
-            }
-          } else {
-            // Here's where the problem starts - this animation will animate a View object.
-            // But that View may get recycled if it is animated out of the container,
-            // and the animation will continue to fade a view that now contains unrelated
-            // content.
-            val anim = ObjectAnimator.ofFloat(view, View.ALPHA, 0f)
-            anim.duration = duration
-            if (binding.setTransientStateCB.isChecked) {
-              // Here's the correct way to do this: if you tell a view that it has
-              // transientState, then ListView will avoid recycling it until the
-              // transientState flag is reset.
-              // A different approach is to use ViewPropertyAnimator, which sets the
-              // transientState flag internally.
-              view.setHasTransientState(true)
-            }
-            anim.addListener(object : AnimatorListenerAdapter() {
-              override fun onAnimationEnd(animation: Animator) {
-                removeElement(cheeseList, item, adapter)
-                view.alpha = 1f
-                view.setBackgroundColor(Color.WHITE)
-                if (binding.setTransientStateCB.isChecked) {
-                  view.setHasTransientState(false)
-                }
-              }
-            })
-            anim.start()
+      AdapterView.OnItemClickListener { parent, view, position, _ ->
+        view.setBackgroundColor(Color.RED)
+        val item = parent.getItemAtPosition(position) as String
+        if (binding.vpaCB.isChecked) {
+          view.animate().setDuration(duration).alpha(0f).withEndAction {
+            removeElement(cheeseList, item, adapter)
+            view.setBackgroundColor(Color.WHITE)
+            view.alpha = 1f
           }
+        } else {
+          // Here's where the problem starts - this animation will animate a View object.
+          // But that View may get recycled if it is animated out of the container,
+          // and the animation will continue to fade a view that now contains unrelated
+          // content.
+          val anim = ObjectAnimator.ofFloat(view, View.ALPHA, 0f)
+          anim.duration = duration
+          if (binding.setTransientStateCB.isChecked) {
+            // Here's the correct way to do this: if you tell a view that it has
+            // transientState, then ListView will avoid recycling it until the
+            // transientState flag is reset.
+            // A different approach is to use ViewPropertyAnimator, which sets the
+            // transientState flag internally.
+            view.setHasTransientState(true)
+          }
+          anim.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+              removeElement(cheeseList, item, adapter)
+              view.alpha = 1f
+              view.setBackgroundColor(Color.WHITE)
+              if (binding.setTransientStateCB.isChecked) {
+                view.setHasTransientState(false)
+              }
+            }
+          })
+          anim.start()
         }
+      }
   }
 
   private fun removeElement(
-      cheeseList: ArrayList<String>,
-      item: String,
-      adapter: StableArrayAdapter
+    cheeseList: ArrayList<String>,
+    item: String,
+    adapter: StableArrayAdapter
   ) {
     cheeseList.remove(item)
     adapter.notifyDataSetChanged()
   }
 
   private inner class StableArrayAdapter(
-      context: Context, textViewResourceId: Int,
-      objects: List<String>
+    context: Context, textViewResourceId: Int,
+    objects: List<String>
   ) : ArrayAdapter<String>(context, textViewResourceId, objects) {
 
     var mIdMap = HashMap<String, Int>()

@@ -1,114 +1,139 @@
-/*
- * Copyright (C) 2017 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.example.android.appwidgetsample
 
-import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.widget.RemoteViews
+import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.glance.Button
+import androidx.glance.GlanceId
+import androidx.glance.GlanceModifier
+import androidx.glance.action.ActionParameters
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.cornerRadius
+import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.background
+import androidx.glance.currentState
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Column
+import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.height
+import androidx.glance.layout.padding
+import androidx.glance.state.PreferencesGlanceStateDefinition
+import androidx.glance.text.FontWeight
+import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import java.text.DateFormat
-import java.util.*
+import java.util.Date
+import androidx.core.content.edit
 
-/**
- * App widget provider class, to handle update broadcast intents and updates
- * for the app widget.
- */
-class NewAppWidget : AppWidgetProvider() {
-  /**
-   * Update a single app widget.  This is a helper method for the standard
-   * onUpdate() callback that handles one widget update at a time.
-   *
-   * @param context          The application context.
-   * @param appWidgetManager The app widget manager.
-   * @param appWidgetId      The current app widget id.
-   */
-  private fun updateAppWidget(
-    context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int, appWidgetIds: IntArray
-  ) { // Get the count from prefs.
-    val prefs = context.getSharedPreferences(SHARED_PREF_FILE, 0)
-    var count = prefs.getInt(COUNT_KEY, 0)
-    count++
+class NewAppWidget : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = NewAppWidgetContent
+}
 
-    // Get the current time.
-    val dateString = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())
+object NewAppWidgetContent : GlanceAppWidget() {
+    
+    override val stateDefinition = PreferencesGlanceStateDefinition
 
-    // Construct the RemoteViews object.
-    val views = RemoteViews(
-      context.packageName, R.layout.new_app_widget
-    )
-    views.setTextViewText(R.id.appwidget_id, appWidgetId.toString())
-    views.setTextViewText(
-      R.id.appwidget_update, context.resources.getString(
-        R.string.date_count_format, count, dateString
-      )
-    )
+    val countKey = intPreferencesKey("count")
+    val triggerKey = androidx.datastore.preferences.core.longPreferencesKey("trigger")
 
-    // Save count back to prefs.
-    val prefEditor = prefs.edit()
-    prefEditor.putInt(COUNT_KEY, count)
-    prefEditor.apply()
-
-    // Setup update button to send an update request as a pending intent.
-    val intentUpdate = Intent(context, NewAppWidget::class.java)
-
-    // The intent action must be an app widget update.
-    intentUpdate.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-
-    // Include the widget ID to be updated as an intent extra.
-//    val idArray = intArrayOf(appWidgetId)
-    intentUpdate.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
-
-    // Wrap it all in a pending intent to send a broadcast.
-    // Use the app widget ID as the request code (second argument) so that
-    // each intent is unique.
-    val pendingUpdate = PendingIntent.getBroadcast(
-      context,
-      appWidgetId,
-      intentUpdate,
-      PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-    )
-
-    // Assign the pending intent to the button onClick handler
-    views.setOnClickPendingIntent(R.id.button_update, pendingUpdate)
-
-    // Instruct the widget manager to update the widget.
-    appWidgetManager.updateAppWidget(appWidgetId, views)
-  }
-
-  /**
-   * Override for onUpdate() method, to handle all widget update requests.
-   *
-   * @param context          The application context.
-   * @param appWidgetManager The app widget manager.
-   * @param appWidgetIds     An array of the app widget IDs.
-   */
-  override fun onUpdate(
-    context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray
-  ) {
-    // There may be multiple widgets active, so update all of them.
-    for (appWidgetId in appWidgetIds) {
-      updateAppWidget(context, appWidgetManager, appWidgetId, appWidgetIds)
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
+        provideContent {
+            // We read the local state to ensure we depend on it, 
+            // effectively subscribing to updates.
+            val prefs = currentState<Preferences>()
+            val trigger = prefs[triggerKey]
+            
+            // Read the actual count from Global SharedPreferences
+            // We do this inside the Composable so it re-runs when prefs changes (trigger)
+            val globalPrefs = context.getSharedPreferences("com.example.android.appwidgetsample", 0)
+            val count = globalPrefs.getInt("count", 0)
+            val dateString = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date())
+            
+            MyContent(count, dateString)
+        }
     }
-  }
 
-  companion object {
-    // Name of shared preferences file & key
-    private const val SHARED_PREF_FILE = "com.example.android.appwidgetsample"
-    private const val COUNT_KEY = "count"
-  }
+    @Composable
+    private fun MyContent(count: Int, dateString: String) {
+        Column(
+            modifier = GlanceModifier
+                .fillMaxSize()
+                .background(ColorProvider(R.color.white))
+                .cornerRadius(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Widget Update",
+                style = TextStyle(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = ColorProvider(R.color.colorPrimary)
+                )
+            )
+            Spacer(modifier = GlanceModifier.height(8.dp))
+            Text(
+                text = "Count: $count",
+                style = TextStyle(
+                    fontSize = 16.sp,
+                    color = ColorProvider(R.color.black)
+                )
+            )
+            Text(
+                text = "Last: $dateString",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = ColorProvider(R.color.gray)
+                )
+            )
+            Spacer(modifier = GlanceModifier.height(16.dp))
+            Button(
+                text = "Update Now",
+                onClick = actionRunCallback<UpdateAction>()
+            )
+        }
+    }
+}
+
+class UpdateAction : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
+        // 1. Update Global Count
+        val globalPrefs = context.getSharedPreferences("com.example.android.appwidgetsample", 0)
+        val count = globalPrefs.getInt("count", 0) + 1
+        globalPrefs.edit(commit = true) { putInt("count", count) }
+
+        // 2. Force update on ALL widgets by changing their local state (Trigger)
+        val manager = androidx.glance.appwidget.GlanceAppWidgetManager(context)
+        val ids = manager.getGlanceIds(NewAppWidgetContent::class.java)
+        val now = System.currentTimeMillis()
+
+        ids.forEach { id ->
+            try {
+                updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { prefs ->
+                    prefs.toMutablePreferences().apply {
+                        this[NewAppWidgetContent.triggerKey] = now
+                    }
+                }
+                NewAppWidgetContent.update(context, id)
+            } catch (e: Exception) {
+                // Ignore errors during update to ensure loop continues
+            }
+        }
+    }
 }

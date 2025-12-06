@@ -16,8 +16,18 @@
 package com.example.android.appwidgetsample
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import com.example.android.appwidgetsample.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 
 /**
  * AppWidgetSample demonstrates app widgets, including:
@@ -29,11 +39,23 @@ import com.example.android.appwidgetsample.databinding.ActivityMainBinding
  * MainActivity is unused and includes a message to add the app widget to
  * the user's home screen.
  */
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
+    enableEdgeToEdge()
+    setContent {
+      MaterialTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+          Box(
+            modifier = Modifier
+              .fillMaxSize()
+              .padding(innerPadding),
+            contentAlignment = Alignment.Center
+          ) {
+            Text(text = stringResource(R.string.activity_text))
+          }
+        }
+      }
+    }
   }
 }

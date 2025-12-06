@@ -16,18 +16,19 @@
 
 package com.example.android.activityscenetransitionbasic
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.util.Pair
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.android.activityscenetransitionbasic.databinding.GridBinding
-import com.example.android.activityscenetransitionbasic.databinding.GridItemBinding
 import com.squareup.picasso.Picasso
 
 /**
@@ -35,16 +36,23 @@ import com.squareup.picasso.Picasso
  * user clicks on an item, [DetailActivity] is launched, using the Activity Scene Transitions
  * framework to animatedly do so.
  */
-class MainActivity : Activity(), AdapterView.OnItemClickListener {
+class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
   private lateinit var binding: GridBinding
 
   private var mAdapter: GridAdapter? = null
 
   public override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    WindowCompat.setDecorFitsSystemWindows(window, false)
     binding = GridBinding.inflate(layoutInflater)
     val view = binding.root
     setContentView(view)
+
+    ViewCompat.setOnApplyWindowInsetsListener(binding.grid) { v, insets ->
+        val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+        insets
+    }
 
     // Setup the GridView and set the adapter
     binding.grid.onItemClickListener = this

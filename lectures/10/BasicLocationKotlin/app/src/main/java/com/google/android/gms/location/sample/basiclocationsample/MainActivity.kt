@@ -16,194 +16,373 @@
 
 package com.google.android.gms.location.sample.basiclocationsample
 
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
-import android.annotation.SuppressLint
+import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.View
-import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.sample.basiclocationsample.databinding.MainActivityBinding
-import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
+import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 
 /**
  * Demonstrates use of the Location API to retrieve the last known location for a device.
  */
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: MainActivityBinding
-
-  private val TAG = "MainActivity"
-  private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
-
-  /**
-   * Provides the entry point to the Fused Location Provider API.
-   */
-  private lateinit var fusedLocationClient: FusedLocationProviderClient
-
-  private lateinit var latitudeText: TextView
-  private lateinit var longitudeText: TextView
+class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = MainActivityBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-
-    latitudeText = binding.latitudeText
-    longitudeText = binding.longitudeText
-
-    fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-  }
-
-  override fun onStart() {
-    super.onStart()
-
-    if (!checkPermissions()) {
-      requestPermissions()
-    } else {
-      getLastLocation()
+    enableEdgeToEdge()
+    setContent {
+      MaterialTheme {
+        MainScreen()
+      }
     }
   }
+}
 
-  /**
-   * Provides a simple way of getting a device's location and is well suited for
-   * applications that do not require a fine-grained location and that do not need location
-   * updates. Gets the best and most recent location currently available, which may be null
-   * in rare cases when a location is not available.
-   *
-   * Note: this method should be called after location permission has been granted.
-   */
-  @SuppressLint("MissingPermission")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen() {
+  val context = LocalContext.current
+  val scope = rememberCoroutineScope()
+  val snackbarHostState = remember { SnackbarHostState() }
+  var location by remember { mutableStateOf<Location?>(null) }
+  var isLoading by remember { mutableStateOf(false) }
+  var permissionDenied by remember { mutableStateOf(false) }
+  val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
   fun getLastLocation() {
-    fusedLocationClient.lastLocation
-      .addOnCompleteListener { taskLocation ->
-        Log.w(TAG, "getLastLocation ${taskLocation.result}")
-        if (taskLocation.isSuccessful && taskLocation.result != null) {
-
-          val location = taskLocation.result
-
-          latitudeText.text = resources
-            .getString(R.string.latitude_label, location?.latitude)
-          longitudeText.text = resources
-            .getString(R.string.longitude_label, location?.longitude)
-        } else {
-          Log.w(TAG, "getLastLocation:exception", taskLocation.exception)
-          showSnackbar(R.string.no_location_detected)
+    if (ActivityCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+      ) != PackageManager.PERMISSION_GRANTED
+    ) {
+      permissionDenied = true
+      return
+    }
+    permissionDenied = false
+    isLoading = true
+    fusedLocationClient.lastLocation.addOnCompleteListener { task ->
+      isLoading = false
+      if (task.isSuccessful && task.result != null) {
+        location = task.result
+      } else {
+        Log.w("MainActivity", "getLastLocation:exception", task.exception)
+        scope.launch {
+          snackbarHostState.showSnackbar(context.getString(R.string.no_location_detected))
         }
       }
-  }
-
-  /**
-   * Shows a [Snackbar].
-   *
-   * @param snackStrId The id for the string resource for the Snackbar text.
-   * @param actionStrId The text of the action item.
-   * @param listener The listener associated with the Snackbar action.
-   */
-  private fun showSnackbar(
-    snackStrId: Int,
-    actionStrId: Int = 0,
-    listener: View.OnClickListener? = null
-  ) {
-    val snackbar = Snackbar.make(
-      binding.root, getString(snackStrId),
-      LENGTH_INDEFINITE
-    )
-    if (actionStrId != 0 && listener != null) {
-      snackbar.setAction(getString(actionStrId), listener)
     }
-    snackbar.show()
   }
 
-  /**
-   * Return the current state of the permissions needed.
-   */
-  private fun checkPermissions() =
-    ActivityCompat.checkSelfPermission(this, ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
-
-  private fun startLocationPermissionRequest() {
-    ActivityCompat.requestPermissions(
-      this, arrayOf(ACCESS_COARSE_LOCATION),
-      REQUEST_PERMISSIONS_REQUEST_CODE
-    )
-  }
-
-  private fun requestPermissions() {
-    if (ActivityCompat.shouldShowRequestPermissionRationale(this, ACCESS_COARSE_LOCATION)) {
-      // Provide an additional rationale to the user. This would happen if the user denied the
-      // request previously, but didn't check the "Don't ask again" checkbox.
-      Log.i(TAG, "Displaying permission rationale to provide additional context.")
-      showSnackbar(R.string.permission_rationale, android.R.string.ok, View.OnClickListener {
-        // Request permission
-        startLocationPermissionRequest()
-      })
-
+  val requestPermissionLauncher = rememberLauncherForActivityResult(
+    ActivityResultContracts.RequestPermission()
+  ) { isGranted: Boolean ->
+    if (isGranted) {
+      permissionDenied = false
+      getLastLocation()
     } else {
-      // Request permission. It's possible this can be auto answered if device policy
-      // sets the permission in a given state or the user denied the permission
-      // previously and checked "Never ask again".
-      Log.i(TAG, "Requesting permission")
-      startLocationPermissionRequest()
-    }
-  }
-
-  /**
-   * Callback received when a permissions request has been completed.
-   */
-  override fun onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<String>,
-    grantResults: IntArray
-  ) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    Log.i(TAG, "onRequestPermissionResult")
-    if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
-      when {
-        // If user interaction was interrupted, the permission request is cancelled and you
-        // receive empty arrays.
-        grantResults.isEmpty() -> Log.i(TAG, "User interaction was cancelled.")
-
-        // Permission granted.
-        (grantResults[0] == PackageManager.PERMISSION_GRANTED) -> getLastLocation()
-
-        // Permission denied.
-
-        // Notify the user via a SnackBar that they have rejected a core permission for the
-        // app, which makes the Activity useless. In a real app, core permissions would
-        // typically be best requested during a welcome-screen flow.
-
-        // Additionally, it is important to remember that a permission might have been
-        // rejected without asking the user for permission (device policy or "Never ask
-        // again" prompts). Therefore, a user interface affordance is typically implemented
-        // when permissions are denied. Otherwise, your app could appear unresponsive to
-        // touches or interactions which have required permissions.
-        else -> {
-          showSnackbar(R.string.permission_denied_explanation, R.string.settings,
-            View.OnClickListener {
-              // Build intent that displays the App settings screen.
-              val intent = Intent().apply {
-                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-              }
-              startActivity(intent)
-            })
+      permissionDenied = true
+      scope.launch {
+        val result = snackbarHostState.showSnackbar(
+          message = context.getString(R.string.permission_denied_explanation),
+          actionLabel = context.getString(R.string.settings)
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+          val intent = Intent().apply {
+            action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            data = Uri.fromParts("package", context.packageName, null)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+          }
+          context.startActivity(intent)
         }
       }
     }
   }
 
-  fun update(view: View) {
-    getLastLocation()
+  LaunchedEffect(Unit) {
+    if (ActivityCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+      ) == PackageManager.PERMISSION_GRANTED
+    ) {
+      getLastLocation()
+    } else {
+      requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
   }
 
+  Scaffold(
+    topBar = {
+      TopAppBar(
+        title = { Text(stringResource(R.string.app_name)) },
+        colors = TopAppBarDefaults.topAppBarColors(
+          containerColor = MaterialTheme.colorScheme.primaryContainer,
+          titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+      )
+    },
+    snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+    floatingActionButton = {
+      FloatingActionButton(onClick = {
+        if (ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+          ) == PackageManager.PERMISSION_GRANTED
+        ) {
+          getLastLocation()
+        } else {
+          requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+      }) {
+        if (isLoading) {
+          CircularProgressIndicator(
+            modifier = Modifier.size(24.dp),
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+          )
+        } else {
+          Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.update))
+        }
+      }
+    }
+  ) { innerPadding ->
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(innerPadding)
+        .padding(16.dp)
+        .verticalScroll(rememberScrollState()),
+      verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+      // 1. Location Display Card
+      LocationCard(location = location, isLoading = isLoading, permissionDenied = permissionDenied)
+
+      // 2. Educational Info Card
+      EducationalInfoCard()
+      
+      if (permissionDenied) {
+          PermissionRationaleCard {
+              requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+          }
+      }
+    }
+  }
+}
+
+@Composable
+fun LocationCard(location: Location?, isLoading: Boolean, permissionDenied: Boolean) {
+  Card(
+    modifier = Modifier.fillMaxWidth(),
+    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+  ) {
+    Column(
+      modifier = Modifier.padding(16.dp),
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+          imageVector = Icons.Default.LocationOn,
+          contentDescription = null,
+          tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+          text = "Current Location",
+          style = MaterialTheme.typography.titleLarge,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+      }
+      Spacer(modifier = Modifier.height(16.dp))
+
+      if (isLoading) {
+        CircularProgressIndicator()
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Fetching location...")
+      } else if (permissionDenied) {
+          Text(
+              text = "Permission Denied",
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.error
+          )
+      } else if (location != null) {
+        LocationDataRow(label = stringResource(R.string.latitude_label), value = location.latitude.toString())
+        LocationDataRow(label = stringResource(R.string.longitude_label), value = location.longitude.toString())
+        val time = DateFormat.getTimeInstance().format(Date(location.time))
+        LocationDataRow(label = "Time", value = time)
+      } else {
+        Text(
+          text = stringResource(R.string.no_location_detected),
+          style = MaterialTheme.typography.bodyLarge
+        )
+      }
+    }
+  }
+}
+
+@Composable
+fun LocationDataRow(label: String, value: String) {
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(vertical = 4.dp),
+    horizontalArrangement = Arrangement.SpaceBetween
+  ) {
+    Text(
+      text = label,
+      style = MaterialTheme.typography.bodyMedium,
+      fontWeight = FontWeight.Bold
+    )
+    Text(
+      text = value,
+      style = MaterialTheme.typography.bodyMedium
+    )
+  }
+}
+
+@Composable
+fun EducationalInfoCard() {
+  Card(
+    modifier = Modifier.fillMaxWidth(),
+    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+  ) {
+    Column(
+      modifier = Modifier.padding(16.dp)
+    ) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+          imageVector = Icons.Default.Info,
+          contentDescription = null,
+          tint = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+          text = "How it works",
+          style = MaterialTheme.typography.titleMedium,
+          color = MaterialTheme.colorScheme.onSecondaryContainer,
+          fontWeight = FontWeight.Bold
+        )
+      }
+      Spacer(modifier = Modifier.height(8.dp))
+      Text(
+        text = "1. Request Permission: The app asks for ACCESS_COARSE_LOCATION.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSecondaryContainer
+      )
+      Text(
+        text = "2. FusedLocationProvider: We use Google Play Services to get the best location.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSecondaryContainer
+      )
+      Text(
+        text = "3. getLastLocation(): We retrieve the most recent location available to the device.",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSecondaryContainer
+      )
+    }
+  }
+}
+
+@Composable
+fun PermissionRationaleCard(onRequestPermission: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Permission Needed",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Location permission is required to demonstrate this feature. Please grant access to continue.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onRequestPermission,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.onErrorContainer,
+                    contentColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text("Grant Permission")
+            }
+        }
+    }
 }
