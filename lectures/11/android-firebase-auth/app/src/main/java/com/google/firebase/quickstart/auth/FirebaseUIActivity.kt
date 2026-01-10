@@ -1,104 +1,157 @@
 package com.google.firebase.quickstart.auth
 
-import android.app.Activity
-import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import android.view.View
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultCallback
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
+import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.quickstart.auth.databinding.ActivityFirebaseUiBinding
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.quickstart.auth.ui.theme.FirebaseAuthTheme
 
-/**
- * Demonstrate authentication using the FirebaseUI-Android library. This activity demonstrates
- * using FirebaseUI for basic email/password sign in.
- *
- * For more information, visit https://github.com/firebase/firebaseui-android
- */
-class FirebaseUIActivity : AppCompatActivity(), View.OnClickListener {
-  private lateinit var binding: ActivityFirebaseUiBinding
+class FirebaseUIActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
+    private lateinit var auth: FirebaseAuth
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityFirebaseUiBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-
-    // Initialize Firebase Auth
-    auth = FirebaseAuth.getInstance()
-
-    binding.signInButton.setOnClickListener(this)
-    binding.signOutButton.setOnClickListener(this)
-  }
-
-  override fun onStart() {
-    super.onStart()
-    updateUI(auth.currentUser)
-  }
-
-  @Deprecated("Deprecated in Java")
-  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-
-    if (requestCode == RC_SIGN_IN) {
-      if (resultCode == Activity.RESULT_OK) {
-        // Sign in succeeded
-        updateUI(auth.currentUser)
-      } else {
-        // Sign in failed
-        Toast.makeText(this, "Sign In Failed", Toast.LENGTH_SHORT).show()
-        updateUI(null)
-      }
+    private val signInLauncher = registerForActivityResult(
+        FirebaseAuthUIActivityResultContract()
+    ) { res ->
+        this.onSignInResult(res)
     }
-  }
 
-  private fun startSignIn() {
-    // Build FirebaseUI sign in intent. For documentation on this operation and all
-    // possible customization see: https://github.com/firebase/firebaseui-android
-    val intent = AuthUI.getInstance().createSignInIntentBuilder()
-      .setIsSmartLockEnabled(true)
-      .setAvailableProviders(listOf(AuthUI.IdpConfig.EmailBuilder().build()))
-      .setLogo(R.mipmap.ic_launcher)
-      .build()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        auth = Firebase.auth
 
-    startActivityForResult(intent, RC_SIGN_IN)
-  }
-
-  private fun updateUI(user: FirebaseUser?) {
-    if (user != null) {
-      // Signed in
-      binding.status.text = getString(R.string.firebaseui_status_fmt, user.email)
-      binding.detail.text = getString(R.string.id_fmt, user.uid)
-
-      binding.signInButton.visibility = View.GONE
-      binding.signOutButton.visibility = View.VISIBLE
-    } else {
-      // Signed out
-      binding.status.setText(R.string.signed_out)
-      binding.detail.text = null
-
-      binding.signInButton.visibility = View.VISIBLE
-      binding.signOutButton.visibility = View.GONE
+        setContent {
+            FirebaseAuthTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    FirebaseUIScreen(auth) { startSignIn() }
+                }
+            }
+        }
     }
-  }
 
-  private fun signOut() {
-    AuthUI.getInstance().signOut(this)
-    updateUI(null)
-  }
-
-  override fun onClick(view: View) {
-    when (view.id) {
-      R.id.signInButton -> startSignIn()
-      R.id.signOutButton -> signOut()
+    private fun startSignIn() {
+        val providers = arrayListOf(
+            AuthUI.IdpConfig.EmailBuilder().build()
+        )
+        val signInIntent = AuthUI.getInstance()
+            .createSignInIntentBuilder()
+            .setAvailableProviders(providers)
+            .setLogo(R.mipmap.ic_launcher)
+            .setIsSmartLockEnabled(false) // Disable SmartLock for demo simplicity
+            .build()
+        signInLauncher.launch(signInIntent)
     }
-  }
 
-  companion object {
-    private const val RC_SIGN_IN = 9001
-  }
+    private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
+        val response = result.idpResponse
+        if (result.resultCode == RESULT_OK) {
+            // Successfully signed in
+            val user = FirebaseAuth.getInstance().currentUser
+            // State will update via auth listener if we observed it, 
+            // but here we might need to trigger UI refresh or just rely on onStart/onResume check if we had one.
+            // Compose will recompose if we use an observable auth state.
+            // For simplicity, we just let the UI recompose based on auth.currentUser access
+        } else {
+            // Sign in failed
+             val msg = "Sign in failed"
+             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+@Composable
+fun FirebaseUIScreen(auth: FirebaseAuth, onLaunch: () -> Unit) {
+    // Note: In a real app, use a proper flow/state for auth.currentUser
+    // Here we poll/check on composition or use a side effect if needed. 
+    // Ideally we'd wrap FirebaseAuth in a flow.
+    var user by remember { mutableStateOf(auth.currentUser) }
+    
+    // Simple way to refresh user on resume/recomposition
+    // A better way would be an AuthStateListener
+    androidx.compose.runtime.DisposableEffect(auth) {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            user = firebaseAuth.currentUser
+        }
+        auth.addAuthStateListener(listener)
+        onDispose {
+            auth.removeAuthStateListener(listener)
+        }
+    }
+
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Firebase UI Demo",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            if (user != null) {
+                Text(text = "Signed in as: ${user?.email}", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "UID: ${user?.uid}", style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        AuthUI.getInstance().signOut(auth.app.applicationContext)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Sign Out")
+                }
+            } else {
+                Text(text = "Use the pre-built UI library", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onLaunch,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Launch Firebase UI")
+                }
+            }
+        }
+    }
 }

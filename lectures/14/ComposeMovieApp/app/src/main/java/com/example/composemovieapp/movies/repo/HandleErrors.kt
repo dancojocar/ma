@@ -42,6 +42,7 @@ suspend fun <T> safeApiCall(dispatcher: CoroutineDispatcher, apiCall: suspend ()
 
           Result.Error(code, errorBody ?: throwable.message(), errorMap)
         }
+
         else -> {
           Result.Error(-1, throwable.message)
         }

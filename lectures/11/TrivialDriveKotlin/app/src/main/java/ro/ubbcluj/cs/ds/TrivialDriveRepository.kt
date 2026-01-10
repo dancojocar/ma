@@ -76,16 +76,24 @@ class TrivialDriveRepository(
      * Uses one unit of gas if we don't have a subscription.
      */
     suspend fun drive() {
-        when (val gasTankLevel = gasTankLevel().first()) {
-            GAS_TANK_INFINITE -> sendMessage(R.string.message_infinite_drive)
-            GAS_TANK_MIN -> sendMessage(R.string.message_out_of_gas)
-            else -> {
-                val newGasLevel = gasTankLevel - gameStateModel.decrementGas(GAS_TANK_MIN)
-                Log.d(TAG, "Old Gas Level: $gasTankLevel New Gas Level: $newGasLevel")
-                if (newGasLevel == GAS_TANK_MIN) {
-                    sendMessage(R.string.message_out_of_gas)
-                } else {
-                    sendMessage(R.string.message_you_drove)
+        val gasLevel = gasTankLevel().first()
+        val isPremiumOrInfinite = gasLevel == GAS_TANK_INFINITE
+        
+        if (isPremiumOrInfinite) {
+            gameStateModel.incrementOdometer(20) // Better MPG for premium
+            sendMessage(R.string.message_infinite_drive)
+        } else {
+            when (gasLevel) {
+                GAS_TANK_MIN -> sendMessage(R.string.message_out_of_gas)
+                else -> {
+                    gameStateModel.incrementOdometer(10) // Standard MPG
+                    val newGasLevel = gasLevel - gameStateModel.decrementGas(GAS_TANK_MIN)
+                    Log.d(TAG, "Old Gas Level: $gasLevel New Gas Level: $newGasLevel")
+                    if (newGasLevel == GAS_TANK_MIN) {
+                        sendMessage(R.string.message_out_of_gas)
+                    } else {
+                        sendMessage(R.string.message_you_drove)
+                    }
                 }
             }
         }
@@ -153,16 +161,23 @@ class TrivialDriveRepository(
         val gasTankLevelFlow = gameStateModel.gasTankLevel()
         val monthlySubPurchasedFlow = isPurchased(SKU_INFINITE_GAS_MONTHLY)
         val yearlySubPurchasedFlow = isPurchased(SKU_INFINITE_GAS_YEARLY)
+        val premiumPurchasedFlow = isPurchased(SKU_PREMIUM)
+
         return combine(
             gasTankLevelFlow,
             monthlySubPurchasedFlow,
-            yearlySubPurchasedFlow
-        ) { gasTankLevel, monthlySubPurchased, yearlySubPurchased ->
+            yearlySubPurchasedFlow,
+            premiumPurchasedFlow
+        ) { gasTankLevel, monthlySubPurchased, yearlySubPurchased, premiumPurchased ->
             when {
-                monthlySubPurchased || yearlySubPurchased -> GAS_TANK_INFINITE
+                monthlySubPurchased || yearlySubPurchased || premiumPurchased -> GAS_TANK_INFINITE
                 else -> gasTankLevel
             }
         }
+    }
+
+    fun getOdometer(): Flow<Int> {
+        return gameStateModel.getOdometer()
     }
 
     suspend fun refreshPurchases() {

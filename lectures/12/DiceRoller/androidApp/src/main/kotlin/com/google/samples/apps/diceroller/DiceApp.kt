@@ -104,8 +104,8 @@ private fun GameArea(
             }
 
             @OptIn(ExperimentalAnimationApi::class)
-            AnimatedContent(text) {
-                Text(text = text, textAlign = TextAlign.Center)
+            AnimatedContent(text) { targetText ->
+                Text(text = targetText, textAlign = TextAlign.Center)
             }
         }
         Text(

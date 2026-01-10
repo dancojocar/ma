@@ -30,33 +30,81 @@ import kotlinx.coroutines.launch
    This is used for any business logic, as well as to echo LiveData from the BillingRepository.
 */
 class GameViewModel(private val tdr: TrivialDriveRepository) : ViewModel() {
-    fun drive() {
-        viewModelScope.launch {
-            tdr.drive()
-        }
+  private val _isDriving = androidx.lifecycle.MutableLiveData(false)
+  val isDriving: LiveData<Boolean> = _isDriving
+
+  fun startDriving() {
+    _isDriving.value = true
+  }
+
+  fun finishDriving() {
+    viewModelScope.launch {
+      tdr.drive()
+      _isDriving.value = false
     }
+  }
 
-    /*
-        We can drive if we have at least one unit of gas.
-     */
-    fun canDrive(): LiveData<Boolean> = gasUnitsRemaining.map { gasUnits: Int -> gasUnits > 0 }
+  private val _isManualDriving = androidx.lifecycle.MutableLiveData(false)
+  val isManualDriving: LiveData<Boolean> = _isManualDriving
 
-    val isPremium: LiveData<Boolean>
-        get() = tdr.isPurchased(TrivialDriveRepository.SKU_PREMIUM).asLiveData()
-    val gasUnitsRemaining: LiveData<Int>
-        get() = tdr.gasTankLevel().shareIn(viewModelScope, SharingStarted.Lazily).asLiveData()
+  // Timer state (seconds remaining)
+  private val _manualTimeRemaining = androidx.lifecycle.MutableLiveData(0)
+  val manualTimeRemaining: LiveData<Int> = _manualTimeRemaining
 
-    companion object {
-        val TAG = GameViewModel::class.simpleName
+  private var timerJob: kotlinx.coroutines.Job? = null
+
+  fun startManualDriving() {
+    _isManualDriving.value = true
+    _manualTimeRemaining.value = 10
+
+    timerJob?.cancel()
+    timerJob = viewModelScope.launch {
+      for (i in 10 downTo 1) {
+        _manualTimeRemaining.value = i
+        kotlinx.coroutines.delay(1000)
+      }
+      finishManualDriving()
     }
+  }
 
-    class GameViewModelFactory(private val trivialDriveRepository: TrivialDriveRepository) :
-        ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
-                return GameViewModel(trivialDriveRepository) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
-        }
+  fun finishManualDriving() {
+    if (_isManualDriving.value == true) {
+      timerJob?.cancel()
+      viewModelScope.launch {
+        tdr.drive() // Consume gas
+        _isManualDriving.value = false
+        _manualTimeRemaining.value = 0
+      }
     }
+  }
+
+  /*
+      We can drive if we have at least one unit of gas or if we are premium/infinite.
+      However, repo's gasTankLevel returns INFINITE (5) if premium/subscribed.
+      So check > 0 is actually sufficient if INFINITE > 0 (5 > 0).
+   */
+  fun canDrive(): LiveData<Boolean> = gasUnitsRemaining.map { gasUnits: Int -> gasUnits > 0 }
+
+  val isPremium: LiveData<Boolean>
+    get() = tdr.isPurchased(TrivialDriveRepository.SKU_PREMIUM).asLiveData()
+
+  val gasUnitsRemaining: LiveData<Int>
+    get() = tdr.gasTankLevel().shareIn(viewModelScope, SharingStarted.Lazily).asLiveData()
+
+  val odometer: LiveData<Int>
+    get() = tdr.getOdometer().asLiveData()
+
+  companion object {
+    val TAG = GameViewModel::class.simpleName
+  }
+
+  class GameViewModelFactory(private val trivialDriveRepository: TrivialDriveRepository) :
+    ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+      if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
+        return GameViewModel(trivialDriveRepository) as T
+      }
+      throw IllegalArgumentException("Unknown ViewModel class")
+    }
+  }
 }

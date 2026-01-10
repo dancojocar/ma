@@ -33,4 +33,10 @@ interface GameStateDao {
 
     @Query("UPDATE GameState SET `value`=`value`+1 WHERE `key`=:key AND `value` < :maxValue")
     fun increment(key: String, maxValue: Int): Int
+
+    @Query("INSERT OR IGNORE INTO GameState VALUES(:key, 0)")
+    fun initEntry(key: String)
+
+    @Query("UPDATE GameState SET value = value + :amount WHERE key = :key")
+    fun incrementBy(key: String, amount: Int)
 }

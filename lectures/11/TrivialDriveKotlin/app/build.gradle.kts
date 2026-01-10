@@ -1,17 +1,17 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "ro.ubbcluj.cs.ds"
-    compileSdk = 35
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "ro.ubbcluj.cs.ds"
-        minSdk = 33
-        targetSdk = 35
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = 20241213
         versionName = "2024.1"
 
@@ -22,24 +22,17 @@ android {
     }
 
     signingConfigs {
-        getByName("debug") {
-            keyAlias = "android_ks"
-            keyPassword = "ks123456"
-            storeFile = file("/Users/dan/keyStore/android-release.keystore")
-            storePassword = "ks123456"
-        }
         create("release") {
             keyAlias = "android_ks"
             keyPassword = "ks123456"
             storeFile = file("/Users/dan/keyStore/android-release.keystore")
             storePassword = "ks123456"
         }
-
     }
 
     buildTypes {
         getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release") // Use release key for debug if needed, or create debug key
             isDebuggable = true
         }
         getByName("release") {
@@ -57,13 +50,12 @@ android {
         jvmTarget = "17"
     }
     buildFeatures {
-        viewBinding = true
-        dataBinding = true
-//        compose = true
+        compose = true
+        viewBinding = true // Keep for now if needed during migration
     }
-//    composeOptions {
-//        kotlinCompilerExtensionVersion = "1.4.3"
-//    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14" // Matching Kotlin 1.9.24
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -72,23 +64,41 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    
+    // Billing
+    implementation("com.android.billingclient:billing-ktx:7.1.1") // Keep explicit version or add to catalog if preferred. I'll add to catalog later if needed.
 
-    implementation("com.android.billingclient:billing-ktx:7.1.1")
-
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.21")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
-    implementation("com.google.android.material:material:1.12.0")
+    // Room
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
-    implementation("androidx.databinding:databinding-runtime:8.7.3")
     ksp("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
-    implementation("android.arch.navigation:navigation-fragment-ktx:1.0.0")
-    implementation("android.arch.navigation:navigation-ui-ktx:1.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.7")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.21")
+
+    // Navigation
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }

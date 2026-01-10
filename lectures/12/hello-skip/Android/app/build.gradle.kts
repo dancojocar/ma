@@ -2,17 +2,17 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    kotlin("android") version "1.9.0"
-    id("com.android.application") version "8.1.0"
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.android.application)
 }
 
 val keystorePropertiesFile = file("keystore.properties")
 
 android {
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 29
-        targetSdk = 34
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["PRODUCT_NAME"] = prop("PRODUCT_NAME")
         manifestPlaceholders["PRODUCT_BUNDLE_IDENTIFIER"] = prop("PRODUCT_BUNDLE_IDENTIFIER")

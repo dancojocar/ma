@@ -80,6 +80,10 @@ class MakePurchaseViewModel(private val tdr: TrivialDriveRepository) : ViewModel
         }
     }
 
+    fun consumePremium() {
+        tdr.debugConsumePremium()
+    }
+
     class MakePurchaseViewModelFactory(private val trivialDriveRepository: TrivialDriveRepository) :
         ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

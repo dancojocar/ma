@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.composemovieapp.movies.domain.Movie
 import com.example.composemovieapp.movies.repo.Result
-import com.example.composemovieapp.movies.usecase.GetMoviesUseCase
 import com.example.composemovieapp.movies.usecase.AddMovieUseCase
+import com.example.composemovieapp.movies.usecase.GetMoviesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -116,6 +116,15 @@ class MoviesViewModel @Inject constructor(
           )
         )
       }
+    }
+  }
+  fun clearError() {
+    _uiState.update {
+      it.copy(
+        error = false,
+        errorMessage = "",
+        fieldErrors = emptyMap()
+      )
     }
   }
 }

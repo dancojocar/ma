@@ -1,153 +1,186 @@
 package com.google.firebase.quickstart.auth
 
 import android.os.Bundle
-import android.text.TextUtils
-import android.view.View
-import android.widget.Toast
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.quickstart.auth.databinding.ActivityAnonymousAuthBinding
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.quickstart.auth.ui.theme.FirebaseAuthTheme
 
-/**
- * Activity to demonstrate anonymous login and account linking (with an email/password account).
- */
-class AnonymousAuthActivity : BaseActivity(), View.OnClickListener {
-  private lateinit var binding: ActivityAnonymousAuthBinding
+class AnonymousAuthActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
+    private lateinit var auth: FirebaseAuth
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityAnonymousAuthBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        auth = Firebase.auth
 
-    // Initialize Firebase Auth
-    auth = FirebaseAuth.getInstance()
-
-    // Click listeners
-    binding.buttonAnonymousSignIn.setOnClickListener(this)
-    binding.buttonAnonymousSignOut.setOnClickListener(this)
-    binding.buttonLinkAccount.setOnClickListener(this)
-  }
-
-  public override fun onStart() {
-    super.onStart()
-    // Check if user is signed in (non-null) and update UI accordingly.
-    val currentUser = auth.currentUser
-    updateUI(currentUser)
-  }
-
-  private fun signInAnonymously() {
-    showProgressDialog()
-    auth.signInAnonymously()
-      .addOnCompleteListener(this) { task ->
-        if (task.isSuccessful) {
-          // Sign in success, update UI with the signed-in user's information
-          logd("signInAnonymously:success")
-          val user = auth.currentUser
-          updateUI(user)
-        } else {
-          // If sign in fails, display a message to the user.
-          logw("signInAnonymously:failure", task.exception)
-          Toast.makeText(
-            baseContext, "Authentication failed.",
-            Toast.LENGTH_SHORT
-          ).show()
-          updateUI(null)
+        setContent {
+            FirebaseAuthTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    AnonymousAuthScreen(auth)
+                }
+            }
         }
-
-        hideProgressDialog()
-      }
-  }
-
-  private fun signOut() {
-    auth.signOut()
-    updateUI(null)
-  }
-
-  private fun linkAccount() {
-    // Make sure form is valid
-    if (!validateLinkForm()) {
-      return
     }
+}
 
-    // Get email and password from the form
-    val email = binding.fieldEmail.text.toString()
-    val password = binding.fieldPassword.text.toString()
+@Composable
+fun AnonymousAuthScreen(auth: FirebaseAuth) {
+    var user by remember { mutableStateOf(auth.currentUser) }
+    var message by remember { mutableStateOf("") }
+    
+    // For linking
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var isLinking by remember { mutableStateOf(false) }
 
-    // Create EmailAuthCredential with email and password
-    val credential = EmailAuthProvider.getCredential(email, password)
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Anonymous Auth",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(32.dp))
 
-    // Link the anonymous user to the email credential
-    showProgressDialog()
+            if (user != null) {
+                Text(text = "Signed in as: Anonymouse", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "UID: ${user?.uid}", style = MaterialTheme.typography.bodySmall)
+                if (user?.isAnonymous == false) {
+                     Text(text = "Account is linked! (Permanent)", color = MaterialTheme.colorScheme.primary)
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
-    auth.currentUser?.linkWithCredential(credential)
-      ?.addOnCompleteListener(this) { task ->
-        if (task.isSuccessful) {
-          logd("linkWithCredential:success")
-          val user = task.result?.user
-          updateUI(user)
-        } else {
-          logw("linkWithCredential:failure", task.exception)
-          Toast.makeText(
-            baseContext, "Authentication failed.",
-            Toast.LENGTH_SHORT
-          ).show()
-          updateUI(null)
+                Button(
+                    onClick = {
+                        auth.signOut()
+                        user = null
+                        message = ""
+                        isLinking = false
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Sign Out")
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (user?.isAnonymous == true) {
+                    if (!isLinking) {
+                        Button(
+                            onClick = { isLinking = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Link to Email/Password")
+                        }
+                    } else {
+                        Text("Link Account", style = MaterialTheme.typography.titleMedium)
+                        OutlinedTextField(
+                            value = email,
+                            onValueChange = { email = it },
+                            label = { Text("Email") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text("Password") },
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                                        val credential = EmailAuthProvider.getCredential(email, password)
+                                        user?.linkWithCredential(credential)
+                                            ?.addOnCompleteListener { task ->
+                                                if (task.isSuccessful) {
+                                                    message = "Account linked successfully!"
+                                                    user = auth.currentUser // Refresh state
+                                                    isLinking = false
+                                                } else {
+                                                    message = "Link failed: ${task.exception?.message}"
+                                                }
+                                            }
+                                    }
+                                }
+                            ) {
+                                Text("Link")
+                            }
+                            Button(onClick = { isLinking = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    }
+                }
+            } else {
+                Text(text = "Sign in anonymously to access content.", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        auth.signInAnonymously()
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    user = auth.currentUser
+                                    message = "Signed in anonymously."
+                                } else {
+                                    message = "Sign in failed: ${task.exception?.message}"
+                                }
+                            }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Sign In Anonymously")
+                }
+            }
+            
+            if (message.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = message, color = MaterialTheme.colorScheme.primary)
+            }
         }
-
-        hideProgressDialog()
-      }
-  }
-
-  private fun validateLinkForm(): Boolean {
-    var valid = true
-
-    val email = binding.fieldEmail.text.toString()
-    if (TextUtils.isEmpty(email)) {
-      binding.fieldEmail.error = "Required."
-      valid = false
-    } else {
-      binding.fieldEmail.error = null
     }
-
-    val password = binding.fieldPassword.text.toString()
-    if (TextUtils.isEmpty(password)) {
-      binding.fieldPassword.error = "Required."
-      valid = false
-    } else {
-      binding.fieldPassword.error = null
-    }
-
-    return valid
-  }
-
-  private fun updateUI(user: FirebaseUser?) {
-    hideProgressDialog()
-    val isSignedIn = user != null
-
-    // Status text
-    if (isSignedIn) {
-      binding.anonymousStatusId.text = getString(R.string.id_fmt, user!!.uid)
-      binding.anonymousStatusEmail.text = getString(R.string.email_fmt, user.email)
-    } else {
-      binding.anonymousStatusId.setText(R.string.signed_out)
-      binding.anonymousStatusEmail.text = null
-    }
-
-    // Button visibility
-    binding.buttonAnonymousSignIn.isEnabled = !isSignedIn
-    binding.buttonAnonymousSignOut.isEnabled = isSignedIn
-    binding.buttonLinkAccount.isEnabled = isSignedIn
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.buttonAnonymousSignIn -> signInAnonymously()
-      R.id.buttonAnonymousSignOut -> signOut()
-      R.id.buttonLinkAccount -> linkAccount()
-    }
-  }
 }

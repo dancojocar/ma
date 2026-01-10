@@ -1,193 +1,186 @@
 package com.google.firebase.quickstart.auth
 
 import android.os.Bundle
-import android.text.TextUtils
-import android.view.View
+import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.quickstart.auth.databinding.ActivityEmailpasswordBinding
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.quickstart.auth.ui.theme.FirebaseAuthTheme
 
-class EmailPasswordActivity : BaseActivity(), View.OnClickListener {
-  private lateinit var binding: ActivityEmailpasswordBinding
+class EmailPasswordActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
+    private lateinit var auth: FirebaseAuth
 
-  public override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityEmailpasswordBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        auth = Firebase.auth
 
-    // Buttons
-    binding.emailSignInButton.setOnClickListener(this)
-    binding.emailCreateAccountButton.setOnClickListener(this)
-    binding.signOutButton.setOnClickListener(this)
-    binding.verifyEmailButton.setOnClickListener(this)
-
-    // Initialize Firebase Auth
-    auth = FirebaseAuth.getInstance()
-  }
-
-  public override fun onStart() {
-    super.onStart()
-    // Check if user is signed in (non-null) and update UI accordingly.
-    val currentUser = auth.currentUser
-    updateUI(currentUser)
-  }
-
-  private fun createAccount(email: String, password: String) {
-    logd("createAccount:$email")
-    if (!validateForm()) {
-      return
-    }
-
-    showProgressDialog()
-
-    auth.createUserWithEmailAndPassword(email, password)
-      .addOnCompleteListener(this) { task ->
-        if (task.isSuccessful) {
-          // Sign in success, update UI with the signed-in user's information
-          logd("createUserWithEmail:success")
-          val user = auth.currentUser
-          updateUI(user)
-        } else {
-          // If sign in fails, display a message to the user.
-          logw("createUserWithEmail:failure", task.exception)
-          Toast.makeText(
-            baseContext, "Authentication failed.",
-            Toast.LENGTH_SHORT
-          ).show()
-          updateUI(null)
+        setContent {
+            FirebaseAuthTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    EmailPasswordScreen(auth)
+                }
+            }
         }
-
-        hideProgressDialog()
-      }
-  }
-
-  private fun signIn(email: String, password: String) {
-    logd("signIn:$email")
-    if (!validateForm()) {
-      return
     }
+}
 
-    showProgressDialog()
+@Composable
+fun EmailPasswordScreen(auth: FirebaseAuth) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var user by remember { mutableStateOf(auth.currentUser) }
+    var message by remember { mutableStateOf("") }
 
-    auth.signInWithEmailAndPassword(email, password)
-      .addOnCompleteListener(this) { task ->
-        if (task.isSuccessful) {
-          // Sign in success, update UI with the signed-in user's information
-          logd("signInWithEmail:success")
-          val user = auth.currentUser
-          updateUI(user)
-        } else {
-          // If sign in fails, display a message to the user.
-          logw("signInWithEmail:failure", task.exception)
-          Toast.makeText(
-            baseContext, "Authentication failed.",
-            Toast.LENGTH_SHORT
-          ).show()
-          updateUI(null)
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Email & Password",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            if (user != null) {
+                Text(text = "Signed in as: ${user?.email}", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "Verified: ${user?.isEmailVerified}", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        user?.sendEmailVerification()?.addOnCompleteListener { task ->
+                            message = if (task.isSuccessful) "Verification email sent." else "Failed to send email."
+                        }
+                    },
+                    enabled = user?.isEmailVerified == false,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Verify Email")
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        auth.signOut()
+                        user = null
+                        email = ""
+                        password = ""
+                        message = ""
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Sign Out")
+                }
+            } else {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Password") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            if (email.isNotEmpty() && password.isNotEmpty()) {
+                                auth.signInWithEmailAndPassword(email, password)
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            user = auth.currentUser
+                                            message = "Signed in successfully."
+                                        } else {
+                                            message = "Sign in failed: ${task.exception?.message}"
+                                        }
+                                    }
+                            } else {
+                                message = "Please enter email and password."
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Sign In")
+                    }
+
+                    Button(
+                        onClick = {
+                            if (email.isNotEmpty() && password.isNotEmpty()) {
+                                auth.createUserWithEmailAndPassword(email, password)
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            user = auth.currentUser
+                                            message = "Account created."
+                                        } else {
+                                            message = "Creation failed: ${task.exception?.message}"
+                                        }
+                                    }
+                            } else {
+                                message = "Please enter email and password."
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Create")
+                    }
+                }
+            }
+            
+            if (message.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = message, color = MaterialTheme.colorScheme.primary)
+            }
         }
-
-        if (!task.isSuccessful) {
-          binding.status.setText(R.string.auth_failed)
-        }
-        hideProgressDialog()
-      }
-  }
-
-  private fun signOut() {
-    auth.signOut()
-    updateUI(null)
-  }
-
-  private fun sendEmailVerification() {
-    // Disable button
-    binding.verifyEmailButton.isEnabled = false
-
-    // Send verification email
-    val user = auth.currentUser
-    user?.sendEmailVerification()
-      ?.addOnCompleteListener(this) { task ->
-        // Re-enable button
-        binding.verifyEmailButton.isEnabled = true
-
-        if (task.isSuccessful) {
-          Toast.makeText(
-            baseContext,
-            "Verification email sent to ${user.email} ",
-            Toast.LENGTH_SHORT
-          ).show()
-        } else {
-          loge("sendEmailVerification", task.exception)
-          Toast.makeText(
-            baseContext,
-            "Failed to send verification email.",
-            Toast.LENGTH_SHORT
-          ).show()
-        }
-      }
-  }
-
-  private fun validateForm(): Boolean {
-    var valid = true
-
-    val email = binding.fieldEmail.text.toString()
-    if (TextUtils.isEmpty(email)) {
-      binding.fieldEmail.error = "Required."
-      valid = false
-    } else {
-      binding.fieldEmail.error = null
     }
-
-    val password = binding.fieldPassword.text.toString()
-    if (TextUtils.isEmpty(password)) {
-      binding.fieldPassword.error = "Required."
-      valid = false
-    } else {
-      binding.fieldPassword.error = null
-    }
-
-    return valid
-  }
-
-  private fun updateUI(user: FirebaseUser?) {
-    hideProgressDialog()
-    if (user != null) {
-      binding.status.text = getString(
-        R.string.emailpassword_status_fmt,
-        user.email, user.isEmailVerified
-      )
-      binding.detail.text = getString(R.string.firebase_status_fmt, user.uid)
-
-      binding.emailPasswordButtons.visibility = View.GONE
-      binding.emailPasswordFields.visibility = View.GONE
-      binding.signedInButtons.visibility = View.VISIBLE
-
-      binding.verifyEmailButton.isEnabled = !user.isEmailVerified
-    } else {
-      binding.status.setText(R.string.signed_out)
-      binding.detail.text = null
-
-      binding.emailPasswordButtons.visibility = View.VISIBLE
-      binding.emailPasswordFields.visibility = View.VISIBLE
-      binding.signedInButtons.visibility = View.GONE
-    }
-  }
-
-  override fun onClick(v: View) {
-    when (v.id) {
-      R.id.emailCreateAccountButton -> createAccount(
-        binding.fieldEmail.text.toString(),
-        binding.fieldPassword.text.toString()
-      )
-      R.id.emailSignInButton -> signIn(
-        binding.fieldEmail.text.toString(),
-        binding.fieldPassword.text.toString()
-      )
-      R.id.signOutButton -> signOut()
-      R.id.verifyEmailButton -> sendEmailVerification()
-    }
-  }
 }

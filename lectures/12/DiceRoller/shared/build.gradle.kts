@@ -16,15 +16,16 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.cocoapods)
+    alias(libs.plugins.kotlin.native.cocoapods)
     alias(libs.plugins.android.library)
     alias(libs.plugins.skie)
+    alias(libs.plugins.atomicfu)
 }
 
 version = "1.0"
 
 kotlin {
-    android()
+    androidTarget()
     iosX64()
     iosArm64()
     iosSimulatorArm64()
@@ -48,7 +49,11 @@ kotlin {
         }
     }
 
-    android {
+    skie {
+        isEnabled = false
+    }
+
+    androidTarget {
         compilations.all {
             kotlinOptions {
                 jvmTarget = "1.8"
@@ -63,8 +68,10 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(libs.androidx.datastore.preferences.core)
-                api(libs.androidx.datastore.core.okio)
+                api(libs.androidx.datastore.preferences)
+                api(libs.androidx.datastore.core)
+                api(libs.okio)
+                implementation(libs.atomicfu)
             }
         }
         val commonTest by getting {

@@ -1,92 +1,105 @@
 plugins {
-  id("com.android.application")
-  id("org.jetbrains.kotlin.android")
-  id("com.google.dagger.hilt.android")
-  id("com.google.devtools.ksp")
-  id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
-  namespace = "com.example.composemovieapp"
-  compileSdk = 35
+    namespace = "com.example.composemovieapp"
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
-  defaultConfig {
-    applicationId = "com.example.composemovieapp"
-    minSdk = 33
-    targetSdk = 35
-    versionCode = 1
-    versionName = "1.0"
+    defaultConfig {
+        applicationId = "com.example.composemovieapp"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        versionCode = 1
+        versionName = "1.0"
 
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    vectorDrawables {
-      useSupportLibrary = true
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary = true
+        }
     }
-  }
 
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
     }
-  }
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-  }
-  kotlinOptions {
-    jvmTarget = "11"
-  }
-  buildFeatures {
-    viewBinding = true
-    compose = true
-  }
-  composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.6"
-  }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    buildFeatures {
+        compose = true
+    }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
-  implementation("androidx.core:core-ktx:1.15.0")
-  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
-  implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
-  implementation("androidx.activity:activity-compose:1.10.0")
-  val platform = platform("androidx.compose:compose-bom:2023.08.00")
-  implementation(platform)
+    // AndroidX Core
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.navigation.compose)
 
-  implementation("androidx.compose.runtime:runtime")
-  implementation("androidx.compose.ui:ui")
-  implementation("androidx.compose.foundation:foundation")
-  implementation("androidx.compose.foundation:foundation-layout")
-  implementation("androidx.compose.material:material")
-  implementation("androidx.compose.runtime:runtime-livedata")
-  implementation("androidx.compose.ui:ui-tooling")
-  implementation("androidx.navigation:navigation-compose:2.8.5")
+    // Compose
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.runtime)
+    implementation(libs.compose.ui)
+    implementation(libs.compose.ui.graphics)
+    implementation(libs.compose.ui.tooling.preview)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.foundation.layout)
+    implementation(libs.compose.material)
+    implementation(libs.compose.material.icons.core)
+    implementation(libs.compose.runtime.livedata)
+    debugImplementation(libs.compose.ui.tooling)
+    debugImplementation(libs.compose.ui.test.manifest)
 
-  testImplementation("junit:junit:4.13.2")
-  androidTestImplementation("androidx.test.ext:junit:1.2.1")
-  androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-  androidTestImplementation(platform)
-  androidTestImplementation("androidx.compose.ui:ui-test-junit4")
-  debugImplementation("androidx.compose.ui:ui-tooling")
-  debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // Hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.dagger.compiler)
+    ksp(libs.hilt.compiler)
 
-  // Hilt
-  implementation("com.google.dagger:hilt-android:2.50")
-  implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-  ksp("com.google.dagger:dagger-compiler:2.50") // Dagger compiler
-  ksp("com.google.dagger:hilt-compiler:2.50")   // Hilt compiler
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.retrofit.converter.scalars)
+    implementation(libs.okhttp.logging.interceptor)
 
-  //Retrofit Deps
-  implementation("com.squareup.retrofit2:retrofit:2.9.0")
-  implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-  //Retrofit get String response EASY
-  implementation("com.squareup.retrofit2:converter-scalars:2.8.1")
+    // Image loading
+    implementation(libs.coil.compose)
 
-  //Image lib
-  implementation("io.coil-kt:coil-compose:2.7.0")
+    // Testing - Unit
+    testImplementation(libs.junit)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.truth)
 
-  // Logging interceptor
-  implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
-
-  implementation("org.json:json:20240303")
+    // Testing - Android
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
 }

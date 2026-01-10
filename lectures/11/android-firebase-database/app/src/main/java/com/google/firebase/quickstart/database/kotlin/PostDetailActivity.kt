@@ -1,249 +1,261 @@
 package com.google.firebase.quickstart.database.kotlin
 
-import android.content.Context
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.database.*
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ChildEventListener
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.quickstart.database.R
-import com.google.firebase.quickstart.database.databinding.ActivityPostDetailBinding
-import com.google.firebase.quickstart.database.databinding.ItemCommentBinding
 import com.google.firebase.quickstart.database.kotlin.models.Comment
 import com.google.firebase.quickstart.database.kotlin.models.Post
 import com.google.firebase.quickstart.database.kotlin.models.User
-import java.util.*
+import com.google.firebase.quickstart.database.ui.theme.FirebaseDatabaseTheme
 
-class PostDetailActivity : BaseActivity(), View.OnClickListener {
+class PostDetailActivity : ComponentActivity() {
 
-  private lateinit var postKey: String
-  private lateinit var postReference: DatabaseReference
-  private lateinit var commentsReference: DatabaseReference
+    private lateinit var postKey: String
+    private lateinit var postReference: DatabaseReference
+    private lateinit var commentsReference: DatabaseReference
 
-  private var postListener: ValueEventListener? = null
-  private var adapter: CommentAdapter? = null
-  private lateinit var binding: ActivityPostDetailBinding
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityPostDetailBinding.inflate(layoutInflater)
-    setContentView(binding.root)
-
-    // Get post key from intent
-    postKey = intent.getStringExtra(EXTRA_POST_KEY)
-      ?: throw IllegalArgumentException("Must pass EXTRA_POST_KEY")
-
-    // Initialize Database
-    postReference = FirebaseDatabase.getInstance().reference
-      .child("posts").child(postKey)
-    commentsReference = FirebaseDatabase.getInstance().reference
-      .child("post-comments").child(postKey)
-
-    // Initialize Views
-    binding.buttonPostComment.setOnClickListener(this)
-    binding.recyclerPostComments.layoutManager = LinearLayoutManager(this)
-  }
-
-  public override fun onStart() {
-    super.onStart()
-
-    // Add value event listener to the post
-    val postListener = object : ValueEventListener {
-      override fun onDataChange(dataSnapshot: DataSnapshot) {
-        // Get Post object and use the values to update the UI
-        val post = dataSnapshot.getValue(Post::class.java)
-        post?.let {
-          binding.postAuthorLayout.postAuthor.text = it.author
-          binding.postTextLayout.postTitle.text = it.title
-          binding.postTextLayout.postBody.text = it.body
-        }
-      }
-
-      override fun onCancelled(databaseError: DatabaseError) {
-        // Getting Post failed, log a message
-        logw("loadPost:onCancelled", databaseError.toException())
-        Toast.makeText(
-          baseContext, "Failed to load post.",
-          Toast.LENGTH_SHORT
-        ).show()
-      }
-    }
-    postReference.addValueEventListener(postListener)
-    // [END post_value_event_listener]
-
-    // Keep copy of post listener so we can remove it when app stops
-    this.postListener = postListener
-
-    // Listen for comments
-    adapter = CommentAdapter(this, commentsReference)
-    binding.recyclerPostComments.adapter = adapter
-  }
-
-  public override fun onStop() {
-    super.onStop()
-
-    // Remove post value event listener
-    postListener?.let {
-      postReference.removeEventListener(it)
-    }
-
-    // Clean up comments listener
-    adapter?.cleanupListener()
-  }
-
-  override fun onClick(v: View) {
-    val i = v.id
-    if (i == R.id.buttonPostComment) {
-      postComment()
-    }
-  }
-
-  private fun postComment() {
-    val uid = uid
-    FirebaseDatabase.getInstance().reference.child("users").child(uid)
-      .addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(dataSnapshot: DataSnapshot) {
-          // Get user information
-          val user = dataSnapshot.getValue(User::class.java) ?: return
-
-          val authorName = user.username
-
-          // Create new comment object
-          val commentText = binding.fieldCommentText.text.toString()
-          val comment = Comment(uid, authorName, commentText)
-
-          // Push the comment, it will appear in the list
-          commentsReference.push().setValue(comment)
-
-          // Clear the field
-          binding.fieldCommentText.text = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        postKey = intent.getStringExtra(EXTRA_POST_KEY) ?: run {
+            finish()
+            return
         }
 
-        override fun onCancelled(databaseError: DatabaseError) {
+        postReference = FirebaseDatabase.getInstance().reference.child("posts").child(postKey)
+        commentsReference = FirebaseDatabase.getInstance().reference.child("post-comments").child(postKey)
+
+        setContent {
+            FirebaseDatabaseTheme {
+                PostDetailScreen(
+                    postReference = postReference,
+                    commentsReference = commentsReference,
+                    onPostComment = { text -> postComment(text) },
+                    onBack = { finish() }
+                )
+            }
         }
-      })
-  }
-
-  private class CommentViewHolder(itemView: ItemCommentBinding) :
-    RecyclerView.ViewHolder(itemView.root) {
-    var binding: ItemCommentBinding = itemView
-    fun bind(comment: Comment) {
-      binding.commentAuthor.text = comment.author
-      binding.commentBody.text = comment.text
-    }
-  }
-
-  private class CommentAdapter(
-    private val context: Context,
-    private val databaseReference: DatabaseReference
-  ) : RecyclerView.Adapter<CommentViewHolder>() {
-
-    private val childEventListener: ChildEventListener?
-
-    private val commentIds = ArrayList<String>()
-    private val comments = ArrayList<Comment>()
-
-    init {
-
-      // Create child event listener
-      val childEventListener = object : ChildEventListener {
-        override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
-          logd("onChildAdded:" + dataSnapshot.key!!)
-
-          // A new comment has been added, add it to the displayed list
-          val comment = dataSnapshot.getValue(Comment::class.java)
-
-          // [START_EXCLUDE]
-          // Update RecyclerView
-          commentIds.add(dataSnapshot.key!!)
-          comments.add(comment!!)
-          notifyItemInserted(comments.size - 1)
-        }
-
-        override fun onChildChanged(dataSnapshot: DataSnapshot, previousChildName: String?) {
-          logd("onChildChanged: ${dataSnapshot.key}")
-
-          // A comment has changed, use the key to determine if we are displaying this
-          // comment and if so displayed the changed comment.
-          val newComment = dataSnapshot.getValue(Comment::class.java)
-          val commentKey = dataSnapshot.key
-
-          val commentIndex = commentIds.indexOf(commentKey)
-          if (commentIndex > -1 && newComment != null) {
-            // Replace with the new data
-            comments[commentIndex] = newComment
-
-            // Update the RecyclerView
-            notifyItemChanged(commentIndex)
-          } else {
-            logw("onChildChanged:unknown_child: $commentKey")
-          }
-        }
-
-        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
-          logd("onChildRemoved:" + dataSnapshot.key!!)
-
-          // A comment has changed, use the key to determine if we are displaying this
-          // comment and if so remove it.
-          val commentKey = dataSnapshot.key
-
-          val commentIndex = commentIds.indexOf(commentKey)
-          if (commentIndex > -1) {
-            // Remove data from the list
-            commentIds.removeAt(commentIndex)
-            comments.removeAt(commentIndex)
-
-            // Update the RecyclerView
-            notifyItemRemoved(commentIndex)
-          } else {
-            logw("onChildRemoved:unknown_child:" + commentKey!!)
-          }
-        }
-
-        override fun onChildMoved(dataSnapshot: DataSnapshot, previousChildName: String?) {
-          logd("onChildMoved:" + dataSnapshot.key!!)
-        }
-
-        override fun onCancelled(databaseError: DatabaseError) {
-          logw("postComments:onCancelled", databaseError.toException())
-          Toast.makeText(
-            context, "Failed to load comments.",
-            Toast.LENGTH_SHORT
-          ).show()
-        }
-      }
-      databaseReference.addChildEventListener(childEventListener)
-
-      // Store reference to listener so it can be removed on app stop
-      this.childEventListener = childEventListener
     }
 
-    private lateinit var itemCommentBinding: ItemCommentBinding
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CommentViewHolder {
-      val inflater = LayoutInflater.from(context)
-      itemCommentBinding = ItemCommentBinding.inflate(inflater, parent, false)
-
-      return CommentViewHolder(itemCommentBinding)
+    private fun postComment(commentText: String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        FirebaseDatabase.getInstance().reference.child("users").child(uid)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    val user = dataSnapshot.getValue(User::class.java) ?: return
+                    val authorName = user.username
+                    val comment = Comment(uid, authorName, commentText)
+                    commentsReference.push().setValue(comment)
+                }
+                override fun onCancelled(databaseError: DatabaseError) {}
+            })
     }
 
-    override fun onBindViewHolder(holder: CommentViewHolder, position: Int) {
-      holder.bind(comments[position])
+    companion object {
+        const val EXTRA_POST_KEY = "post_key"
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PostDetailScreen(
+    postReference: DatabaseReference,
+    commentsReference: DatabaseReference,
+    onPostComment: (String) -> Unit,
+    onBack: () -> Unit
+) {
+    var post by remember { mutableStateOf<Post?>(null) }
+    val comments = remember { mutableStateListOf<Comment>() }
+    var commentText by remember { mutableStateOf("") }
+    
+    // Load Post
+    DisposableEffect(postReference) {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                post = snapshot.getValue(Post::class.java)
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        }
+        postReference.addValueEventListener(listener)
+        onDispose { postReference.removeEventListener(listener) }
     }
 
-    override fun getItemCount(): Int = comments.size
-
-    fun cleanupListener() {
-      childEventListener?.let {
-        databaseReference.removeEventListener(it)
-      }
+    // Load Comments
+    DisposableEffect(commentsReference) {
+        val listener = object : ChildEventListener {
+            override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+                val comment = snapshot.getValue(Comment::class.java)
+                if (comment != null) comments.add(comment)
+            }
+            override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {} // Comments usually don't change
+            override fun onChildRemoved(snapshot: DataSnapshot) {} 
+            override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+            override fun onCancelled(error: DatabaseError) {}
+        }
+        commentsReference.addChildEventListener(listener)
+        onDispose { commentsReference.removeEventListener(listener) }
     }
-  }
 
-  companion object {
-    const val EXTRA_POST_KEY = "post_key"
-  }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(post?.title ?: "Post Detail") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp)
+            ) {
+                // Header (Post Content)
+                item {
+                    if (post != null) {
+                        PostHeader(post!!)
+                        Divider(modifier = Modifier.padding(vertical = 16.dp))
+                    }
+                }
+                
+                // Comments
+                items(comments) { comment ->
+                    CommentItem(comment)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+            
+            // Comment Input
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    label = { Text("Write a comment...") },
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        if (commentText.isNotBlank()) {
+                            onPostComment(commentText)
+                            commentText = ""
+                        }
+                    },
+                    enabled = commentText.isNotBlank()
+                ) {
+                    Text("Post")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PostHeader(post: Post) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.AccountCircle,
+                contentDescription = null,
+                tint = Color.Gray,
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = post.author ?: "",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = post.title ?: "",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = post.body ?: "",
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+fun CommentItem(comment: Comment) {
+    Row(verticalAlignment = Alignment.Top) {
+        Icon(
+            imageVector = Icons.Filled.AccountCircle,
+            contentDescription = null,
+            tint = Color.Gray,
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = comment.author ?: "",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = comment.text ?: "",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
 }

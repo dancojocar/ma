@@ -5,5 +5,5 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun MovieDetailsScreen(selectedMovie: String) {
-    Text("Details for $selectedMovie are not implemented yet!")
+  Text("Details for $selectedMovie are not implemented yet!")
 }

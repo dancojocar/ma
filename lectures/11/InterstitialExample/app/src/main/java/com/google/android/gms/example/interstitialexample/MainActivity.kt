@@ -2,55 +2,96 @@ package com.google.android.gms.example.interstitialexample
 
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
-import com.google.android.gms.ads.interstitial.InterstitialAd
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
-import com.google.android.gms.example.interstitialexample.databinding.ActivityMainBinding
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.example.interstitialexample.ui.theme.InterstitialExampleTheme
 
 const val AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+private const val MAIN_TAG = "InterstitialExample"
 
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
 
   private var mInterstitialAd: InterstitialAd? = null
-  private var timerFinished = false
-  private var countdownTimer: CountDownTimer? = null
-  private var lastRetryTimestamp = 0L // Track last retry time
+
+  // UI State
+  private var gameLevel by mutableStateOf(1)
+  private var clicks by mutableStateOf(0)
+  private val targetClicks = 5
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    setContentView(binding.root)
+    enableEdgeToEdge()
 
-    loadAd() // Load the initial ad
+    MobileAds.initialize(this) {}
+    loadAd()
 
-    binding.retryButton.setOnClickListener {
-      val currentTime = System.currentTimeMillis()
-      if (currentTime - lastRetryTimestamp < 10_000) {
-        val message = "Retry button is disabled. Please wait 10 seconds before trying again."
-        logd(message)
-        Toast.makeText(
-          baseContext,
-          message,
-          Toast.LENGTH_SHORT
-        ).show()
-
-        return@setOnClickListener
+    setContent {
+      InterstitialExampleTheme {
+        Surface(
+          modifier = Modifier.fillMaxSize(),
+          color = MaterialTheme.colorScheme.background
+        ) {
+          MainScreen(
+            gameLevel = gameLevel,
+            clicks = clicks,
+            targetClicks = targetClicks,
+            onButtonClick = { onMainButtonClick() }
+          )
+        }
       }
+    }
+  }
 
-      lastRetryTimestamp = currentTime
-      startTimer()
-      if (mInterstitialAd != null) {
-        mInterstitialAd?.show(this)
-      } else {
-        logd("The interstitial ad wasn't ready yet.")
-        loadAd() // Attempt to reload the ad if it wasn't ready
-      }
+  private fun onMainButtonClick() {
+    if (clicks >= targetClicks) {
+      // Level Completed - Clicked "Next Level"
+      showInterstitial()
+    } else {
+      // Game in progress - Increment clicks
+      clicks++
+    }
+  }
+
+  private fun startNextLevel() {
+    gameLevel++
+    clicks = 0
+    loadAd()
+  }
+
+  private fun showInterstitial() {
+    if (mInterstitialAd != null) {
+      mInterstitialAd?.show(this)
+    } else {
+      Log.d(MAIN_TAG, "The interstitial ad wasn't ready yet.")
+      startNextLevel()
     }
   }
 
@@ -63,64 +104,79 @@ class MainActivity : AppCompatActivity() {
       adRequest,
       object : InterstitialAdLoadCallback() {
         override fun onAdFailedToLoad(adError: LoadAdError) {
-          logd("Ad failed to load: ${adError.message}")
+          Log.d(MAIN_TAG, "Ad failed to load: ${adError.message}")
           mInterstitialAd = null
         }
 
         override fun onAdLoaded(interstitialAd: InterstitialAd) {
-          logd("Ad was loaded.")
+          Log.d(MAIN_TAG, "Ad was loaded.")
           mInterstitialAd = interstitialAd
 
-          // Set the full screen content callback
           mInterstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
             override fun onAdDismissedFullScreenContent() {
-              logd("Ad was dismissed.")
-              countdownTimer?.cancel() // Cancel the timer if the ad is dismissed
-              if (!timerFinished) {
-                // Grant the "easy game" label if ad is dismissed before timer ends
-                binding.gameTitle.text = getString(R.string.even_harder)
-              }
+              Log.d(MAIN_TAG, "Ad was dismissed.")
               mInterstitialAd = null
-              loadAd() // Reload the ad after it is dismissed
+              startNextLevel()
             }
 
             override fun onAdFailedToShowFullScreenContent(adError: AdError) {
-              logd("Ad failed to show.")
+              Log.d(MAIN_TAG, "Ad failed to show.")
+              mInterstitialAd = null
+              startNextLevel()
             }
 
             override fun onAdShowedFullScreenContent() {
-              logd("Ad showed fullscreen content.")
+              Log.d(MAIN_TAG, "Ad showed fullscreen content.")
             }
           }
         }
       }
     )
   }
+}
 
-  private fun startTimer() {
-    // Cancel any existing timer
-    countdownTimer?.cancel()
+@Composable
+fun MainScreen(
+  gameLevel: Int,
+  clicks: Int,
+  targetClicks: Int,
+  onButtonClick: () -> Unit
+) {
+  Scaffold { innerPadding ->
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(innerPadding)
+        .padding(16.dp),
+      verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      Text(
+        text = "Level $gameLevel",
+        style = MaterialTheme.typography.headlineLarge,
+        modifier = Modifier.padding(bottom = 24.dp)
+      )
 
-    // Reset state
-    timerFinished = false
-    binding.gameTitle.text = getString(R.string.impossible_game)
-
-    // Start a 5-second countdown
-    countdownTimer = object : CountDownTimer(5000, 1000) {
-      override fun onTick(millisUntilFinished: Long) {
-        binding.timer.text = getString(R.string.timer_seconds, millisUntilFinished / 1000)
+      if (clicks >= targetClicks) {
+        Text(
+          text = "Level Complete!",
+          style = MaterialTheme.typography.headlineMedium,
+          color = MaterialTheme.colorScheme.primary,
+          modifier = Modifier.padding(bottom = 24.dp)
+        )
+        Button(onClick = onButtonClick) {
+          Text(text = "Next Level")
+        }
+      } else {
+        Text(
+          text = "Clicks: $clicks / $targetClicks",
+          style = MaterialTheme.typography.displayMedium,
+          modifier = Modifier.padding(bottom = 24.dp)
+        )
+        Button(onClick = onButtonClick) {
+          Text(text = "Click Me!")
+        }
       }
-
-      override fun onFinish() {
-        timerFinished = true
-        binding.gameTitle.text = getString(R.string.easy_game)
-        binding.timer.text = getString(R.string.timer_finished)
-      }
-    }.start()
-  }
-
-  override fun onDestroy() {
-    super.onDestroy()
-    countdownTimer?.cancel() // Clean up timer
+    }
   }
 }

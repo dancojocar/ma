@@ -8,19 +8,19 @@ import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject
 
 interface MoviesRepository {
-    suspend fun getAllMovies(): Result<List<Movie>>
-    suspend fun addMovie(movie: Movie): Result<Movie>
+  suspend fun getAllMovies(): Result<List<Movie>>
+  suspend fun addMovie(movie: Movie): Result<Movie>
 }
 
 class MoviesRepositoryImpl @Inject constructor(
-    private val service: MoviesService,
-    @AppModule.IoDispatcher private val dispatcher: CoroutineDispatcher
+  private val service: MoviesService,
+  @AppModule.IoDispatcher private val dispatcher: CoroutineDispatcher
 ) : MoviesRepository {
-    override suspend fun getAllMovies(): Result<List<Movie>> {
-        return safeApiCall(dispatcher) { service.getAllMovies() }
-    }
+  override suspend fun getAllMovies(): Result<List<Movie>> {
+    return safeApiCall(dispatcher) { service.getAllMovies() }
+  }
 
-    override suspend fun addMovie(movie: Movie): Result<Movie> {
-        return safeApiCall(dispatcher) { service.addMovie(movie) }
-    }
+  override suspend fun addMovie(movie: Movie): Result<Movie> {
+    return safeApiCall(dispatcher) { service.addMovie(movie) }
+  }
 }

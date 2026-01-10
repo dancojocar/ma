@@ -6,13 +6,13 @@ import com.example.composemovieapp.movies.repo.Result
 import javax.inject.Inject
 
 interface GetMoviesUseCase {
-    suspend operator fun invoke(): Result<List<Movie>>
+  suspend operator fun invoke(): Result<List<Movie>>
 }
 
 class GetMoviesUseCaseImpl @Inject constructor(
-    val repo: MoviesRepository
+  val repo: MoviesRepository
 ) : GetMoviesUseCase {
-    override suspend fun invoke(): Result<List<Movie>> {
-        return repo.getAllMovies()
-    }
+  override suspend fun invoke(): Result<List<Movie>> {
+    return repo.getAllMovies()
+  }
 }

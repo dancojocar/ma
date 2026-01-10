@@ -1,148 +1,139 @@
 package com.google.android.gms.example.rewardedvideoexample
 
 import android.os.Bundle
-import android.os.CountDownTimer
-import androidx.appcompat.app.AppCompatActivity
-import android.view.View
+import android.util.Log
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.rewarded.RewardItem
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
-import com.google.android.gms.example.rewardedvideoexample.databinding.ActivityMainBinding
+import com.google.android.gms.example.rewardedvideoexample.ui.theme.RewardedVideoExampleTheme
 
 const val AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
-const val COUNTER_TIME = 10L
-const val GAME_OVER_REWARD = 1
+private const val MAIN_TAG = "RewardedVideoExample"
 
-class MainActivity : AppCompatActivity() {
-  private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
 
-  private var mCoinCount: Int = 0
-  private var mCountDownTimer: CountDownTimer? = null
-  private var mGameOver = false
-  private var mGamePaused = false
-  private var mIsLoading = false
   private var mRewardedAd: RewardedAd? = null
-  private var mTimeRemaining: Long = 0L
+  private var isLoading = false
+
+  // UI State
+  private var coinCount by mutableStateOf(0)
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    binding = ActivityMainBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-    MobileAds.initialize(this) {}
+    enableEdgeToEdge()
 
+    MobileAds.initialize(this) {}
     loadRewardedAd()
 
-    // Create the "retry" button, which tries to show a rewarded video ad between game plays.
-    binding.retryButton.visibility = View.INVISIBLE
-    binding.retryButton.setOnClickListener { startGame() }
-
-    // Create the "show" button, which shows a rewarded video if one is loaded.
-    binding.showVideoButton.visibility = View.INVISIBLE
-    binding.showVideoButton.setOnClickListener { showRewardedVideo() }
-
-    // Display current coin count to user.
-    binding.coinCountText.text = "Coins: $mCoinCount"
-
-    startGame()
-  }
-
-  public override fun onPause() {
-    super.onPause()
-    pauseGame()
-  }
-
-  public override fun onResume() {
-    super.onResume()
-    if (!mGameOver && mGamePaused) {
-      resumeGame()
+    setContent {
+      RewardedVideoExampleTheme {
+        Surface(
+          modifier = Modifier.fillMaxSize(),
+          color = MaterialTheme.colorScheme.background
+        ) {
+          MainScreen(
+            coinCount = coinCount,
+            onWatchAd = { showRewardedVideo() }
+          )
+        }
+      }
     }
-  }
-
-  private fun pauseGame() {
-    mCountDownTimer?.cancel()
-    mGamePaused = true
-  }
-
-  private fun resumeGame() {
-    createTimer(mTimeRemaining)
-    mGamePaused = false
   }
 
   private fun loadRewardedAd() {
-    val adRequest = AdRequest.Builder().build()
+    if (mRewardedAd != null || isLoading) {
+      return
+    }
 
-    RewardedAd.load(this, AD_UNIT_ID,
-      adRequest, object : RewardedAdLoadCallback() {
+    isLoading = true
+    val adRequest = AdRequest.Builder().build()
+    RewardedAd.load(
+      this,
+      AD_UNIT_ID,
+      adRequest,
+      object : RewardedAdLoadCallback() {
         override fun onAdFailedToLoad(adError: LoadAdError) {
-          logd(adError.message)
+          Log.d(MAIN_TAG, adError.message)
           mRewardedAd = null
+          isLoading = false
         }
 
         override fun onAdLoaded(rewardedAd: RewardedAd) {
-          logd("Ad was loaded.")
+          Log.d(MAIN_TAG, "Ad was loaded.")
           mRewardedAd = rewardedAd
+          isLoading = false
         }
-      })
-  }
-
-  private fun addCoins(coins: Int) {
-    mCoinCount += coins
-    binding.coinCountText.text = "Coins: $mCoinCount"
-  }
-
-  private fun startGame() {
-    // Hide the retry button, load the ad, and start the timer.
-    binding.retryButton.visibility = View.INVISIBLE
-    binding.showVideoButton.visibility = View.INVISIBLE
-    if (mRewardedAd == null && !mIsLoading) {
-      loadRewardedAd()
-    }
-    createTimer(COUNTER_TIME)
-    mGamePaused = false
-    mGameOver = false
-  }
-
-  // Create the game timer, which counts down to the end of the level
-  // and shows the "retry" button.
-  private fun createTimer(time: Long) {
-    mCountDownTimer?.cancel()
-
-    mCountDownTimer = object : CountDownTimer(time * 1000, 50) {
-      override fun onTick(millisUnitFinished: Long) {
-        mTimeRemaining = millisUnitFinished / 1000 + 1
-        binding.timer.text = "seconds remaining: $mTimeRemaining"
       }
-
-      override fun onFinish() {
-        if (mRewardedAd != null) {
-          binding.showVideoButton.visibility = View.VISIBLE
-        }
-        binding.timer.text = "The game has ended!"
-        addCoins(GAME_OVER_REWARD)
-        binding.retryButton.visibility = View.VISIBLE
-        mGameOver = true
-      }
-    }
-
-    mCountDownTimer?.start()
+    )
   }
 
   private fun showRewardedVideo() {
-    binding.showVideoButton.visibility = View.INVISIBLE
     if (mRewardedAd != null) {
-      mRewardedAd?.show(this) {
-        val rewardAmount = it.amount
-//          var rewardType = rewardItem.getType()
-        addCoins(rewardAmount)
-        logd("User earned the reward.")
+      mRewardedAd?.show(this) { rewardItem ->
+        val rewardAmount = rewardItem.amount
+        coinCount += 50 // Fixed reward for demo
+        Log.d(MAIN_TAG, "User earned the reward.")
         mRewardedAd = null
+        loadRewardedAd() // Preload next ad
       }
     } else {
-      logd("The rewarded ad wasn't ready yet.")
+      Log.d(MAIN_TAG, "The rewarded ad wasn't ready yet.")
+      loadRewardedAd()
+    }
+  }
+}
+
+@Composable
+fun MainScreen(
+  coinCount: Int,
+  onWatchAd: () -> Unit
+) {
+  Scaffold { innerPadding ->
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(innerPadding)
+        .padding(16.dp),
+      verticalArrangement = Arrangement.Center,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      Text(
+        text = "Coin Collector",
+        style = MaterialTheme.typography.headlineLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(bottom = 32.dp)
+      )
+
+      Text(
+        text = "Coins: $coinCount",
+        style = MaterialTheme.typography.displayMedium,
+        modifier = Modifier.padding(bottom = 48.dp)
+      )
+
+      Button(onClick = onWatchAd) {
+        Text(text = "Watch Ad for 50 Coins")
+      }
     }
   }
 }

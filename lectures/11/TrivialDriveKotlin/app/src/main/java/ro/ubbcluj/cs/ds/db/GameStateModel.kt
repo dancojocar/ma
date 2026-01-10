@@ -31,6 +31,7 @@ class GameStateModel(application: Application) {
     private val db: GameStateDatabase
     private val gameStateDao: GameStateDao
     private val gasTankLevel: Flow<Int>
+    private val odometer: Flow<Int>
     private val defaultDispatcher: CoroutineDispatcher = Dispatchers.IO
 
     suspend fun decrementGas(minLevel: Int): Int {
@@ -49,8 +50,20 @@ class GameStateModel(application: Application) {
         return gasTankLevel
     }
 
+    fun getOdometer(): Flow<Int> {
+        return odometer
+    }
+
+    suspend fun incrementOdometer(amount: Int) {
+        withContext(defaultDispatcher) {
+            gameStateDao.initEntry(ODOMETER_KEY)
+            gameStateDao.incrementBy(ODOMETER_KEY, amount)
+        }
+    }
+
     companion object {
         private const val GAS_LEVEL = "gas"
+        private const val ODOMETER_KEY = "odometer"
     }
 
     init {
@@ -65,5 +78,6 @@ class GameStateModel(application: Application) {
         gameStateDao = db.gameStateDao()
         // this causes the gasTankLevel from our Room database to behave more like LiveData
         gasTankLevel = gameStateDao[GAS_LEVEL].distinctUntilChanged().shareIn(CoroutineScope(Dispatchers.Main), SharingStarted.Lazily, 1)
+        odometer = gameStateDao[ODOMETER_KEY].distinctUntilChanged().shareIn(CoroutineScope(Dispatchers.Main), SharingStarted.Lazily, 1)
     }
 }

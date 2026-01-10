@@ -1,106 +1,151 @@
 package com.google.firebase.quickstart.auth
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import android.view.View
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.quickstart.auth.databinding.ActivityCustomBinding
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.quickstart.auth.ui.theme.FirebaseAuthTheme
 
-/**
- * Demonstrate Firebase Authentication using a custom minted token. For more information, see:
- * https://firebase.google.com/docs/auth/android/custom-auth
- */
-class CustomAuthActivity : AppCompatActivity(), View.OnClickListener {
-  private lateinit var binding: ActivityCustomBinding
+class CustomAuthActivity : ComponentActivity() {
 
-  private lateinit var auth: FirebaseAuth
+    private lateinit var auth: FirebaseAuth
+    private val customToken = mutableStateOf<String?>(null)
 
-  private var customToken: String? = null
-  private lateinit var tokenReceiver: TokenBroadcastReceiver
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    binding = ActivityCustomBinding.inflate(layoutInflater)
-    val view = binding.root
-    setContentView(view)
-
-    // Button click listeners
-    binding.buttonSignIn.setOnClickListener(this)
-
-    // Create token receiver (for demo purposes only)
-    tokenReceiver = object : TokenBroadcastReceiver() {
-      override fun onNewToken(token: String?) {
-        logd("onNewToken:$token")
-        setCustomToken(token.toString())
-      }
+    private val tokenReceiver = object : TokenBroadcastReceiver() {
+        override fun onNewToken(token: String?) {
+            customToken.value = token
+        }
     }
 
-    // Initialize Firebase Auth
-    auth = FirebaseAuth.getInstance()
-  }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        auth = Firebase.auth
 
-  public override fun onStart() {
-    super.onStart()
-    // Check if user is signed in (non-null) and update UI accordingly.
-    val currentUser = auth.currentUser
-    updateUI(currentUser)
-  }
-
-  override fun onResume() {
-    super.onResume()
-    registerReceiver(tokenReceiver, TokenBroadcastReceiver.filter)
-  }
-
-  override fun onPause() {
-    super.onPause()
-    unregisterReceiver(tokenReceiver)
-  }
-
-  private fun startSignIn() {
-    // Initiate sign in with custom token
-    customToken?.let {
-      auth.signInWithCustomToken(it)
-          .addOnCompleteListener(this) { task ->
-            if (task.isSuccessful) {
-              // Sign in success, update UI with the signed-in user's information
-              logd("signInWithCustomToken:success")
-              val user = auth.currentUser
-              updateUI(user)
-            } else {
-              // If sign in fails, display a message to the user.
-              logw("signInWithCustomToken:failure", task.exception)
-              Toast.makeText(baseContext, "Authentication failed.",
-                  Toast.LENGTH_SHORT).show()
-              updateUI(null)
+        setContent {
+            FirebaseAuthTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    CustomAuthScreen(auth, customToken.value)
+                }
             }
-          }
+        }
     }
-  }
 
-  private fun updateUI(user: FirebaseUser?) {
-    if (user != null) {
-      binding.textSignInStatus.text = "User ID: $user.uid"
-    } else {
-      binding.textSignInStatus.text = "Error: sign in failed"
+    override fun onResume() {
+        super.onResume()
+        registerReceiver(tokenReceiver, TokenBroadcastReceiver.filter)
     }
-  }
 
-  private fun setCustomToken(token: String) {
-    customToken = token
-
-    val status = "Token:$customToken"
-
-    // Enable/disable sign-in button and show the token
-    binding.buttonSignIn.isEnabled = true
-    binding.textTokenStatus.text = status
-  }
-
-  override fun onClick(v: View) {
-    val i = v.id
-    if (i == R.id.buttonSignIn) {
-      startSignIn()
+    override fun onPause() {
+        super.onPause()
+        unregisterReceiver(tokenReceiver)
     }
-  }
+}
+
+@Composable
+fun CustomAuthScreen(auth: FirebaseAuth, customToken: String?) {
+    var user by remember { mutableStateOf(auth.currentUser) }
+    var message by remember { mutableStateOf("") }
+    
+    // Auth Listener
+    DisposableEffect(auth) {
+        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
+            user = firebaseAuth.currentUser
+        }
+        auth.addAuthStateListener(listener)
+        onDispose {
+            auth.removeAuthStateListener(listener)
+        }
+    }
+
+    Scaffold { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Custom Auth Demo",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+
+            if (user != null) {
+                Text(text = "Signed in as: ${user?.uid}", style = MaterialTheme.typography.bodyLarge)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        auth.signOut()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Sign Out")
+                }
+            } else {
+                Text(text = "Waiting for custom token from background...", style = MaterialTheme.typography.bodyMedium)
+                if (customToken != null) {
+                     Text(text = "Token Received: ${customToken.take(10)}...", color = MaterialTheme.colorScheme.primary)
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = {
+                        customToken?.let { token ->
+                            auth.signInWithCustomToken(token)
+                                .addOnCompleteListener { task ->
+                                    if (!task.isSuccessful) {
+                                        message = "Sign in failed: ${task.exception?.message}"
+                                    }
+                                }
+                        }
+                    },
+                    enabled = customToken != null,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Sign In with Custom Token")
+                }
+            }
+            
+            if (message.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = message, color = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
 }

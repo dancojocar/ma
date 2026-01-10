@@ -604,7 +604,13 @@ class BillingDataSource private constructor(
     if (consumePurchaseResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
       Log.d(TAG, "Consumption successful. Emitting sku.")
       defaultScope.launch {
-        purchaseConsumedFlow.emit(purchase.skus)
+        val skusToEmit = ArrayList<String>()
+        for (sku in purchase.skus) {
+          for (i in 0 until purchase.quantity) {
+             skusToEmit.add(sku)
+          }
+        }
+        purchaseConsumedFlow.emit(skusToEmit)
       }
       // Since we've consumed the purchase
       for (sku in purchase.skus) {

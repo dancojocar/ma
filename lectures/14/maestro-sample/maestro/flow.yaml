@@ -1,0 +1,21 @@
+appId: com.example.maestro
+---
+- launchApp
+
+- assertVisible: "Task Manager"
+
+# Add a first task
+- tapOn: "Enter task"
+- inputText: "Buy Milk"
+- tapOn: "Add Task"
+- assertVisible: "Buy Milk"
+
+# Add a second task
+- tapOn: "Enter task"
+- inputText: "Walk the dog"
+- tapOn: "Add Task"
+- assertVisible: "Walk the dog"
+
+# Verify list contains both
+- assertVisible: "Buy Milk"
+- assertVisible: "Walk the dog"
