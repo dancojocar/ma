@@ -1,0 +1,32 @@
+{
+  "_comment": "TEMPLATE FILE - Replace values with your own Firebase project configuration",
+  "project_info": {
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "firebase_url": "https://YOUR_PROJECT_ID.firebaseio.com",
+    "project_id": "YOUR_PROJECT_ID",
+    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:YOUR_PROJECT_NUMBER:android:YOUR_APP_HASH",
+        "android_client_info": {
+          "package_name": "your.package.name"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "YOUR_PROJECT_NUMBER-HASH.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "YOUR_API_KEY"
+        }
+      ],
+      "services": {}
+    }
+  ],
+  "configuration_version": "1"
+}

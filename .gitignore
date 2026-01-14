@@ -16,6 +16,7 @@ out/
 
 # Gradle files
 .gradle/
+.kotlin/
 build/
 
 # Local configuration file (sdk path, etc)
@@ -44,6 +45,8 @@ captures/
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
 
+# CocoaPods
+Pods/
 
 # Xcode
 !**/*.xcodeproj
@@ -105,3 +108,18 @@ node_modules
 #Firebase & Google config files
 google-services.json
 firebase_options.dart
+GoogleService-Info.plist
+firebase.json
+.firebaserc
+firebaseConfig.js
+firebaseConfig.ts
+
+# Service Account Keys (NEVER commit these)
+*-firebase-adminsdk-*.json
+service-account*.json
+*.p12
+
+# Environment files
+.env
+.env.local
+.env.*.local
