@@ -5,7 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pborman/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"os"

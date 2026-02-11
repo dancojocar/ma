@@ -2,9 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/dgrijalva/jwt-go/request"
-	_ "github.com/dgrijalva/jwt-go/request"
+	"strings"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 )
 
@@ -39,7 +38,9 @@ func RefreshTokenService(requestUser *User) []byte {
 
 func LogoutService(req *http.Request) error {
 	authBackend := InitJWTAuthenticationBackend()
-	tokenRequest, err := request.ParseFromRequest(req, request.OAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
+	tokenString := req.Header.Get("Authorization")
+	cleanedTokenString := strings.TrimPrefix(tokenString, "Bearer ")
+	tokenRequest, err := jwt.Parse(cleanedTokenString, func(token *jwt.Token) (interface{}, error) {
 		return authBackend.PublicKey, nil
 	})
 	if err != nil {
