@@ -18,7 +18,7 @@
     "koa-cors": "^0.0.16",
     "koa-router": "^10.1.1",
     "phaser": "^3.55.2",
-    "ws": "^8.4.0"
+    "ws": "^8.21.0"
   },
   "devDependencies": {
     "@babel/core": "^7.16.7",
