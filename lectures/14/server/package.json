@@ -21,8 +21,8 @@
     "ws": "^8.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.16.7",
-    "@babel/preset-env": "^7.16.8",
-    "@babel/register": "^7.16.9"
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/register": "^8.0.1"
   }
 }
