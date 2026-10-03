@@ -1,4 +1,4 @@
-# UniEats Android — tag `l09-push-location`
+# UniEats Android — tag `l10-polish`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -60,6 +60,15 @@ cd unieats/server && npm install && npm start      # http://localhost:3000
   (`notification/SpotNotificationService.kt`); tapping it opens the spot via the
   `unieats://spots/<id>` deep link. Try it with the curl PATCH below while the list is open.
   (Local notifications driven by the WebSocket only; FCM/APNs push is not used.)
+
+## Animations + performance (new in l10)
+
+- List rows keep `Modifier.animateItem()` (⋮ → Sort by rating shows the reorder).
+- Detail screen: tap the **About** card — it expands with `animateContentSize()` (spring) to show
+  the full description, price level, coordinates and last update.
+- Screen changes slide and fade (`NavHost` enter/exit/popEnter/popExit transitions).
+- `PERFORMANCE.md` — the profiling steps from the lecture (HWUI bars, Layout Inspector
+  recomposition counts, Perfetto, Memory Profiler).
 
 ## Demo: offline edit → reconnect → sync
 
