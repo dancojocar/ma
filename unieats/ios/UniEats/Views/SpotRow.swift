@@ -1,4 +1,5 @@
 import SwiftUI
+import UniEatsDomain
 
 struct SpotRow: View {
     @Environment(RemoteConfig.self) private var remoteConfig

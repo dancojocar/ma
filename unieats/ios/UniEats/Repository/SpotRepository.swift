@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UniEatsDomain
 
 @MainActor
 @Observable
@@ -128,8 +129,19 @@ final class SpotRepository {
                 session.sessionExpired()
                 return
             } catch ApiError.conflict(let server) {
-                if let entity = spot(id: entry.entityId) { markSynced(entity, server: server) }
-                context.delete(entry)
+                guard let entity = spot(id: entry.entityId) else {
+                    context.delete(entry)
+                    continue
+                }
+                switch SpotConflictResolver.winner(local: entity.spot, server: Spot(dto: server)) {
+                case .server:
+                    markSynced(entity, server: server)
+                    context.delete(entry)
+                case .client:
+                    var rebased = patch
+                    rebased.updatedAt = server.updatedAt
+                    entry.payload = (try? JSONEncoder().encode(rebased)) ?? entry.payload
+                }
             } catch ApiError.http(let status, let message) where (400..<500).contains(status) {
                 lastSyncError = message
                 if let entity = spot(id: entry.entityId) {

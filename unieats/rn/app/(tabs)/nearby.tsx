@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { LiveBadge } from "../../src/components/LiveBadge";
 import { EmptyView, LoadingView } from "../../src/components/StatusViews";
-import { NEARBY_RADIUS_KM } from "../../src/domain/geo";
+import { NEARBY_RADIUS_KM } from "@unieats/shared";
 import { useLiveSpots } from "../../src/hooks/useLiveSpots";
 import { useNearbySpots } from "../../src/hooks/useNearbySpots";
 

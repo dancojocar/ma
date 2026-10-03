@@ -1,13 +1,14 @@
 # UniEats – React Native (Expo SDK 52)
 
-Tag `l11-cloud`: Profile → Settings has **Remote config** — the flag `show_new_rating_ui` (default
-`false`) from `GET /api/config`, applied by "Fetch & activate" (`src/cloud/featureFlags.ts`); when true,
-ratings render as the new green rating pill (`RatingBadge`). Flip it for the class with
-`curl -X POST localhost:3000/api/config -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}'`.
-**Crash reporting** goes through a `CrashReporter` interface (`src/cloud/crashReporting.ts`; the default
-backend logs, a Sentry/Crashlytics backend would plug in there) behind an opt-in consent switch stored in
-SQLite; uncaught JS errors and the root `ErrorBoundary` report through it, and a dev-only "Test crash" button
-calls `crashReporter.recordError()`. No Firebase dependency.
+Tag `l12-kmp`: the domain layer is a local npm workspace package, `shared/` (`@unieats/shared`): the
+`Spot`/`Review`/`User` models, the Zod schemas, the last-write-wins rule `resolveConflict` (server wins only
+when strictly newer; a tie keeps the client edit) and the 2 km `distanceKm` helper. The app imports it
+everywhere (`import { resolveConflict } from "@unieats/shared"`); there is no `src/domain` copy any more.
+This is RN's answer to a KMP `shared` module: one TypeScript source of truth, linked by npm workspaces and
+bundled by Metro.
+
+Kept from l11: remote flag `show_new_rating_ui` with "Fetch & activate", `CrashReporter` with an opt-in
+consent switch and a dev-only "Test crash" (Profile tab).
 
 Kept from l10: `FadeInDown` row entrance and swipe-to-hide (`PERFORMANCE.md` for profiling).
 Kept from l09: the Nearby tab (2 km, `expo-location` watch only while focused) and a local notification

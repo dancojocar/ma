@@ -8,9 +8,10 @@ import com.unieats.app.data.local.OutboxType
 import com.unieats.app.data.local.UniEatsDatabase
 import com.unieats.app.data.local.toDomain
 import com.unieats.app.data.local.toEntity
-import com.unieats.app.data.model.ConflictResponse
-import com.unieats.app.data.model.Spot
-import com.unieats.app.data.model.SpotPatch
+import com.unieats.shared.ConflictResponse
+import com.unieats.shared.Spot
+import com.unieats.shared.SyncConflictResolver
+import com.unieats.shared.SpotPatch
 import com.unieats.app.data.remote.ApiClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException

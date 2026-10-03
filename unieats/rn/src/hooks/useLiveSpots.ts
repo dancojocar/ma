@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { LIVE_URL } from "../api/config";
-import { LiveEventSchema } from "../domain/schemas";
+import { LiveEventSchema } from "@unieats/shared";
 import { notifySpotUpdated } from "../notifications/spotNotifications";
 import { applyLiveEvent } from "../repository/spotRepository";
 import { useAppActive } from "./useAppActive";

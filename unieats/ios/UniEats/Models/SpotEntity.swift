@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import UniEatsDomain
 
 @Model
 final class SpotEntity {
@@ -48,7 +49,7 @@ final class SpotEntity {
         Spot(
             id: id, name: name, category: category, rating: rating, priceLevel: priceLevel,
             lat: lat, lng: lng, openNow: openNow, photoUrl: photoUrl,
-            spotDescription: spotDescription, updatedAt: updatedAt
+            description: spotDescription, updatedAt: updatedAt
         )
     }
 }

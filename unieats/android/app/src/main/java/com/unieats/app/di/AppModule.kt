@@ -5,6 +5,8 @@ import androidx.room.Room
 import com.unieats.app.BuildConfig
 import com.unieats.app.data.auth.AuthTokens
 import com.unieats.app.data.local.UniEatsDatabase
+import com.unieats.app.data.repository.DefaultEatsRepository
+import com.unieats.app.data.repository.EatsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -62,6 +64,9 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): UniEatsDatabase =
         Room.databaseBuilder(context, UniEatsDatabase::class.java, "unieats.db").build()
+
+    @Provides
+    fun provideEatsRepository(repository: DefaultEatsRepository): EatsRepository = repository
 
     @Provides
     @Singleton

@@ -1,4 +1,4 @@
-import '../../domain/models.dart';
+import 'models.dart';
 
 enum ConflictWinner { server, client }
 

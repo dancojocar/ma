@@ -981,6 +981,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  unieats_data:
+    dependency: "direct main"
+    description:
+      path: "packages/unieats_data"
+      relative: true
+    source: path
+    version: "1.0.0"
   uuid:
     dependency: "direct main"
     description:

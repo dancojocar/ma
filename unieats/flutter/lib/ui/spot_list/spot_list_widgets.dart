@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 class SpotSearchBar extends StatelessWidget {
   const SpotSearchBar({

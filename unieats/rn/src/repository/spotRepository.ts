@@ -1,3 +1,12 @@
+import {
+  resolveConflict,
+  type LiveEvent,
+  type OutboxOp,
+  type Review,
+  type Spot,
+  type SpotEdit,
+  type SpotPage,
+} from "@unieats/shared";
 import { randomUUID } from "expo-crypto";
 import {
   conflictServerCopy,
@@ -22,9 +31,6 @@ import {
   recordServerVersion,
   upsertFromServer,
 } from "../db/spotDao";
-import type { OutboxOp, Review, Spot, SpotEdit } from "../domain/models";
-import type { LiveEvent, SpotPage } from "../domain/schemas";
-import { resolveConflict } from "../domain/syncConflict";
 import { useSessionStore } from "../store/sessionStore";
 import type { CategoryFilter } from "../store/spotsStore";
 

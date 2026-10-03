@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/database/database.dart' show localIdPrefix;
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
 import '../common/status_views.dart';
