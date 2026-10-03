@@ -14,10 +14,12 @@ final class SpotListViewModel {
     private(set) var isLive = false
 
     private let repository: SpotRepository
+    private let notifier: SpotChangeNotifier
     private var reloadTask: Task<Void, Never>?
 
-    init(repository: SpotRepository) {
+    init(repository: SpotRepository, notifier: SpotChangeNotifier) {
         self.repository = repository
+        self.notifier = notifier
     }
 
     func onQueryChange(_ query: String) {
@@ -68,6 +70,9 @@ final class SpotListViewModel {
             if errorMessage != nil { await refresh() }
         case .disconnected:
             isLive = false
+        case .spotUpdated(let spot):
+            repository.apply(update)
+            notifier.notifySpotUpdated(spot)
         default:
             repository.apply(update)
         }

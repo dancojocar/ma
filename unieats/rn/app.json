@@ -46,7 +46,19 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "UniEats uses your location to show food spots within 2 km of you."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#e87c2a"
+        }
+      ]
     ]
   }
 }

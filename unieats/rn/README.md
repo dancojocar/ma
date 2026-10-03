@@ -1,12 +1,21 @@
 # UniEats – React Native (Expo SDK 52)
 
-Tag `l08-auth`: sign in (`student@unieats.app` / `password`) before the tabs open. The JWT from
-`POST /api/auth/login` is kept in memory in a Zustand store (`src/store/sessionStore.ts`) and persisted with
-`expo-secure-store` (`keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY`, `src/auth/sessionStorage.ts`).
-Every mutation — outbox replay of "Edit spot" and the new "Add a review" form — sends
-`Authorization: Bearer <jwt>`; a 401 (or an expired token at start-up) signs you out and returns to the login
-screen with a notice. The Profile tab shows the user and "Sign out".
+Tag `l09-push-location`: a **Nearby** tab lists saved spots within 2 km (`src/domain/geo.ts`,
+haversine). It explains why it needs location, asks with `expo-location`
+(`requestForegroundPermissionsAsync`; "Open Settings" when blocked), and watches the position with
+`watchPositionAsync` only while the tab is focused — the subscription is removed on blur/unmount
+(`src/hooks/useNearbySpots.ts`). A live `spot.updated` event from another device fires a local
+notification "<spot> was updated" (`src/notifications/spotNotifications.ts`, expo-notifications; Android 13+
+asks for POST_NOTIFICATIONS after sign-in); tapping it opens the spot. Both plugins are configured in
+`app.json`. No FCM/APNs: notifications are local, driven by the WebSocket.
 
+Emulator location (the seed is in Bucharest): `adb emu geo fix 26.1025 44.4268`; iOS simulator:
+Features → Location → Custom Location 44.4268, 26.1025. Trigger a notification:
+`curl -X PATCH localhost:3000/api/spots/spot-3 -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"rating":4.9}'`
+(get `$TOKEN` from `POST /api/auth/login`).
+
+Kept from l08: login (`student@unieats.app` / `password`), JWT in memory + `expo-secure-store`, Bearer on
+every mutation and outbox replay, 401 → login, add-review, profile / sign out.
 Everything from l07 is kept: SQLite as the only UI source, outbox + NetInfo replay with
 `Idempotency-Key`, 409 last-write-wins, "N changes pending", live updates, infinite scroll, pull-to-refresh,
 search / category filter / favourites.

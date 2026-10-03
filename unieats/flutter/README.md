@@ -18,13 +18,20 @@ screens only watch Drift, refreshes and live events upsert into it without touch
 edits, and "Edit spot" queues an outbox op that `SpotRepository.syncOutbox()` replays with
 `Idempotency-Key` on reconnect (409 → last-write-wins, `lib/data/sync/sync_conflict_resolver.dart`).
 
-This tag (`l08-auth`) adds sign-in: every screen sits behind `/login` (demo user
-`student@unieats.app` / `password`; a deep link opened while signed out continues after login). The JWT
-and user are kept in `flutter_secure_storage` (Android EncryptedSharedPreferences, iOS Keychain
-"after first unlock, this device only"), `AuthInterceptor` sends `Authorization: Bearer` on every
-mutation including outbox replay, and a 401 ends the session ("Your session expired"). "Sign out" is in
-the list's app bar. "Add review" on the detail screen posts through the outbox (shown at once, synced
-when online). Drift schema v2 renames the reviews column `body` → `text` with a migration.
+Since `l08-auth` every screen sits behind `/login` (demo user `student@unieats.app` / `password`);
+the JWT is kept in `flutter_secure_storage`, sent as `Authorization: Bearer` on every mutation and
+outbox replay, a 401 ends the session, "Sign out" is in the list's app bar and "Add review" posts
+through the outbox. Drift schema v2 renamed the reviews column `body` → `text` with a migration.
+
+This tag (`l09-push-location`) adds:
+- **Spots near me** (`/nearby`, the arrow in the list's app bar): spots within 2 km, nearest first,
+  from `geolocator`. The screen explains why before the system permission prompt, offers "Open
+  settings" when access is blocked, and position updates stop as soon as the screen closes
+  (`positionProvider` is autoDispose). On the emulator set a campus location first:
+  `adb emu geo fix 26.103 44.427` (longitude first), or Simulator → Features → Location → Custom.
+- **Local notifications** "<spot> was updated" (`flutter_local_notifications`) fired by the live
+  WebSocket's `spot.updated` event — no FCM/APNs. Android 13+ asks for `POST_NOTIFICATIONS` when the
+  list first opens. Try: `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
