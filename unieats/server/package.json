@@ -1,0 +1,28 @@
+{
+  "name": "unieats-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UniEats REST server",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "express": "4.22.2"
+  },
+  "devDependencies": {
+    "jest": "29.7.0",
+    "supertest": "7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  }
+}
