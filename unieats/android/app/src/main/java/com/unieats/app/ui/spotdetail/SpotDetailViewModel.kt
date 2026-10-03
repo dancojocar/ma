@@ -6,10 +6,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.unieats.shared.Review
 import com.unieats.shared.Spot
+import com.unieats.app.data.remote.AiDescribeClient
 import com.unieats.app.data.remote.toUserMessage
 import com.unieats.app.data.repository.EatsRepository
 import com.unieats.app.ui.navigation.SpotDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 import javax.inject.Inject
 
 data class SpotDetailUiState(
@@ -29,12 +34,16 @@ data class SpotDetailUiState(
     val isLive: Boolean = false,
     val isReviewFormOpen: Boolean = false,
     val isSubmittingReview: Boolean = false,
-    val reviewError: String? = null
+    val reviewError: String? = null,
+    val aiText: String = "",
+    val isDescribing: Boolean = false,
+    val aiError: String? = null
 )
 
 @HiltViewModel
 class SpotDetailViewModel @Inject constructor(
     private val spotRepository: EatsRepository,
+    private val aiClient: AiDescribeClient,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -63,6 +72,30 @@ class SpotDetailViewModel @Inject constructor(
             val reviews = async { spotRepository.refreshReviews(spotId) }
             val error = spot.await().exceptionOrNull() ?: reviews.await().exceptionOrNull()
             _uiState.update { it.copy(isLoading = false, errorMessage = error?.toUserMessage()) }
+        }
+    }
+
+    private var describeJob: Job? = null
+
+    /** Streams the AI description of the spot as currently shown (full spot, openNow included). */
+    fun describeDish() {
+        val spot = uiState.value.spot ?: return
+        describeJob?.cancel()
+        describeJob = viewModelScope.launch {
+            _uiState.update { it.copy(aiText = "", isDescribing = true, aiError = null) }
+            try {
+                aiClient.describe(spot).collect { delta -> _uiState.update { it.copy(aiText = it.aiText + delta) } }
+                _uiState.update { it.copy(isDescribing = false) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                val message = when (e) {
+                    is HttpRequestTimeoutException -> e.toUserMessage()
+                    is IOException -> "Server unreachable. Is it running on port 3000?"
+                    else -> e.toUserMessage()
+                }
+                _uiState.update { it.copy(isDescribing = false, aiError = message) }
+            }
         }
     }
 

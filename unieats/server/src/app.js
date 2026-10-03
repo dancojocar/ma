@@ -4,6 +4,7 @@ const { sendError } = require('./errors');
 const authRouter = require('./routes/auth');
 const spotsRouter = require('./routes/spots');
 const configRouter = require('./routes/config');
+const { router: aiRouter } = require('./routes/ai');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/spots', spotsRouter);
 app.use('/api/config', configRouter);
+app.use('/api/ai', aiRouter);
 
 app.use((req, res) => {
   sendError(res, 404, 'not_found', 'Route not found');

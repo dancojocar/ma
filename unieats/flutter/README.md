@@ -48,12 +48,18 @@ Since `l11-cloud` a Settings screen (gear in the list's app bar) holds:
   and a `runZonedGuarded` zone (with `ensureInitialized` inside it). Debug builds show a "Test crash"
   button that calls `recordError()`; nothing is reported until you opt in. No Firebase dependency.
 
-This tag (`l12-kmp`) splits out a shared domain layer, the Dart counterpart of the Kotlin
+Since `l12-kmp` there is a shared domain layer, the Dart counterpart of the Kotlin
 Multiplatform module: `packages/unieats_data` is **pure Dart** (no Flutter, Drift or dio) and holds
 the models, the live-event types, `SyncConflictResolver` and the repository interfaces
 (`SpotRepository`, `ReviewRepository`, `AuthRepository`). The app implements them
 (`DriftSpotRepository`, `DriftReviewRepository`, `TokenAuthRepository`) and the providers expose only
 the interfaces. Check the package on its own: `cd packages/unieats_data && dart pub get && dart analyze`.
+
+This tag (`l13-ai`) adds **Describe this dish** on the detail screen: it POSTs the full spot
+(including `openNow`) to `/api/ai/describe` and renders the Server-Sent Events stream as it arrives
+(dio `ResponseType.stream` + `lib/data/network/sse.dart`). Without `ANTHROPIC_API_KEY` the server
+streams a template in four chunks, so the demo works offline; with the key it streams Claude's text.
+If the server is down the card says "Server unreachable".
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

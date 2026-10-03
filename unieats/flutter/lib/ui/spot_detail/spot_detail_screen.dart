@@ -8,6 +8,7 @@ import 'package:unieats_data/unieats_data.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
 import '../common/status_views.dart';
+import 'describe_dish_card.dart';
 
 class SpotDetailScreen extends ConsumerWidget {
   const SpotDetailScreen({super.key, required this.spotId});
@@ -120,6 +121,8 @@ class _SpotDetailBody extends ConsumerWidget {
               SpotMetaRow(spot: spot),
               const SizedBox(height: 12),
               Text(spot.description, style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 12),
+              DescribeDishCard(spot: spot),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 12,
