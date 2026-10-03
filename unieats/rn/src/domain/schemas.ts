@@ -33,3 +33,11 @@ export const SpotPageSchema = z.object({
 });
 
 export type SpotPage = z.infer<typeof SpotPageSchema>;
+
+export const LiveEventSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("spot.created"), spot: SpotSchema }),
+  z.object({ type: z.literal("spot.updated"), spot: SpotSchema }),
+  z.object({ type: z.literal("spot.deleted"), id: z.string() }),
+]);
+
+export type LiveEvent = z.infer<typeof LiveEventSchema>;

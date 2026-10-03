@@ -24,6 +24,7 @@ android {
         // `adb reverse tcp:3000 tcp:3000` and build with -Punieats.serverHost=localhost:3000.
         val serverHost = providers.gradleProperty("unieats.serverHost").getOrElse("10.0.2.2:3000")
         buildConfigField("String", "API_BASE_URL", "\"http://$serverHost/api/\"")
+        buildConfigField("String", "LIVE_URL", "\"ws://$serverHost/live\"")
     }
 
     buildTypes {

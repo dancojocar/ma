@@ -44,6 +44,17 @@ curl -s -X PATCH http://localhost:3000/api/spots/spot-1 \
   -H 'Content-Type: application/json' -d '{"openNow":false}' | jq .
 ```
 
+## Live updates (WebSocket)
+
+`ws://localhost:3000/live` (not `/api/live`) receives one JSON message per change:
+`{ "type": "spot.created" | "spot.updated", "spot": Spot }` or `{ "type": "spot.deleted", "id": "…" }`.
+
+```bash
+npx wscat -c ws://localhost:3000/live          # terminal 1
+curl -s -X PATCH http://localhost:3000/api/spots/spot-1 \
+  -H 'Content-Type: application/json' -d '{"openNow":false}'   # terminal 2
+```
+
 ## Chaos headers
 
 | Header | Effect |

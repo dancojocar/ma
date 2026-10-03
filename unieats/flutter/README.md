@@ -1,6 +1,6 @@
 # UniEats — Flutter
 
-Discover campus food spots. This tag (`l05-rest`) loads everything from the UniEats server:
+Discover campus food spots. Since `l05-rest` the app loads everything from the UniEats server:
 the list pages through `GET /api/spots` (20 per page, infinite scroll until `hasNextPage` is false,
 server-side search and category filter), the detail screen fetches `GET /api/spots/:id` and shows its
 reviews read-only from `GET /api/spots/:id/reviews`. Loading, error (with Retry), empty states and
@@ -9,6 +9,17 @@ pull-to-refresh on both screens; favourites (in memory) are kept.
 - `lib/data/network/api_client.dart` — dio with 10 s connect / 15 s receive timeouts and a
   `RetryInterceptor` (3 retries, exponential backoff) for GETs; failures become a sealed `AppError`.
 - `lib/providers/providers.dart` — `SpotPagesNotifier` (`AsyncNotifier`) does the manual pagination.
+
+This tag (`l06-async`) adds live updates: `liveEventsProvider` (a `StreamProvider.autoDispose`) listens to
+`ws://<host>:3000/live` (`lib/data/network/live_updates.dart`), and `spot.created/updated/deleted`
+events patch the visible list in place. A "Live/Offline" dot in the app bar shows the connection; on a
+drop it reconnects with backoff (1 s doubling to 30 s). The socket closes when the list screen is
+disposed or the app goes to the background, and reopens on resume. Try it:
+
+```bash
+curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (live)"}' \
+  http://localhost:3000/api/spots/spot-3
+```
 
 ## Run
 
