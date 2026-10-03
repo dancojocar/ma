@@ -13,18 +13,24 @@ pull-to-refresh on both screens; favourites (in memory) are kept.
 Since `l06-async` a WebSocket (`ws://<host>:3000/live`) streams spot changes into the app
 (`lib/data/network/live_updates.dart`), reconnecting with backoff; a "Live/Offline" dot shows it.
 
-This tag (`l07-offline`) makes a local Drift database the single source of truth
-(`lib/data/database/`): screens only watch Drift; network refreshes and live events upsert into it
-without touching rows that have unsynced edits. "Edit spot" on the detail screen changes the row at
-once and queues an outbox op; `SpotRepository.syncOutbox()` replays it with `Idempotency-Key` when the
-device reconnects (`connectivity_plus`), the WebSocket reconnects, the app starts, or you tap
-"Sync now". A 409 resolves last-write-wins on `updatedAt` (`lib/data/sync/sync_conflict_resolver.dart`).
+Since `l07-offline` a local Drift database is the single source of truth (`lib/data/database/`):
+screens only watch Drift, refreshes and live events upsert into it without touching rows with unsynced
+edits, and "Edit spot" queues an outbox op that `SpotRepository.syncOutbox()` replays with
+`Idempotency-Key` on reconnect (409 → last-write-wins, `lib/data/sync/sync_conflict_resolver.dart`).
+
+This tag (`l08-auth`) adds sign-in: every screen sits behind `/login` (demo user
+`student@unieats.app` / `password`; a deep link opened while signed out continues after login). The JWT
+and user are kept in `flutter_secure_storage` (Android EncryptedSharedPreferences, iOS Keychain
+"after first unlock, this device only"), `AuthInterceptor` sends `Authorization: Bearer` on every
+mutation including outbox replay, and a 401 ends the session ("Your session expired"). "Sign out" is in
+the list's app bar. "Add review" on the detail screen posts through the outbox (shown at once, synced
+when online). Drift schema v2 renames the reviews column `body` → `text` with a migration.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
 http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
 
-Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
+Edits now need a signed-in session. Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
 `database.dart` run `dart run build_runner build --delete-conflicting-outputs`.
 
 ## Run

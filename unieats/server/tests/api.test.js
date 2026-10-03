@@ -1,5 +1,8 @@
 const request = require('supertest');
 const app = require('../src/app');
+const { withAuth } = require('./helpers');
+
+const api = withAuth(request(app));
 
 const SPOT_FIELDS = {
   id: 'string',
@@ -187,7 +190,7 @@ const NEW_SPOT = {
 };
 
 function createSpot(overrides = {}) {
-  return request(app).post('/api/spots').send({ ...NEW_SPOT, ...overrides });
+  return api.post('/api/spots').send({ ...NEW_SPOT, ...overrides });
 }
 
 describe('POST /api/spots', () => {
@@ -205,7 +208,7 @@ describe('POST /api/spots', () => {
   });
 
   it('fills defaults for optional fields', async () => {
-    const res = await request(app).post('/api/spots').send({ name: 'Minimal', category: 'bar' });
+    const res = await api.post('/api/spots').send({ name: 'Minimal', category: 'bar' });
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ rating: 0, priceLevel: 1, openNow: false, photoUrl: '', description: '' });
   });
@@ -232,7 +235,7 @@ describe('POST /api/spots', () => {
   });
 
   it('400 validation on a malformed JSON body', async () => {
-    const res = await request(app)
+    const res = await api
       .post('/api/spots')
       .set('Content-Type', 'application/json')
       .send('{"name": "broken"');
@@ -250,26 +253,26 @@ describe('PATCH /api/spots/:id', () => {
 
   it('applies the partial update and bumps updatedAt', async () => {
     const before = (await request(app).get(`/api/spots/${id}`)).body;
-    const res = await request(app).patch(`/api/spots/${id}`).send({ openNow: true, name: 'Patched' });
+    const res = await api.patch(`/api/spots/${id}`).send({ openNow: true, name: 'Patched' });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ id, openNow: true, name: 'Patched', category: before.category });
     expect(res.body.updatedAt).toBeGreaterThanOrEqual(before.updatedAt);
   });
 
   it('cannot change the id', async () => {
-    const res = await request(app).patch(`/api/spots/${id}`).send({ id: 'hijack' });
+    const res = await api.patch(`/api/spots/${id}`).send({ id: 'hijack' });
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(id);
   });
 
   it('400 validation on an invalid field', async () => {
-    const res = await request(app).patch(`/api/spots/${id}`).send({ category: 'restaurant' });
+    const res = await api.patch(`/api/spots/${id}`).send({ category: 'restaurant' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('validation');
   });
 
   it('404 for an unknown spot', async () => {
-    const res = await request(app).patch('/api/spots/ghost').send({ name: 'ghost' });
+    const res = await api.patch('/api/spots/ghost').send({ name: 'ghost' });
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('not_found');
   });
@@ -278,9 +281,9 @@ describe('PATCH /api/spots/:id', () => {
 describe('DELETE /api/spots/:id', () => {
   it('204, then the spot and its reviews are gone', async () => {
     const { id } = (await createSpot({ name: 'Deletable' })).body;
-    await request(app).post(`/api/spots/${id}/reviews`).send({ stars: 3 });
+    await api.post(`/api/spots/${id}/reviews`).send({ stars: 3 });
 
-    const res = await request(app).delete(`/api/spots/${id}`);
+    const res = await api.delete(`/api/spots/${id}`);
     expect(res.status).toBe(204);
     expect(res.text).toBe('');
     expect((await request(app).get(`/api/spots/${id}`)).status).toBe(404);
@@ -288,7 +291,7 @@ describe('DELETE /api/spots/:id', () => {
   });
 
   it('404 for an unknown spot', async () => {
-    const res = await request(app).delete('/api/spots/ghost');
+    const res = await api.delete('/api/spots/ghost');
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('not_found');
   });
@@ -323,7 +326,7 @@ describe('GET /api/spots/:id/reviews', () => {
 
 describe('POST /api/spots/:id/reviews', () => {
   it('201 with the new review, which then appears in the list', async () => {
-    const res = await request(app)
+    const res = await api
       .post('/api/spots/spot-4/reviews')
       .send({ stars: 5, text: 'Warm bread at 8 am' });
     expect(res.status).toBe(201);
@@ -336,13 +339,13 @@ describe('POST /api/spots/:id/reviews', () => {
   });
 
   it.each([0, 6, 3.5, '4', undefined])('400 validation for stars=%p', async (stars) => {
-    const res = await request(app).post('/api/spots/spot-4/reviews').send({ stars, text: 'x' });
+    const res = await api.post('/api/spots/spot-4/reviews').send({ stars, text: 'x' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('validation');
   });
 
   it('404 for an unknown spot', async () => {
-    const res = await request(app).post('/api/spots/ghost/reviews').send({ stars: 3 });
+    const res = await api.post('/api/spots/ghost/reviews').send({ stars: 3 });
     expect(res.status).toBe(404);
   });
 });
@@ -366,8 +369,8 @@ describe('Idempotency-Key', () => {
 
   it('PATCH replays the original response', async () => {
     const k = key();
-    const first = await request(app).patch('/api/spots/spot-7').set('Idempotency-Key', k).send({ description: 'first' });
-    const second = await request(app).patch('/api/spots/spot-7').set('Idempotency-Key', k).send({ description: 'second' });
+    const first = await api.patch('/api/spots/spot-7').set('Idempotency-Key', k).send({ description: 'first' });
+    const second = await api.patch('/api/spots/spot-7').set('Idempotency-Key', k).send({ description: 'second' });
     expect(second.status).toBe(200);
     expect(second.body.description).toBe('first');
     expect((await request(app).get('/api/spots/spot-7')).body.description).toBe('first');
@@ -377,14 +380,14 @@ describe('Idempotency-Key', () => {
   it('DELETE replays 204 instead of 404', async () => {
     const k = key();
     const { id } = (await createSpot()).body;
-    expect((await request(app).delete(`/api/spots/${id}`).set('Idempotency-Key', k)).status).toBe(204);
-    expect((await request(app).delete(`/api/spots/${id}`).set('Idempotency-Key', k)).status).toBe(204);
+    expect((await api.delete(`/api/spots/${id}`).set('Idempotency-Key', k)).status).toBe(204);
+    expect((await api.delete(`/api/spots/${id}`).set('Idempotency-Key', k)).status).toBe(204);
   });
 
   it('review POST replays without creating a duplicate', async () => {
     const k = key();
-    const first = await request(app).post('/api/spots/spot-5/reviews').set('Idempotency-Key', k).send({ stars: 4 });
-    const second = await request(app).post('/api/spots/spot-5/reviews').set('Idempotency-Key', k).send({ stars: 4 });
+    const first = await api.post('/api/spots/spot-5/reviews').set('Idempotency-Key', k).send({ stars: 4 });
+    const second = await api.post('/api/spots/spot-5/reviews').set('Idempotency-Key', k).send({ stars: 4 });
     expect(second.body.id).toBe(first.body.id);
     const list = await request(app).get('/api/spots/spot-5/reviews');
     expect(list.body.filter((r) => r.id === first.body.id)).toHaveLength(1);
@@ -418,7 +421,7 @@ describe('Chaos headers on mutations and reviews', () => {
 
   it('X-Chaos-Drop applies to PATCH', async () => {
     await expect(
-      request(app).patch('/api/spots/spot-1').set('X-Chaos-Drop', '1').send({ name: 'x' })
+      api.patch('/api/spots/spot-1').set('X-Chaos-Drop', '1').send({ name: 'x' })
     ).rejects.toThrow();
   });
 });
@@ -431,7 +434,7 @@ describe('PATCH conflict rule (updatedAt)', () => {
   });
 
   it('applies a write based on the current version and returns a newer updatedAt', async () => {
-    const res = await request(app)
+    const res = await api
       .patch(`/api/spots/${spot.id}`)
       .send({ openNow: true, updatedAt: spot.updatedAt });
     expect(res.status).toBe(200);
@@ -440,7 +443,7 @@ describe('PATCH conflict rule (updatedAt)', () => {
   });
 
   it('applies a write whose updatedAt is newer than the server copy', async () => {
-    const res = await request(app)
+    const res = await api
       .patch(`/api/spots/${spot.id}`)
       .send({ name: 'Mine', updatedAt: spot.updatedAt + 60_000 });
     expect(res.status).toBe(200);
@@ -448,9 +451,9 @@ describe('PATCH conflict rule (updatedAt)', () => {
   });
 
   it('409 conflict with the server copy when the write is based on a stale version', async () => {
-    const fresh = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
+    const fresh = await api.patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
 
-    const res = await request(app)
+    const res = await api
       .patch(`/api/spots/${spot.id}`)
       .send({ name: 'Mine', updatedAt: spot.updatedAt });
     expect(res.status).toBe(409);
@@ -463,29 +466,29 @@ describe('PATCH conflict rule (updatedAt)', () => {
   });
 
   it('two writes from the same old version: the first wins, the second gets 409', async () => {
-    const first = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'A', updatedAt: spot.updatedAt });
-    const second = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'B', updatedAt: spot.updatedAt });
+    const first = await api.patch(`/api/spots/${spot.id}`).send({ name: 'A', updatedAt: spot.updatedAt });
+    const second = await api.patch(`/api/spots/${spot.id}`).send({ name: 'B', updatedAt: spot.updatedAt });
     expect(first.status).toBe(200);
     expect(second.status).toBe(409);
     expect(second.body.spot.name).toBe('A');
   });
 
   it('a PATCH without updatedAt is applied unconditionally', async () => {
-    await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
-    const res = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Blind write' });
+    await api.patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
+    const res = await api.patch(`/api/spots/${spot.id}`).send({ name: 'Blind write' });
     expect(res.status).toBe(200);
   });
 
   it('400 validation when updatedAt is not a number', async () => {
-    const res = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'x', updatedAt: 'yesterday' });
+    const res = await api.patch(`/api/spots/${spot.id}`).send({ name: 'x', updatedAt: 'yesterday' });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe('validation');
   });
 
   it('replaying a conflicted operation with the same Idempotency-Key returns the same 409', async () => {
-    await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
+    await api.patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
     const send = () =>
-      request(app)
+      api
         .patch(`/api/spots/${spot.id}`)
         .set('Idempotency-Key', `conflict-${spot.id}`)
         .send({ name: 'Mine', updatedAt: spot.updatedAt });

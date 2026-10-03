@@ -27,6 +27,15 @@ final class SpotDetailViewModel {
         }
     }
 
+    func addReview(stars: Int, text: String) async -> String? {
+        do {
+            try await repository.addReview(spotId: spotId, stars: stars, text: text)
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
     func save(name: String, description: String, openNow: Bool) {
         do {
             try repository.editSpot(id: spotId, name: name, description: description, openNow: openNow)

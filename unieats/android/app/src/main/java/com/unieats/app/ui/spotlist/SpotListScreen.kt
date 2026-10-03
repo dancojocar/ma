@@ -13,8 +13,14 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -45,6 +51,7 @@ import com.unieats.app.ui.components.MessageView
 @Composable
 fun SpotListScreen(
     onSpotClick: (String) -> Unit,
+    onLogout: () -> Unit,
     viewModel: SpotListViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -56,7 +63,8 @@ fun SpotListScreen(
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadNextPage,
         onRetry = viewModel::retry,
-        onSpotClick = onSpotClick
+        onSpotClick = onSpotClick,
+        onLogout = onLogout
     )
 }
 
@@ -70,7 +78,8 @@ fun SpotListContent(
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
-    onSpotClick: (String) -> Unit
+    onSpotClick: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
     var sortByRating by rememberSaveable { mutableStateOf(false) }
     val spots = if (sortByRating) state.spots.sortedByDescending { it.rating } else state.spots
@@ -94,6 +103,7 @@ fun SpotListContent(
                     TextButton(onClick = { sortByRating = !sortByRating }) {
                         Text(if (sortByRating) "Sort: rating" else "Sort: default")
                     }
+                    OverflowMenu(onLogout = onLogout)
                 }
             )
         },
@@ -149,6 +159,25 @@ fun SpotListContent(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun OverflowMenu(onLogout: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(Icons.Default.MoreVert, contentDescription = "More options")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("Log out") },
+                onClick = {
+                    expanded = false
+                    onLogout()
+                }
+            )
         }
     }
 }

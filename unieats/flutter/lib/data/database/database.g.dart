@@ -766,10 +766,12 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  static const VerificationMeta _reviewTextMeta = const VerificationMeta(
+    'reviewText',
+  );
   @override
-  late final GeneratedColumn<String> body = GeneratedColumn<String>(
-    'body',
+  late final GeneratedColumn<String> reviewText = GeneratedColumn<String>(
+    'text',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -792,7 +794,7 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
     spotId,
     author,
     stars,
-    body,
+    reviewText,
     createdAt,
   ];
   @override
@@ -836,13 +838,13 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
     } else if (isInserting) {
       context.missing(_starsMeta);
     }
-    if (data.containsKey('body')) {
+    if (data.containsKey('text')) {
       context.handle(
-        _bodyMeta,
-        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+        _reviewTextMeta,
+        reviewText.isAcceptableOrUnknown(data['text']!, _reviewTextMeta),
       );
     } else if (isInserting) {
-      context.missing(_bodyMeta);
+      context.missing(_reviewTextMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -881,10 +883,10 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
             DriftSqlType.int,
             data['${effectivePrefix}stars'],
           )!,
-      body:
+      reviewText:
           attachedDatabase.typeMapping.read(
             DriftSqlType.string,
-            data['${effectivePrefix}body'],
+            data['${effectivePrefix}text'],
           )!,
       createdAt:
           attachedDatabase.typeMapping.read(
@@ -905,14 +907,16 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
   final String spotId;
   final String author;
   final int stars;
-  final String body;
+
+  /// Was `body` in schema v1; v2 renamed the SQL column to match the API's `text`.
+  final String reviewText;
   final int createdAt;
   const ReviewRow({
     required this.id,
     required this.spotId,
     required this.author,
     required this.stars,
-    required this.body,
+    required this.reviewText,
     required this.createdAt,
   });
   @override
@@ -922,7 +926,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
     map['spot_id'] = Variable<String>(spotId);
     map['author'] = Variable<String>(author);
     map['stars'] = Variable<int>(stars);
-    map['body'] = Variable<String>(body);
+    map['text'] = Variable<String>(reviewText);
     map['created_at'] = Variable<int>(createdAt);
     return map;
   }
@@ -933,7 +937,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       spotId: Value(spotId),
       author: Value(author),
       stars: Value(stars),
-      body: Value(body),
+      reviewText: Value(reviewText),
       createdAt: Value(createdAt),
     );
   }
@@ -948,7 +952,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       spotId: serializer.fromJson<String>(json['spotId']),
       author: serializer.fromJson<String>(json['author']),
       stars: serializer.fromJson<int>(json['stars']),
-      body: serializer.fromJson<String>(json['body']),
+      reviewText: serializer.fromJson<String>(json['reviewText']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
   }
@@ -960,7 +964,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       'spotId': serializer.toJson<String>(spotId),
       'author': serializer.toJson<String>(author),
       'stars': serializer.toJson<int>(stars),
-      'body': serializer.toJson<String>(body),
+      'reviewText': serializer.toJson<String>(reviewText),
       'createdAt': serializer.toJson<int>(createdAt),
     };
   }
@@ -970,14 +974,14 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
     String? spotId,
     String? author,
     int? stars,
-    String? body,
+    String? reviewText,
     int? createdAt,
   }) => ReviewRow(
     id: id ?? this.id,
     spotId: spotId ?? this.spotId,
     author: author ?? this.author,
     stars: stars ?? this.stars,
-    body: body ?? this.body,
+    reviewText: reviewText ?? this.reviewText,
     createdAt: createdAt ?? this.createdAt,
   );
   ReviewRow copyWithCompanion(ReviewsCompanion data) {
@@ -986,7 +990,8 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       spotId: data.spotId.present ? data.spotId.value : this.spotId,
       author: data.author.present ? data.author.value : this.author,
       stars: data.stars.present ? data.stars.value : this.stars,
-      body: data.body.present ? data.body.value : this.body,
+      reviewText:
+          data.reviewText.present ? data.reviewText.value : this.reviewText,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -998,14 +1003,15 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
           ..write('spotId: $spotId, ')
           ..write('author: $author, ')
           ..write('stars: $stars, ')
-          ..write('body: $body, ')
+          ..write('reviewText: $reviewText, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, spotId, author, stars, body, createdAt);
+  int get hashCode =>
+      Object.hash(id, spotId, author, stars, reviewText, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1014,7 +1020,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
           other.spotId == this.spotId &&
           other.author == this.author &&
           other.stars == this.stars &&
-          other.body == this.body &&
+          other.reviewText == this.reviewText &&
           other.createdAt == this.createdAt);
 }
 
@@ -1023,7 +1029,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
   final Value<String> spotId;
   final Value<String> author;
   final Value<int> stars;
-  final Value<String> body;
+  final Value<String> reviewText;
   final Value<int> createdAt;
   final Value<int> rowid;
   const ReviewsCompanion({
@@ -1031,7 +1037,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     this.spotId = const Value.absent(),
     this.author = const Value.absent(),
     this.stars = const Value.absent(),
-    this.body = const Value.absent(),
+    this.reviewText = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1040,21 +1046,21 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     required String spotId,
     required String author,
     required int stars,
-    required String body,
+    required String reviewText,
     required int createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        spotId = Value(spotId),
        author = Value(author),
        stars = Value(stars),
-       body = Value(body),
+       reviewText = Value(reviewText),
        createdAt = Value(createdAt);
   static Insertable<ReviewRow> custom({
     Expression<String>? id,
     Expression<String>? spotId,
     Expression<String>? author,
     Expression<int>? stars,
-    Expression<String>? body,
+    Expression<String>? reviewText,
     Expression<int>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -1063,7 +1069,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
       if (spotId != null) 'spot_id': spotId,
       if (author != null) 'author': author,
       if (stars != null) 'stars': stars,
-      if (body != null) 'body': body,
+      if (reviewText != null) 'text': reviewText,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1074,7 +1080,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     Value<String>? spotId,
     Value<String>? author,
     Value<int>? stars,
-    Value<String>? body,
+    Value<String>? reviewText,
     Value<int>? createdAt,
     Value<int>? rowid,
   }) {
@@ -1083,7 +1089,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
       spotId: spotId ?? this.spotId,
       author: author ?? this.author,
       stars: stars ?? this.stars,
-      body: body ?? this.body,
+      reviewText: reviewText ?? this.reviewText,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1104,8 +1110,8 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     if (stars.present) {
       map['stars'] = Variable<int>(stars.value);
     }
-    if (body.present) {
-      map['body'] = Variable<String>(body.value);
+    if (reviewText.present) {
+      map['text'] = Variable<String>(reviewText.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
@@ -1123,7 +1129,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
           ..write('spotId: $spotId, ')
           ..write('author: $author, ')
           ..write('stars: $stars, ')
-          ..write('body: $body, ')
+          ..write('reviewText: $reviewText, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1894,7 +1900,7 @@ typedef $$ReviewsTableCreateCompanionBuilder =
       required String spotId,
       required String author,
       required int stars,
-      required String body,
+      required String reviewText,
       required int createdAt,
       Value<int> rowid,
     });
@@ -1904,7 +1910,7 @@ typedef $$ReviewsTableUpdateCompanionBuilder =
       Value<String> spotId,
       Value<String> author,
       Value<int> stars,
-      Value<String> body,
+      Value<String> reviewText,
       Value<int> createdAt,
       Value<int> rowid,
     });
@@ -1938,8 +1944,8 @@ class $$ReviewsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get body => $composableBuilder(
-    column: $table.body,
+  ColumnFilters<String> get reviewText => $composableBuilder(
+    column: $table.reviewText,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1978,8 +1984,8 @@ class $$ReviewsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get body => $composableBuilder(
-    column: $table.body,
+  ColumnOrderings<String> get reviewText => $composableBuilder(
+    column: $table.reviewText,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2010,8 +2016,10 @@ class $$ReviewsTableAnnotationComposer
   GeneratedColumn<int> get stars =>
       $composableBuilder(column: $table.stars, builder: (column) => column);
 
-  GeneratedColumn<String> get body =>
-      $composableBuilder(column: $table.body, builder: (column) => column);
+  GeneratedColumn<String> get reviewText => $composableBuilder(
+    column: $table.reviewText,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2049,7 +2057,7 @@ class $$ReviewsTableTableManager
                 Value<String> spotId = const Value.absent(),
                 Value<String> author = const Value.absent(),
                 Value<int> stars = const Value.absent(),
-                Value<String> body = const Value.absent(),
+                Value<String> reviewText = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReviewsCompanion(
@@ -2057,7 +2065,7 @@ class $$ReviewsTableTableManager
                 spotId: spotId,
                 author: author,
                 stars: stars,
-                body: body,
+                reviewText: reviewText,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -2067,7 +2075,7 @@ class $$ReviewsTableTableManager
                 required String spotId,
                 required String author,
                 required int stars,
-                required String body,
+                required String reviewText,
                 required int createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => ReviewsCompanion.insert(
@@ -2075,7 +2083,7 @@ class $$ReviewsTableTableManager
                 spotId: spotId,
                 author: author,
                 stars: stars,
-                body: body,
+                reviewText: reviewText,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

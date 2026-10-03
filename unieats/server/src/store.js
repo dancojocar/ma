@@ -40,6 +40,15 @@ function deleteSpot(id) {
   return true;
 }
 
+function getUserByEmail(email) {
+  const normalized = String(email).trim().toLowerCase();
+  return seed.users.find((u) => u.email === normalized) || null;
+}
+
+function getUserById(id) {
+  return seed.users.find((u) => u.id === id) || null;
+}
+
 function getReviewsForSpot(spotId) {
   return reviews.filter((r) => r.spotId === spotId);
 }
@@ -58,4 +67,6 @@ module.exports = {
   deleteSpot,
   getReviewsForSpot,
   addReview,
+  getUserByEmail,
+  getUserById,
 };

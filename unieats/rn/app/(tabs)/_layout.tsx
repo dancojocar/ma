@@ -1,11 +1,17 @@
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import { StyleSheet, Text } from "react-native";
+import { LoadingView } from "../../src/components/StatusViews";
+import { useSessionStore } from "../../src/store/sessionStore";
 
 function TabIcon({ symbol }: { symbol: string }) {
   return <Text style={styles.icon}>{symbol}</Text>;
 }
 
 export default function TabsLayout() {
+  const status = useSessionStore((s) => s.status);
+  if (status === "restoring") return <LoadingView />;
+  if (status === "signedOut") return <Redirect href="/login" />;
+
   return (
     <Tabs
       screenOptions={{
@@ -22,6 +28,13 @@ export default function TabsLayout() {
           title: "Spots",
           headerShown: false,
           tabBarIcon: ({ focused }) => <TabIcon symbol={focused ? "🍽️" : "🍴"} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ focused }) => <TabIcon symbol={focused ? "👤" : "👥"} />,
         }}
       />
     </Tabs>

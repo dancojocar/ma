@@ -25,6 +25,10 @@ export function isClientError(error: unknown): boolean {
   );
 }
 
+export function isUnauthorized(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
 export function describeError(error: unknown): string {
   if (!(error instanceof ApiError)) return "Something went wrong.";
   switch (error.kind) {
@@ -35,6 +39,7 @@ export function describeError(error: unknown): string {
     case "parse":
       return "The server sent an unexpected response.";
     case "http":
+      if (error.status === 401) return "Please sign in again.";
       return error.status === 404 ? "Not found." : `Server error (${error.status}).`;
   }
 }

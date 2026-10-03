@@ -54,6 +54,32 @@ class ApiClient {
         list.map((e) => Review.fromJson(e as Map<String, dynamic>)).toList(),
   );
 
+  Future<({String token, User user})> login(String email, String password) =>
+      _send(
+        () => _dio.post<Map<String, dynamic>>(
+          '/auth/login',
+          data: {'email': email, 'password': password},
+        ),
+        (json) => (
+          token: json['token'] as String,
+          user: User.fromJson(json['user'] as Map<String, dynamic>),
+        ),
+      );
+
+  Future<Review> createReview(
+    String spotId, {
+    required int stars,
+    required String text,
+    required String idempotencyKey,
+  }) => _send(
+    () => _dio.post<Map<String, dynamic>>(
+      '/spots/$spotId/reviews',
+      data: {'stars': stars, 'text': text},
+      options: Options(headers: {'Idempotency-Key': idempotencyKey}),
+    ),
+    Review.fromJson,
+  );
+
   /// [idempotencyKey] makes a replayed request safe: the server answers a
   /// repeated key with the original response instead of applying it twice.
   Future<Spot> patchSpot(

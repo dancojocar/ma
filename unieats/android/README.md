@@ -1,4 +1,4 @@
-# UniEats Android — tag `l07-offline`
+# UniEats Android — tag `l08-auth`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -27,6 +27,20 @@ cd unieats/server && npm install && npm start      # http://localhost:3000
   `SyncConflictResolver`: the newer `updatedAt` wins, a tie goes to the client).
 - UI: **Edit spot** on the detail screen (name, description, open now), a "Waiting to sync" chip on
   edited spots and an "N changes pending" banner on the list.
+
+## Login and protected writes (new in l08)
+
+- Sign in with `student@unieats.app` / `password`. The server protects every mutation from this
+  tag on.
+- `data/auth/TokenStore.kt` — the JWT and display name in `EncryptedSharedPreferences`
+  (AES-256-GCM values, key in the Android Keystore). `allowBackup="false"` keeps it out of backups.
+- `data/remote/ApiClient.kt` — `authorized()` adds `Authorization: Bearer <jwt>` to PATCH and
+  review POST (reads stay anonymous); `OutboxSync` replays with the same header.
+- `di/AppModule.kt` — a 401 on a request that carried a token clears the session, and
+  `ui/navigation/NavGraph.kt` sends you back to the login screen (also when the 1 h token
+  expires). Queued edits stay in the outbox and are replayed after the next sign-in.
+- **Log out** is in the ⋮ menu of the list; **Add review** is on the detail screen (online only:
+  POST needs the server).
 
 ## Demo: offline edit → reconnect → sync
 

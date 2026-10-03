@@ -16,6 +16,7 @@ coreKtx = "1.16.0"
 lifecycleRuntimeKtx = "2.9.0"
 activityCompose = "1.10.1"
 work = "2.10.1"
+securityCrypto = "1.1.0"
 androidxHilt = "1.2.0"
 
 [libraries]
@@ -47,6 +48,9 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "androidxHilt" }
 androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "androidxHilt" }
+
+# Secure storage
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
