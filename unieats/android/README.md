@@ -1,6 +1,8 @@
-# UniEats Android — tag `l03-state`
+# UniEats Android — tag `l04-nav`
 
-The list now has search, a category filter and favourites, all owned by a ViewModel.
+Real navigation: a Navigation Compose `NavHost` with type-safe routes, the detail screen receives
+only the spot **id**, and two deep links open a spot directly. Search, category filter and
+favourites from l03 are still there.
 
 ## Run
 
@@ -10,18 +12,24 @@ The list now has search, a category filter and favourites, all owned by a ViewMo
 
 ## What to look at
 
-- `ui/spotlist/SpotListViewModel.kt` — `SpotListUiState(spots, searchQuery, categoryFilter,
-  favouriteIds)` held in a **private** `MutableStateFlow` and exposed as one read-only
-  `StateFlow<SpotListUiState>`. The screen can only change it through `onSearchQueryChange`,
-  `onCategorySelected` and `toggleFavourite`.
-- `ui/spotlist/SpotSearchBar.kt` — stateless `SpotSearchBar(query, onQueryChange)` and
-  `CategoryFilterRow(selected, onSelect)`: state goes down, events go up.
-- `ui/spotlist/SpotListScreen.kt` — `SpotListScreen` collects the state with
-  `collectAsStateWithLifecycle()` and hands it to the stateless `SpotListContent`. The Sort toggle
-  stays a local `rememberSaveable`: it is ephemeral UI state nobody else needs.
-- `data/repository/SpotRepository.kt` — still the 8 hard-coded spots; Hilt injects it.
+- `ui/navigation/NavGraph.kt` — `@Serializable` routes `SpotList` and `SpotDetail(spotId)`;
+  `navController.navigate(SpotDetail(id))`; the detail destination declares two `navDeepLink`s.
+- `ui/spotdetail/SpotDetailViewModel.kt` — reads its argument with
+  `savedStateHandle.toRoute<SpotDetail>()` and looks the spot up in the repository (it never gets
+  the object itself, so a deep link and a tap take the same path).
+- `AndroidManifest.xml` — two `VIEW` + `BROWSABLE` intent-filters: `unieats://spots/…` and
+  `https://unieats.app/spots/…`.
 
-**Rotation demo:** search for "pizza", then rotate the emulator. The query and the filtered list
-survive because they live in the ViewModel (the manifest has no `configChanges`, so the Activity
-really is recreated). Move the query into a `remember { mutableStateOf("") }` inside the composable
-and rotate again to see it reset.
+## Try the deep links (emulator or phone with USB debugging)
+
+```bash
+adb shell am start -W -a android.intent.action.VIEW -d "unieats://spots/spot-3" com.unieats.app
+adb shell am start -W -a android.intent.action.VIEW -d "https://unieats.app/spots/spot-3" com.unieats.app
+```
+
+Both open "Pizza Stop"; Back goes to the list (Navigation builds the back stack for you). An unknown
+id shows "Spot not found". The https link is marked `autoVerify`, but without a
+`/.well-known/assetlinks.json` on unieats.app Android will not verify it, so a browser tap opens the
+browser; passing the package name as above (or
+`adb shell pm set-app-links-user-selection --user 0 --package com.unieats.app true unieats.app`)
+routes it to the app.

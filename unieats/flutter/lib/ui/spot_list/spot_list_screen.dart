@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../domain/models.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
-import '../spot_detail/spot_detail_screen.dart';
 import 'spot_list_widgets.dart';
 
 class SpotListScreen extends ConsumerWidget {
@@ -43,12 +43,7 @@ class SpotListScreen extends ConsumerWidget {
                           isFavourite: state.favouriteIds.contains(spot.id),
                           onFavouriteToggle:
                               () => notifier.toggleFavourite(spot.id),
-                          onTap:
-                              () => Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => SpotDetailScreen(spot: spot),
-                                ),
-                              ),
+                          onTap: () => context.push('/spots/${spot.id}'),
                         );
                       },
                     ),
