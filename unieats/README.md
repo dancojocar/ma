@@ -32,11 +32,12 @@ four install side by side on one phone.
 | L07 Persistence/Offline | `l07-offline` | Local DB is the single source of truth; "Edit spot" writes optimistically into an outbox; replay on reconnect with `Idempotency-Key`; 409 → last-write-wins; "N changes pending" indicator. | `PATCH` returns 409 on a stale `updatedAt` |
 | L08 Security | `l08-auth` | Login, JWT in secure storage, `Authorization` on every mutation and on replay, 401 → login, logout. **Add review** appears here. | `POST /api/auth/login` (bcrypt), JWT required on mutations |
 | L09 Background/Sensors | `l09-push-location` | "Spots near me" (2 km) with proper permission flow, updates stopped on leave; a local notification on live `spot.updated`. | unchanged |
-| L10 Animations/Perf | `l10-polish` | List item animations, hero/zoom photo transition, expandable description, swipe gesture (RN); `PERFORMANCE.md` per stack. | unchanged |
-| L11 Cloud/Distribution | `l11-cloud` | `show_new_rating_ui` flag from `GET /api/config` with Fetch & activate; consent-gated `CrashReporter` with a debug Test-crash button. No Firebase SDK (see the legacy demos). | `GET/POST /api/config`; CI workflows |
+| L10 Animations/Perf | `l10-polish` | Android: `animateItem`, expandable About card, NavHost transitions. iOS: list animation + zoom photo transition. Flutter: `Hero` + staggered entrance. RN: `FadeInDown` + swipe gesture. `PERFORMANCE.md` per stack. | unchanged |
+| L11 Cloud/Distribution | `l11-cloud` | `show_new_rating_ui` flag from `GET /api/config` with Fetch & activate; consent-gated `CrashReporter` with a debug Test-crash button. No Firebase SDK (see the legacy demos). | `GET/POST /api/config` |
 | L12 Architecture | `l12-kmp` | Android: real Kotlin Multiplatform `shared/` module (models + `SyncConflictResolver`, `UniEatsShared` XCFramework) and an `EatsRepository` interface with a fake for tests. iOS links the local `UniEatsDomain` Swift package. Flutter: pure-Dart `packages/unieats_data`. RN: `@unieats/shared` workspace package. | unchanged |
 | L13 AI | `l13-ai` | "Describe this dish" streamed token by token over Server-Sent Events from the backend proxy. | `POST /api/ai/describe` (SSE; Claude when `ANTHROPIC_API_KEY` is set, template otherwise) |
 | L14 Testing/Interview | `l14-tests` | Unit tests in every stack + one Maestro flow per stack. | contract conformance suite (219 tests) |
+| — | branch tip | `unieats/maestro/run.sh` + `.github/workflows/{native,cross,server}.yml` at the repo root (`working-directory: unieats/<stack>`). | — |
 
 Each tag *adds*: nothing from an earlier tag is removed (favourites, search, live updates stay).
 
@@ -64,10 +65,12 @@ near 44.427 N, 26.103 E (Bucharest); set the emulator location there for the L09
 
 ## Verification (2026-10-03, every tag from a clean checkout)
 
-| Stack | Gate run at every tag | Result |
+Test gates run where tests exist: client unit tests arrive at `l14-tests` (the RN `test` script too); before that the gate is build + analyze.
+
+| Stack | Gate | Result |
 |---|---|---|
 | server | `npm ci && npm test` | pass at all 14 tags (21 → 219 tests) |
-| android | `:app:assembleDebug`, `:app:testDebugUnitTest`, `:shared:allTests` (l12+) | pass; 0 Kotlin warnings; 31 tests at l14 |
+| android | `:app:assembleDebug`, `:app:testDebugUnitTest`, `:shared:allTests` (l12+) | pass; 0 Kotlin warnings; 25 tests at l14 (22 app + 3 shared, the shared ones on 3 targets) |
 | flutter | `flutter analyze` (0 issues), `flutter test`, `flutter build apk --debug` | pass; 26 tests at l14 |
 | rn | `npm ci && npx tsc --noEmit && npm test && npx expo export` | pass; 21 tests at l14 |
 | ios | `xcodebuild … build` (0 warnings), `UniEatsTests` at l14 | pass; 11 tests at l14 |
@@ -77,7 +80,9 @@ Known limits, stated honestly:
 - No Android emulator was available during the rebuild: Android and RN flows and deep links were
   verified statically (merged manifest) and against the server from JVM/Node, not on a device.
 - `https://unieats.app/...` links need a hosted assetlinks/AASA file to open the app directly; the
-  custom scheme works everywhere.
+  custom scheme works everywhere. Flutter on iOS declares only the custom scheme (no associated domain).
+- At `l08` the Android/iOS READMEs and at `l08`–`l09` the Flutter README show a conflict-demo `curl -X PATCH`
+  without the Bearer token the server requires from `l08`; prefix it with the login snippet from `server/README.md`.
 - RN at `l07`–`l09` resolves a 409 by re-sending a newer local edit on top of the server copy; from
   `l10` it follows the contract exactly (server copy wins, op dropped).
 - iOS `l07`–`l13`: a simulator that still has an app store from the pre-rebuild code crashes at
