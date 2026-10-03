@@ -1,0 +1,212 @@
+name: Cross-platform CI
+
+on:
+  push:
+    paths:
+      - "unieats/flutter/**"
+      - "unieats/rn/**"
+      - "unieats/*/maestro/**"
+      - ".github/workflows/cross.yml"
+  pull_request:
+    paths:
+      - "unieats/flutter/**"
+      - "unieats/rn/**"
+      - "unieats/*/maestro/**"
+      - ".github/workflows/cross.yml"
+  workflow_dispatch:
+    inputs:
+      run_maestro:
+        description: "Also run the Maestro flows on an Android emulator (slow)"
+        type: boolean
+        default: false
+
+env:
+  FLUTTER_VERSION: "3.41.4"
+  MAESTRO_VERSION: "2.0.10"
+
+jobs:
+  flutter:
+    name: Flutter — analyze, test, build APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: unieats/flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Unit tests
+        run: flutter test
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flutter-app-debug
+          path: unieats/flutter/build/app/outputs/flutter-apk/app-debug.apk
+
+  rn:
+    name: React Native — tsc + tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: unieats/rn
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: unieats/rn/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+  maestro-syntax:
+    name: Maestro — check flow syntax (all stacks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Check every flow
+        run: |
+          for flow in unieats/android/maestro/android.yaml unieats/ios/maestro/ios.yaml \
+                      unieats/flutter/maestro/flutter.yaml unieats/rn/maestro/rn.yaml; do
+            maestro check-syntax "$flow"
+          done
+
+  maestro-flutter:
+    name: Maestro — Flutter (Android emulator)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_maestro
+    needs: flutter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Start the UniEats server
+        working-directory: unieats/server
+        run: |
+          npm ci
+          nohup npm start > server.log 2>&1 &
+          for _ in $(seq 30); do curl -sf http://localhost:3000/api/health && exit 0; sleep 1; done
+          cat server.log; exit 1
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: flutter-app-debug
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Run the flow on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install -r app-debug.apk
+            maestro test unieats/flutter/maestro/flutter.yaml
+
+  maestro-rn:
+    name: Maestro — React Native (Android emulator)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_maestro
+    needs: rn
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: |
+            unieats/server/package-lock.json
+            unieats/rn/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Start the UniEats server
+        working-directory: unieats/server
+        run: |
+          npm ci
+          nohup npm start > server.log 2>&1 &
+          for _ in $(seq 30); do curl -sf http://localhost:3000/api/health && exit 0; sleep 1; done
+          cat server.log; exit 1
+
+      # A debug build loads its JS from Metro, so Metro must be running while the flow runs.
+      - name: Prebuild the native Android project, build it, start Metro
+        working-directory: unieats/rn
+        run: |
+          npm ci
+          npx expo prebuild --platform android --no-install
+          (cd android && ./gradlew :app:assembleDebug --console=plain)
+          CI=1 nohup npx expo start --port 8081 > metro.log 2>&1 &
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Run the flow on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install -r unieats/rn/android/app/build/outputs/apk/debug/app-debug.apk
+            maestro test unieats/rn/maestro/rn.yaml

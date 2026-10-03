@@ -1,0 +1,168 @@
+name: Native CI
+
+on:
+  push:
+    paths:
+      - "unieats/android/**"
+      - "unieats/ios/**"
+      - ".github/workflows/native.yml"
+  pull_request:
+    paths:
+      - "unieats/android/**"
+      - "unieats/ios/**"
+      - ".github/workflows/native.yml"
+  workflow_dispatch:
+    inputs:
+      run_maestro:
+        description: "Also run the Maestro flows (boots an emulator / simulator, slow)"
+        type: boolean
+        default: false
+
+env:
+  MAESTRO_VERSION: "2.0.10"
+
+jobs:
+  android:
+    name: Android — assemble + unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: unieats/android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Write local.properties
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+      - name: Assemble debug APK
+        run: ./gradlew :app:assembleDebug --console=plain
+
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest --console=plain
+
+      - name: Shared KMP module tests
+        run: ./gradlew :shared:allTests --console=plain
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-app-debug
+          path: unieats/android/app/build/outputs/apk/debug/app-debug.apk
+
+  ios:
+    name: iOS — simulator build + unit tests
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: unieats/ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build for the iOS Simulator
+        run: |
+          xcodebuild -project UniEats.xcodeproj -scheme UniEats \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            build CODE_SIGNING_ALLOWED=NO
+
+      - name: Unit tests (UniEatsTests scheme)
+        run: |
+          UDID=$(xcrun simctl list devices available | grep -m1 -E '^ +iPhone' | grep -oE '[0-9A-F-]{36}')
+          xcodebuild -project UniEats.xcodeproj -scheme UniEatsTests \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            test CODE_SIGNING_ALLOWED=NO
+
+  maestro-android:
+    name: Maestro — Android
+    if: github.event_name == 'workflow_dispatch' && inputs.run_maestro
+    needs: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Start the UniEats server
+        working-directory: unieats/server
+        run: |
+          npm ci
+          nohup npm start > server.log 2>&1 &
+          for _ in $(seq 30); do curl -sf http://localhost:3000/api/health && exit 0; sleep 1; done
+          cat server.log; exit 1
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-app-debug
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Run the flow on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: |
+            adb install -r app-debug.apk
+            maestro test unieats/android/maestro/android.yaml
+
+  maestro-ios:
+    name: Maestro — iOS
+    if: github.event_name == 'workflow_dispatch' && inputs.run_maestro
+    needs: ios
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Start the UniEats server
+        working-directory: unieats/server
+        run: |
+          npm ci
+          nohup npm start > server.log 2>&1 &
+          for _ in $(seq 30); do curl -sf http://localhost:3000/api/health && exit 0; sleep 1; done
+          cat server.log; exit 1
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Build, boot a simulator, install, run the flow
+        working-directory: unieats/ios
+        run: |
+          UDID=$(xcrun simctl list devices available | grep -m1 -E '^ +iPhone' | grep -oE '[0-9A-F-]{36}')
+          xcodebuild -project UniEats.xcodeproj -scheme UniEats \
+            -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath build \
+            build CODE_SIGNING_ALLOWED=NO
+          xcrun simctl boot "$UDID"
+          xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/UniEats.app
+          maestro test maestro/ios.yaml

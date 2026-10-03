@@ -1,0 +1,37 @@
+name: Server CI
+
+on:
+  push:
+    paths:
+      - "unieats/server/**"
+      - ".github/workflows/server.yml"
+  pull_request:
+    paths:
+      - "unieats/server/**"
+      - ".github/workflows/server.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} — npm ci + npm test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ["20", "22"]
+    defaults:
+      run:
+        working-directory: unieats/server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: unieats/server/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
