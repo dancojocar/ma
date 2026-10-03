@@ -1,7 +1,6 @@
-# UniEats Android — tag `l02-ui`
+# UniEats Android — tag `l03-state`
 
-A static list of the 8 campus food spots and a detail screen, all from hard-coded data
-(`data/model/SeedData.kt`, the same 8 spots the server seeds). No network, no ViewModel yet.
+The list now has search, a category filter and favourites, all owned by a ViewModel.
 
 ## Run
 
@@ -9,18 +8,20 @@ A static list of the 8 campus food spots and a detail screen, all from hard-code
 ./gradlew -p unieats/android :app:installDebug
 ```
 
-or open `unieats/android` in Android Studio and press Run.
-
 ## What to look at
 
-- `ui/spotlist/SpotListScreen.kt` — `LazyColumn` with `items(spots, key = { it.id })` and
-  `Modifier.animateItem()` on every row. Tap **Sort** in the top bar: the rows slide to their new
-  positions. Delete `key = { it.id }` and tap Sort again: the rows just flash, because Compose no
-  longer knows which row is which.
-- `ui/spotlist/SpotCard.kt` — one row, a stateless composable (`spot` + `onClick` in, UI out).
-- `ui/spotdetail/SpotDetailScreen.kt` — detail with photo, rating, description and "Reviews (n)".
-- `MainActivity.kt` — list → detail is a `rememberSaveable` selected id (real navigation arrives
-  at `l04-nav`). The system Back button returns to the list.
+- `ui/spotlist/SpotListViewModel.kt` — `SpotListUiState(spots, searchQuery, categoryFilter,
+  favouriteIds)` held in a **private** `MutableStateFlow` and exposed as one read-only
+  `StateFlow<SpotListUiState>`. The screen can only change it through `onSearchQueryChange`,
+  `onCategorySelected` and `toggleFavourite`.
+- `ui/spotlist/SpotSearchBar.kt` — stateless `SpotSearchBar(query, onQueryChange)` and
+  `CategoryFilterRow(selected, onSelect)`: state goes down, events go up.
+- `ui/spotlist/SpotListScreen.kt` — `SpotListScreen` collects the state with
+  `collectAsStateWithLifecycle()` and hands it to the stateless `SpotListContent`. The Sort toggle
+  stays a local `rememberSaveable`: it is ephemeral UI state nobody else needs.
+- `data/repository/SpotRepository.kt` — still the 8 hard-coded spots; Hilt injects it.
 
-Photos are loaded from `photoUrl` (picsum.photos) with Coil, so the emulator needs internet for
-images; everything else works offline.
+**Rotation demo:** search for "pizza", then rotate the emulator. The query and the filtered list
+survive because they live in the ViewModel (the manifest has no `configChanges`, so the Activity
+really is recreated). Move the query into a `remember { mutableStateOf("") }` inside the composable
+and rotate again to see it reset.

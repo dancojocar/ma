@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SpotRow: View {
     let spot: Spot
+    let isFavourite: Bool
+    let onToggleFavourite: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -15,6 +17,12 @@ struct SpotRow: View {
                         .font(.headline)
                         .lineLimit(1)
                     Spacer()
+                    Button(action: onToggleFavourite) {
+                        Image(systemName: isFavourite ? "heart.fill" : "heart")
+                            .foregroundStyle(isFavourite ? .red : .secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(isFavourite ? "Remove from favourites" : "Add to favourites")
                     OpenBadge(openNow: spot.openNow)
                 }
 
