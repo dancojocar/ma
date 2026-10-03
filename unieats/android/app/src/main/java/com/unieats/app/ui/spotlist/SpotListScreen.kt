@@ -59,6 +59,7 @@ import com.unieats.app.ui.components.MessageView
 fun SpotListScreen(
     onSpotClick: (String) -> Unit,
     onNearbyClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onLogout: () -> Unit,
     viewModel: SpotListViewModel = hiltViewModel()
 ) {
@@ -73,6 +74,7 @@ fun SpotListScreen(
         onRetry = viewModel::retry,
         onSpotClick = onSpotClick,
         onNearbyClick = onNearbyClick,
+        onSettingsClick = onSettingsClick,
         onLogout = onLogout
     )
 }
@@ -89,6 +91,7 @@ fun SpotListContent(
     onRetry: () -> Unit,
     onSpotClick: (String) -> Unit,
     onNearbyClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     var sortByRating by rememberSaveable { mutableStateOf(false) }
@@ -117,6 +120,7 @@ fun SpotListContent(
                     OverflowMenu(
                         sortByRating = sortByRating,
                         onToggleSort = { sortByRating = !sortByRating },
+                        onSettingsClick = onSettingsClick,
                         onLogout = onLogout
                     )
                 }
@@ -159,6 +163,7 @@ fun SpotListContent(
                                 spot = spot,
                                 isFavourite = spot.id in state.favouriteIds,
                                 isPending = spot.id in state.pendingSpotIds,
+                                showNewRatingUi = state.showNewRatingUi,
                                 onClick = { onSpotClick(spot.id) },
                                 onToggleFavourite = { onToggleFavourite(spot.id) },
                                 modifier = Modifier.animateItem()
@@ -193,7 +198,12 @@ private fun NotificationPermissionEffect() {
 }
 
 @Composable
-private fun OverflowMenu(sortByRating: Boolean, onToggleSort: () -> Unit, onLogout: () -> Unit) {
+private fun OverflowMenu(
+    sortByRating: Boolean,
+    onToggleSort: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onLogout: () -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
@@ -205,6 +215,13 @@ private fun OverflowMenu(sortByRating: Boolean, onToggleSort: () -> Unit, onLogo
                 onClick = {
                     expanded = false
                     onToggleSort()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("Settings") },
+                onClick = {
+                    expanded = false
+                    onSettingsClick()
                 }
             )
             DropdownMenuItem(

@@ -35,6 +35,7 @@ const MIGRATIONS = [
    );`,
   // v2: a pending row keeps the server version it edited in `updatedAt` itself (CONTRACT §3).
   `ALTER TABLE spots DROP COLUMN serverUpdatedAt;`,
+  `CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);`,
 ];
 
 let db: SQLite.SQLiteDatabase | null = null;

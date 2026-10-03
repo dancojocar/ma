@@ -2,6 +2,7 @@ package com.unieats.app.data.remote
 
 import com.unieats.app.data.auth.AuthTokens
 import com.unieats.app.data.model.Category
+import com.unieats.app.data.model.ConfigResponse
 import com.unieats.app.data.model.LoginRequest
 import com.unieats.app.data.model.LoginResponse
 import com.unieats.app.data.model.NewReview
@@ -50,6 +51,8 @@ class ApiClient @Inject constructor(
     suspend fun getSpot(id: String): Spot = http.get("spots/$id").body()
 
     suspend fun getReviews(spotId: String): List<Review> = http.get("spots/$spotId/reviews").body()
+
+    suspend fun getConfig(): ConfigResponse = http.get("config").body()
 
     suspend fun patchSpot(id: String, patch: SpotPatch, idempotencyKey: String): Spot =
         http.patch("spots/$id") {

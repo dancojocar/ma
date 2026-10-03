@@ -33,10 +33,20 @@ Since `l09-push-location`:
   WebSocket's `spot.updated` event — no FCM/APNs. Android 13+ asks for `POST_NOTIFICATIONS` when the
   list first opens. Try: `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
 
-This tag (`l10-polish`) adds motion: the spot photo flies from the list card to the detail header
+Since `l10-polish`: the spot photo flies from the list card to the detail header
 (`Hero(tag: 'spot-photo-<id>')`) and cards fade/slide in with a 40 ms stagger (`AnimatedEntrance` in
 `lib/ui/spot_list/spot_list_screen.dart`, an `AnimationController` per card, disposed with it, skipped
 under "reduce motion"). Profiling steps: [PERFORMANCE.md](PERFORMANCE.md).
+
+This tag (`l11-cloud`) adds a Settings screen (gear in the list's app bar; "Sign out" moved there):
+- **Remote config** — one flag, `show_new_rating_ui` (default `false`). "Fetch & activate" calls
+  `GET /api/config` and applies it at once: the rating turns into the gradient "★ 4.5 / 5" badge.
+  Flip it on the server with `POST /api/config` (Bearer token) `{"flags":{"show_new_rating_ui":true}}`.
+- **Crash reporting** — `CrashReporter` interface (`lib/services/crash_reporter.dart`); the default
+  logs to the `crash` log channel, behind a consent gate (opt-in switch, stored with
+  `shared_preferences`). `main` wires `FlutterError.onError`, `PlatformDispatcher.instance.onError`
+  and a `runZonedGuarded` zone (with `ensureInitialized` inside it). Debug builds show a "Test crash"
+  button that calls `recordError()`; nothing is reported until you opt in. No Firebase dependency.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

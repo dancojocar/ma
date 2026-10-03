@@ -1,10 +1,15 @@
 # UniEats – React Native (Expo SDK 52)
 
-Tag `l10-polish`: list rows enter with Reanimated 3 `FadeInDown` (staggered by index) and can be
-swiped away (left or right) to hide them for the session: `src/components/SwipeToDismiss.tsx` uses a
-`react-native-gesture-handler` `Gesture.Pan()` driving a `useSharedValue` with `withTiming`, all on the UI
-thread; "Show N hidden" brings them back. Profiling steps: `PERFORMANCE.md`.
+Tag `l11-cloud`: Profile → Settings has **Remote config** — the flag `show_new_rating_ui` (default
+`false`) from `GET /api/config`, applied by "Fetch & activate" (`src/cloud/featureFlags.ts`); when true,
+ratings render as the new green rating pill (`RatingBadge`). Flip it for the class with
+`curl -X POST localhost:3000/api/config -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}'`.
+**Crash reporting** goes through a `CrashReporter` interface (`src/cloud/crashReporting.ts`; the default
+backend logs, a Sentry/Crashlytics backend would plug in there) behind an opt-in consent switch stored in
+SQLite; uncaught JS errors and the root `ErrorBoundary` report through it, and a dev-only "Test crash" button
+calls `crashReporter.recordError()`. No Firebase dependency.
 
+Kept from l10: `FadeInDown` row entrance and swipe-to-hide (`PERFORMANCE.md` for profiling).
 Kept from l09: the Nearby tab (2 km, `expo-location` watch only while focused) and a local notification
 "<spot> was updated" from live `spot.updated` events (`expo-notifications`).
 

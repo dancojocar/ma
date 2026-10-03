@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,15 +22,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.unieats.app.data.model.Spot
+import com.unieats.app.ui.components.RatingBadge
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
-import com.unieats.app.ui.components.ratingText
 
 @Composable
 fun SpotCard(
     spot: Spot,
     isFavourite: Boolean,
     isPending: Boolean,
+    showNewRatingUi: Boolean,
     onClick: () -> Unit,
     onToggleFavourite: () -> Unit,
     modifier: Modifier = Modifier
@@ -64,13 +64,7 @@ fun SpotCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.Star,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    Text(spot.ratingText(), style = MaterialTheme.typography.bodySmall)
+                    RatingBadge(spot, newDesign = showNewRatingUi)
                     Text(
                         spot.priceText(),
                         style = MaterialTheme.typography.bodySmall,
