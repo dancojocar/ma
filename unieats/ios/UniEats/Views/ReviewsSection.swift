@@ -9,6 +9,7 @@ struct ReviewsSection: View {
             HStack {
                 Text("Reviews (\(reviews.count))")
                     .font(.headline)
+                    .accessibilityIdentifier("spot-detail-reviews")
                 Spacer()
                 Button("Add review", systemImage: "square.and.pencil", action: onAddReview)
                     .font(.subheadline)

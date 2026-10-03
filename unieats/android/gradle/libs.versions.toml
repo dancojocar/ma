@@ -19,6 +19,8 @@ work = "2.10.1"
 securityCrypto = "1.1.0"
 playServicesLocation = "21.3.0"
 junit = "4.13.2"
+mockk = "1.14.11"
+turbine = "1.2.1"
 androidxHilt = "1.2.0"
 
 [libraries]
@@ -81,6 +83,8 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 
 # Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 [plugins]
