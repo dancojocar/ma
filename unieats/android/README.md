@@ -1,22 +1,26 @@
-# UniEats Android — tag `l01-hello`
+# UniEats Android — tag `l02-ui`
 
-The bare app shell: one Compose screen, "UniEats / Find your next campus meal."
+A static list of the 8 campus food spots and a detail screen, all from hard-coded data
+(`data/model/SeedData.kt`, the same 8 spots the server seeds). No network, no ViewModel yet.
 
 ## Run
-
-1. Open `unieats/android` in Android Studio (Ladybug or newer, JDK 17+).
-2. Start an emulator or plug in a phone with USB debugging on.
-3. Press Run, or from the repo root:
 
 ```bash
 ./gradlew -p unieats/android :app:installDebug
 ```
 
-The application id is `com.unieats.app` (Settings → Apps shows it).
+or open `unieats/android` in Android Studio and press Run.
 
-## Notes
+## What to look at
 
-- No server is needed at this tag.
-- `res/xml/network_security_config.xml` already allows plain http only to `10.0.2.2` (the
-  emulator's alias for your laptop) and `localhost`, which is what the later tags use to reach the
-  dev server. Every other host must use https.
+- `ui/spotlist/SpotListScreen.kt` — `LazyColumn` with `items(spots, key = { it.id })` and
+  `Modifier.animateItem()` on every row. Tap **Sort** in the top bar: the rows slide to their new
+  positions. Delete `key = { it.id }` and tap Sort again: the rows just flash, because Compose no
+  longer knows which row is which.
+- `ui/spotlist/SpotCard.kt` — one row, a stateless composable (`spot` + `onClick` in, UI out).
+- `ui/spotdetail/SpotDetailScreen.kt` — detail with photo, rating, description and "Reviews (n)".
+- `MainActivity.kt` — list → detail is a `rememberSaveable` selected id (real navigation arrives
+  at `l04-nav`). The system Back button returns to the list.
+
+Photos are loaded from `photoUrl` (picsum.photos) with Coil, so the emulator needs internet for
+images; everything else works offline.
