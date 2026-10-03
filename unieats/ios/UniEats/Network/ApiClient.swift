@@ -44,6 +44,15 @@ struct ApiClient: Sendable {
         try await get("spots/\(spotId)/reviews")
     }
 
+    func patchSpot(id: String, patch: SpotPatch, idempotencyKey: String) async throws -> SpotDTO {
+        var request = URLRequest(url: baseURL.appending(path: "spots/\(id)"))
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
+        request.httpBody = try JSONEncoder().encode(patch)
+        return try await send(request)
+    }
+
     private func get<T: Decodable>(_ path: String, query: [URLQueryItem] = []) async throws -> T {
         var url = baseURL.appending(path: path)
         if !query.isEmpty { url.append(queryItems: query) }
@@ -74,12 +83,19 @@ struct ApiClient: Sendable {
             throw ApiError.noConnectivity
         }
         guard let http = response as? HTTPURLResponse else { throw ApiError.noConnectivity }
+        if http.statusCode == 409, let conflict = try? JSONDecoder().decode(ConflictEnvelope.self, from: data) {
+            throw ApiError.conflict(server: conflict.spot)
+        }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONDecoder().decode(ErrorEnvelope.self, from: data))?.error.message
             throw ApiError.http(statusCode: http.statusCode, message: message ?? HTTPURLResponse.localizedString(forStatusCode: http.statusCode))
         }
         return data
     }
+}
+
+private struct ConflictEnvelope: Decodable {
+    let spot: SpotDTO
 }
 
 private struct ErrorEnvelope: Decodable {

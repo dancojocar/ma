@@ -4,22 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unieats.app.data.model.Category
 import com.unieats.app.data.model.Spot
-import com.unieats.app.data.remote.LiveEvent
-import com.unieats.app.data.remote.LiveUpdates
 import com.unieats.app.data.remote.toUserMessage
 import com.unieats.app.data.repository.SpotRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,6 +27,8 @@ data class SpotListUiState(
     val searchQuery: String = "",
     val categoryFilter: Category? = null,
     val favouriteIds: Set<String> = emptySet(),
+    val pendingSpotIds: Set<String> = emptySet(),
+    val pendingChanges: Int = 0,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val isLoadingMore: Boolean = false,
@@ -39,32 +38,30 @@ data class SpotListUiState(
     val isLive: Boolean = false
 )
 
-fun Spot.matches(query: String, category: Category?): Boolean {
-    val q = query.trim()
-    val textMatches = name.contains(q, ignoreCase = true) || description.contains(q, ignoreCase = true)
-    return textMatches && (category == null || this.category == category)
-}
-
 private const val SEARCH_DEBOUNCE_MS = 300L
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SpotListViewModel @Inject constructor(
-    private val spotRepository: SpotRepository,
-    liveUpdates: LiveUpdates
+    private val spotRepository: SpotRepository
 ) : ViewModel() {
 
+    /** Everything the user controls plus load status; the rows themselves come from Room. */
     private val _uiState = MutableStateFlow(SpotListUiState())
 
-    // The WebSocket is part of the upstream: it is open only while the screen collects uiState
-    // (plus 5 s, so a rotation does not reconnect).
-    private val liveConnection: Flow<Boolean> = liveUpdates.events()
-        .onEach(::applyLiveEvent)
-        .map { it != LiveEvent.Disconnected }
-        .onStart { emit(false) }
+    private val spotsFromDb = _uiState
+        .map { it.searchQuery to it.categoryFilter }
         .distinctUntilChanged()
+        .flatMapLatest { (query, category) -> spotRepository.observeSpots(query, category) }
 
-    val uiState: StateFlow<SpotListUiState> = combine(_uiState, liveConnection) { state, live ->
-        state.copy(isLive = live)
+    val uiState: StateFlow<SpotListUiState> = combine(
+        _uiState,
+        spotsFromDb,
+        spotRepository.observePendingSpotIds(),
+        spotRepository.observePendingChanges(),
+        spotRepository.liveConnection
+    ) { state, spots, pendingIds, pendingChanges, live ->
+        state.copy(spots = spots, pendingSpotIds = pendingIds, pendingChanges = pendingChanges, isLive = live)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), _uiState.value)
 
     private var loadJob: Job? = null
@@ -101,39 +98,14 @@ class SpotListViewModel @Inject constructor(
         val nextPage = state.currentPage + 1
         loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true, errorMessage = null) }
-            spotRepository.fetchSpots(nextPage, state.searchQuery, state.categoryFilter)
-                .onSuccess { page ->
-                    _uiState.update {
-                        it.copy(
-                            spots = (it.spots + page.spots).distinctBy(Spot::id),
-                            currentPage = nextPage,
-                            hasNextPage = page.hasNextPage,
-                            isLoadingMore = false
-                        )
-                    }
+            spotRepository.refreshSpots(nextPage, state.searchQuery, state.categoryFilter)
+                .onSuccess { hasNext ->
+                    _uiState.update { it.copy(currentPage = nextPage, hasNextPage = hasNext, isLoadingMore = false) }
                 }
                 .onFailure { error ->
                     retryFailedLoad = ::loadNextPage
                     _uiState.update { it.copy(isLoadingMore = false, errorMessage = error.toUserMessage()) }
                 }
-        }
-    }
-
-    private fun applyLiveEvent(event: LiveEvent) {
-        _uiState.update { state ->
-            when (event) {
-                is LiveEvent.SpotUpdated -> state.copy(
-                    spots = state.spots.map { if (it.id == event.spot.id) event.spot else it }
-                )
-                is LiveEvent.SpotCreated ->
-                    if (event.spot.matches(state.searchQuery, state.categoryFilter)) {
-                        state.copy(spots = listOf(event.spot) + state.spots.filterNot { it.id == event.spot.id })
-                    } else {
-                        state
-                    }
-                is LiveEvent.SpotDeleted -> state.copy(spots = state.spots.filterNot { it.id == event.id })
-                LiveEvent.Connected, LiveEvent.Disconnected -> state
-            }
         }
     }
 
@@ -143,16 +115,10 @@ class SpotListViewModel @Inject constructor(
             delay(debounceMs)
             _uiState.update { it.copy(isLoading = !refreshing, isRefreshing = refreshing, errorMessage = null) }
             val state = _uiState.value
-            spotRepository.fetchSpots(1, state.searchQuery, state.categoryFilter)
-                .onSuccess { page ->
+            spotRepository.refreshSpots(1, state.searchQuery, state.categoryFilter)
+                .onSuccess { hasNext ->
                     _uiState.update {
-                        it.copy(
-                            spots = page.spots,
-                            currentPage = 1,
-                            hasNextPage = page.hasNextPage,
-                            isLoading = false,
-                            isRefreshing = false
-                        )
+                        it.copy(currentPage = 1, hasNextPage = hasNext, isLoading = false, isRefreshing = false)
                     }
                 }
                 .onFailure { error ->

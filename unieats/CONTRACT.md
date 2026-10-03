@@ -53,8 +53,14 @@ Review {
   server keeps the response for 24h and replays it (same status and body, header
   `Idempotent-Replayed: true`) for a repeated key. This is what makes outbox replay safe.
   Without the header, mutations still work but are not idempotent.
+- **Conflict rule (PATCH):** a PATCH body may carry the `updatedAt` of the version the client
+  edited. If it is **older** than the stored `updatedAt` the write is rejected with
+  409 `{ error: { code: "conflict", message }, spot: <current server Spot> }` and nothing changes.
+  Equal or newer (or absent) → the patch is applied and the server sets a new, strictly larger
+  `updatedAt`. A 409 is cached under its `Idempotency-Key` like any other response.
 - **Errors:** always `{ error: { code, message } }` with the matching status:
-  400 `validation` (also for a body that is not valid JSON), 404 `not_found`, 500 `server_error`.
+  400 `validation` (also for a body that is not valid JSON), 404 `not_found`, 409 `conflict`,
+  500 `server_error`.
 
 ## Realtime
 
@@ -69,6 +75,23 @@ spot write the server broadcasts one JSON text message to all connected clients:
 
 An idempotent replay does not broadcast again. Reviews are not broadcast. Clients use it for
 live updates (L06) but the app must work without it (reconnect with backoff).
+
+## Offline-first sync semantics (identical in every stack, from L07)
+
+1. **Local DB is the single source of truth.** The UI only ever reads from the local store
+   (Room / SwiftData / Drift / expo-sqlite), observed reactively.
+2. **Reads:** show local data immediately; refresh from `/spots` in the background; upsert by
+   `id`; never delete-then-insert (breaks the reactive stream); never overwrite a row whose
+   `pendingSync = true`.
+3. **Writes:** apply optimistically to the local DB, set `pendingSync = true`, and enqueue
+   `{ opId (uuid), type: create|update|delete, entityId, payload }` in an `outbox` table that
+   survives restarts. An update's payload includes the `updatedAt` the user edited.
+4. **Replay** (on reconnect): send the outbox in order, each with `Idempotency-Key: <opId>`; on
+   2xx store the server's Spot and clear `pendingSync`.
+5. **Conflict — last-write-wins on `updatedAt`:** if server `updatedAt` > local `updatedAt`, the
+   server wins; otherwise (including a tie) the client wins. The server enforces this with the
+   409 rule above, so on a 409 the client replaces its row with `spot` from the response, clears
+   `pendingSync` and drops the operation.
 
 ## Chaos mode (L05 + the networking kata)
 

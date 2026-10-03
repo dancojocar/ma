@@ -23,7 +23,8 @@ function addSpot(spot) {
 function updateSpot(id, patch) {
   const spot = getSpotById(id);
   if (!spot) return null;
-  Object.assign(spot, patch, { updatedAt: Date.now() });
+  // Strictly increasing so a client holding the previous version is always detected as stale.
+  Object.assign(spot, patch, { updatedAt: Math.max(Date.now(), spot.updatedAt + 1) });
   changes.emit('change', { type: 'spot.updated', spot });
   return spot;
 }

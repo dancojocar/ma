@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../../domain/models.dart';
+
 sealed class AppError implements Exception {
   const AppError();
 
@@ -36,6 +38,16 @@ class HttpError extends AppError {
           : 'Server error ($statusCode): $serverMessage';
 }
 
+/// 409 from `PATCH /spots/:id`: the server holds a newer version.
+class Conflict extends AppError {
+  const Conflict(this.serverSpot);
+
+  final Spot serverSpot;
+
+  @override
+  String get message => 'Someone else changed "${serverSpot.name}" first.';
+}
+
 class BadResponse extends AppError {
   const BadResponse();
 
@@ -48,6 +60,8 @@ AppError mapDioError(DioException e) => switch (e.type) {
   DioExceptionType.sendTimeout ||
   DioExceptionType.receiveTimeout => const TimeoutError(),
   DioExceptionType.connectionError => const NoConnectivity(),
+  DioExceptionType.badResponse when _conflictSpot(e.response) != null =>
+    Conflict(_conflictSpot(e.response)!),
   DioExceptionType.badResponse => HttpError(
     e.response?.statusCode ?? -1,
     _serverMessage(e.response?.data),
@@ -59,5 +73,13 @@ AppError mapDioError(DioException e) => switch (e.type) {
 
 String? _serverMessage(Object? body) {
   if (body case {'error': {'message': final String message}}) return message;
+  return null;
+}
+
+Spot? _conflictSpot(Response<Object?>? response) {
+  if (response?.statusCode != 409) return null;
+  if (response!.data case {'spot': final Map<String, dynamic> spot}) {
+    return Spot.fromJson(spot);
+  }
   return null;
 }

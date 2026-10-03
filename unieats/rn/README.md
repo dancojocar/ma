@@ -1,12 +1,17 @@
 # UniEats – React Native (Expo SDK 52)
 
-Tag `l06-async`: everything from l05 (server list with `useInfiniteQuery` keyed
-`["spots", q, category]`, Zod, loading/error/empty states, pull-to-refresh, photos, read-only reviews,
-search/filter/favourites) plus live updates: `src/hooks/useLiveSpots.ts` opens `ws://<host>:3000/live`
-while the list is focused and the app is in the foreground, reconnects with exponential backoff
-(1 s → 30 s), and on every `spot.created/updated/deleted` calls
-`queryClient.invalidateQueries({ queryKey: ["spots"] })`. The header shows "● Live".
-Demo: `curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"rating":5}'`.
+Tag `l07-offline`: offline-first. SQLite (`expo-sqlite`, `src/db/`) is the only thing screens read;
+TanStack Query (`useSpotsSync`, keyed `["spots", q, category]`) now just fetches pages and upserts them
+into SQLite without touching rows that have unsynced edits. "Edit spot" on the detail screen
+(name / description / open now) updates the row optimistically (`pendingSync = 1`) and appends
+`{ opId, type: "update", entityId, payload }` to the `outbox` table. `src/repository/spotRepository.ts`
+`syncPending()` replays the outbox in order with `Idempotency-Key: <opId>` whenever
+`@react-native-community/netinfo` reports the server reachable again; a 409 is resolved by
+last-write-wins on `updatedAt` (`src/domain/syncConflict.ts`). The banner shows
+"Offline · N changes pending". Live updates (`/live`) keep working and are written into SQLite.
+Still from earlier tags: infinite scroll, pull-to-refresh, search/filter/favourites, read-only reviews.
+
+Demo: edit a spot, toggle airplane mode on the emulator, edit another, turn it off → both PATCHes arrive.
 
 Start the server first: `cd unieats/server && npm ci && npm start` (port 3000).
 

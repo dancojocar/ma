@@ -54,6 +54,21 @@ class ApiClient {
         list.map((e) => Review.fromJson(e as Map<String, dynamic>)).toList(),
   );
 
+  /// [idempotencyKey] makes a replayed request safe: the server answers a
+  /// repeated key with the original response instead of applying it twice.
+  Future<Spot> patchSpot(
+    String id,
+    Map<String, dynamic> patch, {
+    required String idempotencyKey,
+  }) => _send(
+    () => _dio.patch<Map<String, dynamic>>(
+      '/spots/$id',
+      data: patch,
+      options: Options(headers: {'Idempotency-Key': idempotencyKey}),
+    ),
+    Spot.fromJson,
+  );
+
   Future<R> _send<T, R>(
     Future<Response<T>> Function() request,
     R Function(T body) parse,

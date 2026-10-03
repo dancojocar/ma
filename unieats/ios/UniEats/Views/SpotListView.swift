@@ -1,69 +1,48 @@
+import SwiftData
 import SwiftUI
 
 struct SpotListView: View {
-    let api: ApiClient
+    let repository: SpotRepository
     let live: LiveUpdateService
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
     @Environment(\.scenePhase) private var scenePhase
 
-    init(api: ApiClient, live: LiveUpdateService) {
-        self.api = api
+    init(repository: SpotRepository, live: LiveUpdateService) {
+        self.repository = repository
         self.live = live
-        _viewModel = State(initialValue: SpotListViewModel(api: api))
+        _viewModel = State(initialValue: SpotListViewModel(repository: repository))
     }
 
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                CategoryFilterView(
-                    selectedCategory: viewModel.categoryFilter,
-                    onCategoryChange: viewModel.onCategoryChange
-                )
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-
-                ForEach(viewModel.spots) { spot in
-                    NavigationLink(value: spot.id) {
-                        SpotRow(
-                            spot: spot,
-                            isFavourite: viewModel.favouriteIds.contains(spot.id),
-                            onToggleFavourite: { viewModel.toggleFavourite(spot.id) }
-                        )
+            SpotListContent(viewModel: viewModel)
+                .safeAreaInset(edge: .top) { SyncStatusBanner(repository: repository) }
+                .refreshable { await viewModel.refresh() }
+                .task { await viewModel.refresh() }
+                .task(id: scenePhase) {
+                    guard scenePhase == .active else { return }
+                    for await update in live.updates() {
+                        await viewModel.apply(update)
                     }
-                    .task { await viewModel.loadMoreIfNeeded(after: spot) }
+                    await viewModel.apply(.disconnected)
                 }
-
-                footer
-                    .listRowSeparator(.hidden)
-            }
-            .listStyle(.plain)
-            .overlay { emptyOrErrorState }
-            .refreshable { await viewModel.refresh() }
-            .task { await viewModel.refresh() }
-            .task(id: scenePhase) {
-                guard scenePhase == .active else { return }
-                for await update in live.updates() {
-                    viewModel.apply(update)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
+                            .labelStyle(.titleAndIcon)
+                            .font(.caption)
+                            .foregroundStyle(viewModel.isLive ? .green : .secondary)
+                    }
                 }
-                viewModel.apply(.disconnected)
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
-                        .labelStyle(.titleAndIcon)
-                        .font(.caption)
-                        .foregroundStyle(viewModel.isLive ? .green : .secondary)
+                .navigationTitle("UniEats")
+                .searchable(
+                    text: Binding(get: { viewModel.searchQuery }, set: viewModel.onQueryChange),
+                    prompt: "Search spots"
+                )
+                .navigationDestination(for: String.self) { spotId in
+                    SpotDetailView(spotId: spotId, repository: repository)
                 }
-            }
-            .navigationTitle("UniEats")
-            .searchable(
-                text: Binding(get: { viewModel.searchQuery }, set: viewModel.onQueryChange),
-                prompt: "Search spots"
-            )
-            .navigationDestination(for: String.self) { spotId in
-                SpotDetailView(spotId: spotId, api: api)
-            }
         }
         .onOpenURL { url in
             if let spotId = DeepLink.spotId(from: url) {
@@ -71,19 +50,67 @@ struct SpotListView: View {
             }
         }
     }
+}
+
+private struct SpotListContent: View {
+    let viewModel: SpotListViewModel
+    @Query private var spots: [SpotEntity]
+
+    init(viewModel: SpotListViewModel) {
+        self.viewModel = viewModel
+        let query = viewModel.searchQuery
+        let category = viewModel.categoryFilter ?? ""
+        _spots = Query(
+            filter: #Predicate<SpotEntity> { spot in
+                (query.isEmpty || spot.name.localizedStandardContains(query))
+                    && (category.isEmpty || spot.category == category)
+            },
+            sort: \.name
+        )
+    }
+
+    var body: some View {
+        List {
+            CategoryFilterView(
+                selectedCategory: viewModel.categoryFilter,
+                onCategoryChange: viewModel.onCategoryChange
+            )
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+
+            ForEach(spots) { entity in
+                NavigationLink(value: entity.id) {
+                    SpotRow(
+                        spot: entity.spot,
+                        isFavourite: viewModel.favouriteIds.contains(entity.id),
+                        isPending: entity.pendingSync,
+                        onToggleFavourite: { viewModel.toggleFavourite(entity.id) }
+                    )
+                }
+                .task {
+                    if entity.id == spots.last?.id { await viewModel.loadMore() }
+                }
+            }
+
+            footer
+                .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+        .overlay { emptyOrErrorState }
+    }
 
     @ViewBuilder
     private var footer: some View {
         if viewModel.isLoadingMore {
             ProgressView()
                 .frame(maxWidth: .infinity)
-        } else if let message = viewModel.errorMessage, !viewModel.spots.isEmpty {
+        } else if let message = viewModel.errorMessage, !spots.isEmpty {
             VStack(spacing: 8) {
-                Text(message)
+                Text("Showing saved spots. \(message)")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                Button("Retry") { Task { await viewModel.loadMore() } }
+                Button("Retry") { Task { await viewModel.refresh() } }
                     .buttonStyle(.bordered)
             }
             .frame(maxWidth: .infinity)
@@ -92,7 +119,7 @@ struct SpotListView: View {
 
     @ViewBuilder
     private var emptyOrErrorState: some View {
-        if viewModel.spots.isEmpty {
+        if spots.isEmpty {
             if viewModel.isLoading {
                 ProgressView("Loading spots…")
             } else if let message = viewModel.errorMessage {

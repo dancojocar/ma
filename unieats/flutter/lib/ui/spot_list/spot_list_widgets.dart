@@ -115,3 +115,63 @@ class LiveIndicator extends StatelessWidget {
     );
   }
 }
+
+class PendingSyncBanner extends StatelessWidget {
+  const PendingSyncBanner({
+    super.key,
+    required this.count,
+    required this.onSyncNow,
+  });
+
+  final int count;
+  final VoidCallback onSyncNow;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      color: scheme.tertiaryContainer,
+      padding: const EdgeInsets.only(left: 16, right: 8),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_upload_outlined, color: scheme.onTertiaryContainer),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              count == 1 ? '1 change pending' : '$count changes pending',
+              style: TextStyle(color: scheme.onTertiaryContainer),
+            ),
+          ),
+          TextButton(onPressed: onSyncNow, child: const Text('Sync now')),
+        ],
+      ),
+    );
+  }
+}
+
+class OfflineBanner extends StatelessWidget {
+  const OfflineBanner({super.key, required this.error, required this.onRetry});
+
+  final Object error;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      color: scheme.errorContainer,
+      padding: const EdgeInsets.only(left: 16, right: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Showing saved spots. $error',
+              style: TextStyle(color: scheme.onErrorContainer),
+            ),
+          ),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
+        ],
+      ),
+    );
+  }
+}
