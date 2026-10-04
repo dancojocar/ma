@@ -117,7 +117,7 @@ keeps `?from=/spots` and the next sign-in lands on the list.
   `retry: (_, _) => null`). Debug builds show a "Test crash" button that calls `recordError()`; nothing
   is reported until you opt in. No Firebase dependency.
 
-This tag (`l12-kmp`) splits out a shared domain layer, the Dart counterpart of the Kotlin
+Since `l12-kmp` there is a shared domain layer, the Dart counterpart of the Kotlin
 Multiplatform module: `packages/unieats_data` is **pure Dart** (no Flutter, Drift or dio) and holds
 the models (`Spot`, `Review`, `User`, the sealed `Session` and the auth exceptions), the live-event
 types, `SyncConflictResolver` and the repository interfaces:
@@ -136,6 +136,20 @@ request already in flight finishes but Riverpod ignores its result. Everything t
 plugin or Riverpod stays in the app: Drift, dio, `TokenStore`, `LocationService`,
 `NotificationService`, `RemoteFlags` and `CrashReporter`. The package keeps no lock file
 (`packages/unieats_data/.gitignore`); the app's `pubspec.lock` records it as a path dependency.
+
+This tag (`l13-ai`) adds **Describe this dish** on the detail screen
+(`lib/ui/spot_detail/describe_dish_card.dart`). `ApiClient.describeSpot` POSTs the full spot (including
+`openNow`) to `/api/ai/describe` with the Bearer token (the `AuthInterceptor`, like every other POST)
+and reads the Server-Sent Events stream as it arrives (dio `ResponseType.stream` +
+`lib/data/network/sse.dart`): each `data: {"delta":…}` frame is appended, `event: done` ends it,
+`event: error` or a stream that stops before `done` shows the error. `DescribeDishController` in
+`providers.dart` (an `autoDispose` family per spot, like `EditSpotController`) holds the text, the
+streaming flag and the error, ignores taps while a description is streaming, and cancels the request
+(dio `CancelToken`) when the detail screen closes. The text is a live region announced once, when it is
+complete. Without `ANTHROPIC_API_KEY` the server streams a template in four chunks, so the demo works
+offline; with the key it streams Claude's text. If the server is down the card says "Server
+unreachable"; after 10 requests a minute the server answers 429 and the card says "Too many requests";
+a 401 signs out as for any other request.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

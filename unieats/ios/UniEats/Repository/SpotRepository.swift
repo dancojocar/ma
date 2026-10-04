@@ -14,6 +14,7 @@ final class SpotRepository {
     private let context: ModelContext
     private let api: ApiClient
     private let session: SessionStore
+    private let ai = AiDescribeClient(baseURL: ApiConfig.baseURL)
     private var retryTask: Task<Void, Never>?
     private var retryAttempt = 0
     private var inFlightOpId: String?
@@ -106,6 +107,21 @@ final class SpotRepository {
             try context.save()
         } catch ApiError.unauthorized {
             session.sessionExpired()
+            throw ApiError.unauthorized
+        }
+    }
+
+    /// Sends the full spot (the server describes what it is given) with the session token. A 401
+    /// ends the session like any other request, unless the user has logged in again meanwhile.
+    func describe(_ spot: Spot, onChunk: (String) -> Void) async throws {
+        guard let token = session.token else { throw ApiError.unauthorized }
+        do {
+            for try await chunk in ai.describe(spot.dto, token: token) {
+                try Task.checkCancellation()
+                onChunk(chunk)
+            }
+        } catch ApiError.unauthorized {
+            if session.token == token { session.sessionExpired() }
             throw ApiError.unauthorized
         }
     }

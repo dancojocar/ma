@@ -491,6 +491,76 @@ class AddReviewController extends AsyncNotifier<void> {
 final addReviewProvider = AsyncNotifierProvider.autoDispose
     .family<AddReviewController, void, String>(AddReviewController.new);
 
+/// "Describe this dish": the text streamed so far, whether more is coming,
+/// and the error that ended the stream.
+@immutable
+class DishDescription {
+  const DishDescription({this.text = '', this.isStreaming = false, this.error});
+
+  final String text;
+  final bool isStreaming;
+  final Object? error;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DishDescription &&
+      other.text == text &&
+      other.isStreaming == isStreaming &&
+      other.error == error;
+
+  @override
+  int get hashCode => Object.hash(text, isStreaming, error);
+}
+
+class DescribeDishController extends Notifier<DishDescription> {
+  DescribeDishController(this.spotId);
+
+  final String spotId;
+  StreamSubscription<String>? _subscription;
+  CancelToken? _cancelToken;
+
+  @override
+  DishDescription build() {
+    ref.onDispose(_cancel);
+    return const DishDescription();
+  }
+
+  /// Ignored while a description is already streaming.
+  void describe(Spot spot) {
+    if (state.isStreaming) return;
+    if (ref.read(signedInUserProvider) == null) {
+      state = DishDescription(error: StateError('Not signed in'));
+      return;
+    }
+    final cancelToken = _cancelToken = CancelToken();
+    state = const DishDescription(isStreaming: true);
+    _subscription = ref
+        .read(apiClientProvider)
+        .describeSpot(spot, cancelToken: cancelToken)
+        .listen(
+          (delta) => state = DishDescription(
+            text: state.text + delta,
+            isStreaming: true,
+          ),
+          onError: (Object e) =>
+              state = DishDescription(text: state.text, error: e),
+          onDone: () => state = DishDescription(text: state.text),
+          cancelOnError: true,
+        );
+  }
+
+  void _cancel() {
+    _cancelToken?.cancel();
+    _subscription?.cancel().ignore();
+  }
+}
+
+/// Disposed with the detail screen, which cancels a running stream.
+final describeDishProvider = NotifierProvider.autoDispose
+    .family<DescribeDishController, DishDescription, String>(
+      DescribeDishController.new,
+    );
+
 final locationServiceProvider = Provider<LocationService>(
   (_) => LocationService(),
 );

@@ -47,6 +47,7 @@ User { id: string, email: string, displayName: string }
 | POST | `/spots/:id/reviews` | yes | `{ stars, text }` (+ `Idempotency-Key`) | `Review` (201) |
 | GET | `/config` | no | — | `{ flags: { show_new_rating_ui: boolean } }` |
 | POST | `/config` | yes | `{ flags: { show_new_rating_ui: boolean } }` | `{ flags }` (200) |
+| POST | `/ai/describe` | yes | `{ spot: Spot }` (full spot, incl. `openNow`) | `text/event-stream` (200) |
 
 - **Auth:** `Authorization: Bearer <jwt>` on every mutation (from L08; before L08 they are
   open). Missing/invalid/expired token → 401 `{ error: { code: "unauthorized", message } }`
@@ -69,7 +70,7 @@ User { id: string, email: string, displayName: string }
   `updatedAt`. A 409 is cached under its `Idempotency-Key` like any other response.
 - **Errors:** always `{ error: { code, message } }` with the matching status:
   400 `validation` (also for a body that is not valid JSON), 401 `unauthorized`, 404 `not_found`,
-  409 `conflict`, 500 `server_error`.
+  409 `conflict`, 429 `rate_limited`, 500 `server_error`.
 
 ## JWT
 
@@ -99,6 +100,32 @@ Today there is one flag, `show_new_rating_ui` (default `false`), which toggles t
 badge in every client. Clients ship the same default, fetch on "Fetch & activate" and apply the
 value immediately. `POST /api/config` (auth) changes known flags for the classroom demo; unknown
 flags or non-boolean values → 400. Values reset when the server restarts.
+
+## AI describe — Server-Sent Events (from L13)
+
+`POST /api/ai/describe`, auth required, at most 10 requests per minute per user (then 429
+`rate_limited` with `Retry-After`). Validation failures (no `spot.name`, invalid JSON) are
+ordinary 400 JSON responses. Otherwise the response is `200 text/event-stream`:
+
+```
+data: {"delta":"<text>"}            // one or more, append in order
+
+event: done
+data: {"source":"template" | "<model id>"}
+```
+
+or, if generation fails after the stream started, a final
+
+```
+event: error
+data: {"error":{"code":"ai_unavailable" | "refused","message":"…"}}
+```
+
+Frames are separated by a blank line. With `ANTHROPIC_API_KEY` set on the server, the text
+comes from the Anthropic Messages API (`claude-sonnet-5-5`, streamed); without it, a
+deterministic template is streamed in exactly 4 `delta` chunks with the same framing, so
+clients behave identically offline. A client that cannot reach the server shows a "server
+unreachable" message.
 
 ## Offline-first sync semantics (identical in every stack, from L07)
 

@@ -44,6 +44,18 @@ class Conflict extends AppError {
   String get message => 'Someone else changed "${serverSpot.name}" first.';
 }
 
+/// The AI stream ended with `event: error` (model unavailable or refused) or
+/// stopped before `event: done`.
+class AiUnavailable extends AppError {
+  const AiUnavailable(this.message);
+
+  const AiUnavailable.cutOff()
+    : message = 'The description was cut off. Try again.';
+
+  @override
+  final String message;
+}
+
 class BadResponse extends AppError {
   const BadResponse();
 

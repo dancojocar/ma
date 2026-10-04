@@ -1,6 +1,22 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l12-kmp`: the domain layer is a local npm workspace package, `shared/` (`@unieats/shared`, sources in
+Tag `l13-ai`: the detail screen has **Describe this dish** (`src/components/DescribeDishSection.tsx`, above
+"Edit spot"). It POSTs the full spot (incl. `openNow`; `SpotSchema.parse` drops the local `pendingSync`) to
+`/api/ai/describe` with the Bearer token of the signed-in session and streams the Server-Sent Events answer
+into the screen chunk by chunk (`src/api/aiClient.ts`: `expo/fetch`, because React Native's built-in fetch
+cannot read a body incrementally, + `ReadableStream` reader + `TextDecoder`, parsed by `src/api/sse.ts`, which
+copes with frames split across chunks and `\r\n` line ends). The server proxies Claude when it has
+`ANTHROPIC_API_KEY`, otherwise streams a template in 4 chunks, so the demo works offline; "Source: template"
+shows which. `src/hooks/useDishDescription.ts` holds the text and status: a second tap is disabled while a
+stream runs, and leaving the screen aborts the request. If the server cannot be reached (or sends no
+headers within 10 s, or the connection drops mid-stream) the screen says "Server unreachable"; a 429 says
+"Too many requests. Try again in a minute."; an `event: error` frame shows the server's message. A 401 ends
+the session like every other call (`expire()` in `sessionStore`): the login screen opens with "Your session
+expired". For screen readers the button reports a busy state while streaming, and the finished description
+(or the error) is announced once with `AccessibilityInfo.announceForAccessibility` rather than read again
+for every chunk.
+
+Kept from l12: the domain layer is a local npm workspace package, `shared/` (`@unieats/shared`, sources in
 `shared/src/`): the `Spot`/`Review`/`User` models, the outbox op type `OutboxOp` (with the `userId` of whoever
 queued it, from l08), the Zod schemas (including `RemoteConfigSchema` from l11), the conflict rule
 `resolveConflict` and the 2 km `distanceKm` helper. The app imports it everywhere
@@ -157,7 +173,8 @@ card has a "Hide" action instead of the swipe, the red "Hide" text behind a row 
 readers, and "Show N hidden" is a button. The rating, classic or pill, reads "Rated 4.5 out of 5" (the star
 glyph is not read); in the settings card the two titles are headers, "Fetch & activate" and "Test crash" are
 buttons, the status line under the flag is a polite live region and the consent switch is labelled "Share
-crash reports".
+crash reports". "Describe this dish" is a button that is busy while the answer streams; its spinner reads
+"Loading", and the finished description or error is announced once.
 
 ## Run
 

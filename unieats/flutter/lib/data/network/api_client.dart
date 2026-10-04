@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'dart:io' show IOException;
+
 import 'package:dio/dio.dart';
 import 'package:unieats_data/unieats_data.dart';
 
 import 'app_error.dart';
 import 'retry_interceptor.dart';
+import 'sse.dart';
 
 Dio createDio(String baseUrl) {
   final dio = Dio(
@@ -77,6 +81,73 @@ class ApiClient {
     ),
     Review.fromJson,
   );
+
+  /// `POST /ai/describe` answers with Server-Sent Events; each `data`
+  /// frame carries `{"delta": "..."}`, emitted here as soon as it arrives.
+  /// The stream ends quietly when [cancelToken] is cancelled.
+  Stream<String> describeSpot(Spot spot, {CancelToken? cancelToken}) async* {
+    final Response<ResponseBody> response;
+    try {
+      response = await _dio.post<ResponseBody>(
+        '/ai/describe',
+        data: {'spot': spot.toJson()},
+        cancelToken: cancelToken,
+        options: Options(
+          responseType: ResponseType.stream,
+          receiveTimeout: const Duration(seconds: 60),
+          headers: {'Accept': 'text/event-stream'},
+        ),
+      );
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) return;
+      throw await _streamError(e);
+    }
+    try {
+      await for (final frame in parseSse(response.data!.stream)) {
+        switch ((frame.event, jsonDecode(frame.data))) {
+          case ('message', {'delta': final String delta}):
+            yield delta;
+          case ('done', _):
+            return;
+          case ('error', {'error': {'message': final String message}}):
+            throw AiUnavailable(message);
+        }
+      }
+    } on AppError {
+      rethrow;
+    } on FormatException {
+      throw const BadResponse();
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e)) return;
+      throw mapDioError(e);
+    } on IOException {
+      if (cancelToken?.isCancelled ?? false) return;
+      throw const AiUnavailable.cutOff();
+    }
+    if (cancelToken?.isCancelled ?? false) return;
+    throw const AiUnavailable.cutOff();
+  }
+
+  /// A failed streamed request carries its JSON error body as a byte stream.
+  Future<AppError> _streamError(DioException e) async {
+    final body = e.response?.data;
+    if (body is! ResponseBody) return mapDioError(e);
+    final Object? json;
+    try {
+      json = jsonDecode(await utf8.decodeStream(body.stream));
+    } on Exception {
+      return mapDioError(e);
+    }
+    return mapDioError(
+      e.copyWith(
+        response: Response<Object?>(
+          requestOptions: e.requestOptions,
+          statusCode: e.response?.statusCode,
+          data: json,
+        ),
+      ),
+    );
+  }
 
   Future<Map<String, bool>> fetchConfig() => _send(
     () => _dio.get<Map<String, dynamic>>('/config'),

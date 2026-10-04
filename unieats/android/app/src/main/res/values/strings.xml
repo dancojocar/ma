@@ -61,6 +61,8 @@
     </plurals>
     <string name="detail_add_review">Add review</string>
     <string name="detail_no_reviews">No reviews yet.</string>
+    <string name="describe_dish">Describe this dish</string>
+    <string name="describe_dish_in_progress">Describing…</string>
     <plurals name="review_stars">
         <item quantity="one">%d out of 5 stars</item>
         <item quantity="other">%d out of 5 stars</item>

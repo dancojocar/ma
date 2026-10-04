@@ -1,31 +1,27 @@
-# UniEats iOS — l12-kmp
+# UniEats iOS — l13-ai
 
-A shared domain module consumed by the app.
+"Describe this dish": an LLM description streamed from the backend proxy.
 
 ## What this tag adds
 
-- `UniEatsDomain/` — a local Swift package (`Package.swift`, swift-tools 6.0) **linked into the
-  UniEats target** (Xcode › project › Package Dependencies shows it; `project.pbxproj` has an
-  `XCLocalSwiftPackageReference` + product dependency). It holds the domain model `Spot` and
-  `SpotConflictResolver` (last-write-wins on `updatedAt`: the server wins only if its version is
-  strictly newer; a tie goes to the client — CONTRACT §5). The package keeps Swift's default
-  (nonisolated) actor isolation, so its types are plain `Sendable` values usable from any actor.
-- The app imports it everywhere it uses `Spot` (`import UniEatsDomain`); JSON/SwiftData mapping
-  stays in the app (`Models/Spot.swift` `SpotDTO`, `Models/SpotEntity.swift`). The domain
-  property is `description`, as in the JSON; the SwiftData column keeps `spotDescription`.
-- On a 409 `SpotRepository` asks `SpotConflictResolver.winner(local:server:)`, with the local
-  copy at the version the queued edit was based on. The server only sends a 409 when its copy is
-  newer, so the server always wins: the row takes the server's `spot`, and that edit plus any
-  later queued edits of the spot (based on the same stale version) are dropped.
-
-Why a Swift package and not the Kotlin Multiplatform `UniEatsShared.xcframework`: the iOS build
-must not depend on a JDK + Gradle build of `../android/shared`. To try the KMP route, build the
-framework with `cd ../android && ./gradlew :shared:assembleUniEatsSharedXCFramework` and drag
-`shared/build/XCFrameworks/debug/UniEatsShared.xcframework` into the target's
-*Frameworks, Libraries, and Embedded Content*; `import UniEatsShared` then exposes the Kotlin
-`Spot` and `SyncConflictResolver` (the app keeps using the Swift package).
-
-Build the package on its own: `swift build --package-path UniEatsDomain`.
+- `AI/AiDescribeClient.swift` — `POST /api/ai/describe` with the Bearer token and the **full
+  spot** (`{"spot": {…, "openNow": …}}`), read with `URLSession.bytes(for:)` and exposed as an
+  `AsyncThrowingStream<String, Error>`: every `data: {"delta": "…"}` line yields a chunk,
+  `event: done` finishes, `event: error` throws with the server's message. The client is
+  `nonisolated`, so the lines are read and decoded off the main actor; only the chunks reach the
+  view model.
+- `SpotRepository.describe(_:onChunk:)` takes the token from `SessionStore` (no token, no
+  request). A 401 ends the session like any other request: back to login with "Your session
+  expired", queued edits kept, the biometric item deleted. 429 → "Too many requests — wait a
+  minute", no connection → the usual "Can't reach the server" (all in `Localizable.xcstrings`).
+- **Describe this dish** button on the spot detail (`Views/DescribeDishSection.swift`, tinted
+  with the contrast-checked `Color.aiText` from `Views/Palette.swift`); the text grows as chunks
+  arrive (`SpotDetailViewModel.describe(_:)`), the request is cancelled when you leave the
+  screen. For VoiceOver the text is one element marked "updates frequently" while it streams,
+  and the finished description (or the error) is announced once.
+- The API key never ships in the app: the server calls the Anthropic Messages API when it has
+  `ANTHROPIC_API_KEY`, otherwise it streams a deterministic template in 4 chunks, so the demo
+  works offline. To see the streaming clearly: `AI_FALLBACK_CHUNK_MS=1500 npm start`.
 
 ## Already in the app (earlier tags)
 
@@ -44,6 +40,7 @@ Build the package on its own: `swift build --package-path UniEatsDomain`.
 | l10 | Animated filtered list, row photo → detail zoom transition, `PERFORMANCE.md` | `Views/SpotListView.swift`, `Views/SpotRow.swift` |
 | l10 | String Catalog with plural variants, `String(localized:)` outside views; VoiceOver labels for ratings and prices, `.isSelected` chips, 4.5:1 contrast colours | `Localizable.xcstrings`, `Views/Palette.swift` |
 | l11 | Settings tab: `show_new_rating_ui` Fetch & activate (`NewRatingBadge`), consent-gated `CrashReporter` with a debug Test crash; Settings › Account holds the Face ID switch and Log out | `Cloud/`, `Views/SettingsView.swift`, `Views/SpotRow.swift` |
+| l12 | Local Swift package `UniEatsDomain` (domain `Spot`, `SpotConflictResolver`, nonisolated `Sendable` types) linked into the app; on a 409 the server copy wins and the stale queued edits of that spot are dropped | `UniEatsDomain/`, `Repository/SpotRepository.swift` |
 
 The simulator cannot run the l09 background replay: `submit` fails with "not available on this
 platform" (logged under `com.unieats.app` / `sync` and ignored). On a device, pause in the

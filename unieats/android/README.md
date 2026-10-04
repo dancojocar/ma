@@ -1,4 +1,4 @@
-# UniEats Android — tag `l12-kmp`
+# UniEats Android — tag `l13-ai`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -230,6 +230,26 @@ No Firebase dependency: the same ideas against the course server.
   `RemoteConfig` for **Fetch & activate**.
 - Unit tests without Android: `./gradlew -p unieats/android :app:testDebugUnitTest` runs
   `SpotListViewModelTest` against `FakeEatsRepository` and `FakeFeatureFlags` (`app/src/test`).
+
+## "Describe this dish" (new in l13)
+
+- Detail screen → **Describe this dish**. The app sends the full spot (`openNow` included) to
+  `POST /api/ai/describe` with the JWT; the server calls Claude when it has `ANTHROPIC_API_KEY`
+  and otherwise streams a template, so the demo works offline. The app never holds an API key.
+- `data/remote/AiDescribeClient.kt` — Ktor `preparePost(...).execute { bodyAsChannel() }` reads the
+  `text/event-stream` line by line; `ServerSentEventParser` (`data/remote/ServerSentEvents.kt`,
+  unit-tested in `app/src/test`) turns lines into events; each `data: {"delta": …}` is emitted
+  into a `Flow<String>`; `event: done` ends it, `event: error` throws. Retries are off and the
+  timeout is longer for this one request.
+- `AiDescribeClient.describe()` reads the token (`AuthTokens.token()` is suspend) inside the
+  `flow {}` before building the request; a 401 ends the session like any other request.
+- `SpotDetailViewModel.describeDish()` appends every delta to `aiText`, so the text grows on screen
+  as it arrives (`animateContentSize`). Errors use the same `toUserMessage()` as the rest of the
+  app, shown under the button: a stopped server gives "Can't reach the server…", a 429 "Too many
+  requests…", an `event: error` "The AI could not finish: …".
+- `ui/spotdetail/DescribeDishSection.kt`: the button is disabled and reads "Describing…" with a
+  spinner while the text streams; the text and the error are polite live regions, so TalkBack
+  reads them as they change.
 
 ## Demo: offline edit → reconnect → sync
 

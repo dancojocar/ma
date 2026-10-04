@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unieats.shared.Review
 import com.unieats.shared.Spot
+import com.unieats.app.data.remote.AiDescribeClient
 import com.unieats.app.data.remote.toUserMessage
 import com.unieats.app.data.repository.EatsRepository
 import com.unieats.app.data.repository.FavouritesRepository
@@ -11,6 +12,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,13 +33,17 @@ data class SpotDetailUiState(
     val isLive: Boolean = false,
     val isReviewFormOpen: Boolean = false,
     val isSubmittingReview: Boolean = false,
-    val reviewError: String? = null
+    val reviewError: String? = null,
+    val aiText: String = "",
+    val isDescribing: Boolean = false,
+    val aiError: String? = null
 )
 
 @HiltViewModel(assistedFactory = SpotDetailViewModel.Factory::class)
 class SpotDetailViewModel @AssistedInject constructor(
     private val spotRepository: EatsRepository,
     private val favourites: FavouritesRepository,
+    private val aiClient: AiDescribeClient,
     @Assisted private val spotId: String
 ) : ViewModel() {
 
@@ -83,6 +90,24 @@ class SpotDetailViewModel @AssistedInject constructor(
     }
 
     fun toggleFavourite() = favourites.toggle(spotId)
+
+    private var describeJob: Job? = null
+
+    fun describeDish() {
+        val spot = uiState.value.spot ?: return
+        describeJob?.cancel()
+        describeJob = viewModelScope.launch {
+            _uiState.update { it.copy(aiText = "", isDescribing = true, aiError = null) }
+            try {
+                aiClient.describe(spot).collect { delta -> _uiState.update { it.copy(aiText = it.aiText + delta) } }
+                _uiState.update { it.copy(isDescribing = false) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isDescribing = false, aiError = e.toUserMessage()) }
+            }
+        }
+    }
 
     fun openReviewForm() = _uiState.update { it.copy(isReviewFormOpen = true, reviewError = null) }
 
