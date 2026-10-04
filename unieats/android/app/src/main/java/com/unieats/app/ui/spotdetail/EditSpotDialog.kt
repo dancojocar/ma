@@ -17,8 +17,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.unieats.app.R
 import com.unieats.app.data.model.Spot
 
 @Composable
@@ -33,20 +35,20 @@ fun EditSpotDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit spot") },
+        title = { Text(stringResource(R.string.detail_edit_spot)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.edit_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") },
+                    label = { Text(stringResource(R.string.edit_description)) },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -56,16 +58,16 @@ fun EditSpotDialog(
                         .fillMaxWidth()
                         .toggleable(value = openNow, role = Role.Switch, onValueChange = { openNow = it })
                 ) {
-                    Text("Open now", modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.status_open_now), modifier = Modifier.weight(1f))
                     Switch(checked = openNow, onCheckedChange = null)
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = { onSave(name, description, openNow) }, enabled = name.isNotBlank()) {
-                Text("Save")
+                Text(stringResource(R.string.edit_save))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }

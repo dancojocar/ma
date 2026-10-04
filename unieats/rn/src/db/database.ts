@@ -35,6 +35,12 @@ const MIGRATIONS = [
    );`,
   // v2: ops queued before sign-in existed have no owner (NULL).
   `ALTER TABLE outbox ADD COLUMN userId TEXT;`,
+  // v3: the base version moves into each queued payload and a pending row's own `updatedAt`
+  // (CONTRACT §3); the UPDATEs carry over edits queued before the upgrade.
+  `UPDATE outbox SET payload = json_set(payload, '$.updatedAt',
+     COALESCE((SELECT serverUpdatedAt FROM spots WHERE spots.id = outbox.entityId), 0));
+   UPDATE spots SET updatedAt = serverUpdatedAt WHERE pendingSync = 1;
+   ALTER TABLE spots DROP COLUMN serverUpdatedAt;`,
 ];
 
 let db: SQLite.SQLiteDatabase | null = null;

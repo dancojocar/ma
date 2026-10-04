@@ -53,7 +53,7 @@ final class SessionStore {
             defaults.set(response.user.id, forKey: Key.userId)
             phase = .signedIn
         } catch ApiError.unauthorized {
-            errorMessage = "Wrong email or password."
+            errorMessage = String(localized: "Wrong email or password.")
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -67,17 +67,17 @@ final class SessionStore {
 
         let context: LAContext
         do {
-            context = try await biometrics.authenticate(reason: "Unlock UniEats")
+            context = try await biometrics.authenticate(reason: String(localized: "Unlock UniEats"))
         } catch let error as LAError where Self.staysLocked.contains(error.code) {
             return
         } catch {
-            return end(notice: "\(biometrics.kindName) is not available. Please log in with your password.")
+            return end(notice: String(localized: "\(biometrics.kindName) is not available. Please log in with your password."))
         }
 
         // A new face or finger changes the state hash and invalidates the .biometryCurrentSet item.
         guard biometrics.stateHash(of: context) == storedStateHash,
               let stored = try? keychain.load(context: context) else {
-            return end(notice: "Biometrics changed on this device. Please log in with your password.")
+            return end(notice: String(localized: "Biometrics changed on this device. Please log in with your password."))
         }
         token = stored
         phase = .signedIn
@@ -86,7 +86,7 @@ final class SessionStore {
     func setBiometricUnlock(_ on: Bool) async {
         guard phase == .signedIn, let token, on != biometricUnlockEnabled else { return }
         if on {
-            let reason = "Use \(biometrics.kindName) to unlock UniEats"
+            let reason = String(localized: "Use \(biometrics.kindName) to unlock UniEats")
             guard let context = try? await biometrics.authenticate(reason: reason),
                   phase == .signedIn, self.token == token else { return }
             do {
@@ -118,7 +118,7 @@ final class SessionStore {
     }
 
     func sessionExpired() {
-        end(notice: "Your session expired. Please log in again.")
+        end(notice: String(localized: "Your session expired. Please log in again."))
     }
 
     private func end(notice: String) {

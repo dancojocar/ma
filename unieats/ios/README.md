@@ -1,49 +1,42 @@
-# UniEats iOS — l09-push-location
+# UniEats iOS — l10-polish
 
-"Spots near me", change notifications and background replay of the outbox.
+Animations, a profiling checklist, a String Catalog and accessibility fixes.
 
 ## What this tag adds
 
-- **Tabs**: `UniEatsApp` shows a `TabView` (Spots, Near Me) once signed in. Favourites move out
-  of `SpotListViewModel` into `ViewModels/FavouritesStore.swift`, owned by the app, so both tabs
-  share them. A deep link selects the Spots tab before opening the spot, so a link opened while
-  Near Me is showing does not land on a hidden stack.
-- **Near Me tab** (`Views/NearMeView.swift`, `Location/LocationManager.swift`): CoreLocation
-  with a when-in-use permission request (`NSLocationWhenInUseUsageDescription` in
-  `UniEats/Info.plist`); lists spots within **2 km**, nearest first, from SwiftData
-  (`SpotRepository.fetchAllPages()` fills the store first).
-  `startUpdatingLocation()` runs only while the screen is visible (`onAppear`) and
-  `stopUpdatingLocation()` is called in `onDisappear`.
-- **Local notification "<spot> was updated"** (`Notifications/SpotChangeNotifier.swift`): fired
-  from the l06 live `spot.updated` event, not from opening any screen. Permission is requested
-  after login; the notification-center delegate shows the banner while the app is in the
-  foreground (the live socket only runs then, while the Spots list is on screen). No APNs/FCM:
-  real push is a legacy demo.
-- **Background replay** of pending edits (`BGAppRefreshTask`, id `com.unieats.app.outbox-sync`):
-  when the app goes to the background with edits still queued, `SpotRepository.scheduleBackgroundSync()`
-  submits a `BGAppRefreshTaskRequest` (earliest in 15 minutes); the system decides when it runs.
-  The `.backgroundTask(.appRefresh(…))` scene modifier in `UniEatsApp` registers the handler,
-  which replays the outbox and schedules again if anything is left. `UniEats/Info.plist` lists
-  the id under `BGTaskSchedulerPermittedIdentifiers` and has `UIBackgroundModes` = `fetch`.
-  The replay needs the token in memory, so with biometric unlock on, a background launch from a
-  cold start stays locked and leaves the edits for the next unlock.
+- Filtered list animates: `.animation(.easeInOut(duration: 0.25), value: spots.map(\.id))` on the
+  `List` in `Views/SpotListView.swift`, rows use
+  `.transition(.move(edge: .leading).combined(with: .opacity))` — tap a category chip or type in
+  search and rows slide/fade instead of jumping.
+- Shared-element style hero: the row photo is a `matchedTransitionSource(id: spot.id, in:)` and
+  the pushed detail uses `.navigationTransition(.zoom(sourceID:in:))` (iOS 18), so the photo
+  zooms into the detail screen and back. (`matchedGeometryEffect` only works between views that
+  coexist in one hierarchy, e.g. a `ZStack`; across a `NavigationStack` push the zoom
+  transition is the supported API.)
+- `PERFORMANCE.md` — Instruments steps (SwiftUI, Animation Hitches, Time Profiler, Allocations).
+- **String Catalog** `UniEats/Localizable.xcstrings` (source language en). SwiftUI literals
+  (`Text("…")`, `Button`, `Label`, `accessibilityLabel`) are keys already; strings built outside
+  views use `String(localized:)`: `ApiError` messages, the `SessionStore` login/unlock notices,
+  the Face ID prompt reasons and the "<spot> was updated" notification. Counts use plural
+  variants instead of a hand-written ternary: `Text("\(outbox.count) changes pending")` in
+  `Views/SyncStatusBanner.swift` has *one* = "%lld change pending", *other* = "%lld changes
+  pending" (same for the review picker's "%lld stars"). Xcode adds new keys to the catalog when
+  it builds the project in the IDE; a command-line build does not.
+- **Accessibility**:
+  - VoiceOver reads ratings and prices as words: the star + number in `SpotRow` and
+    `SpotDetailView` is one element ("Rating 4.5 out of 5"), `$$` reads "Price level 2 of 3",
+    review stars read "5 out of 5 stars" and each segment of the Add review picker "1 star" …
+    "5 stars".
+  - The selected category chip has the `.isSelected` trait.
+  - Contrast of at least 4.5:1 (`Views/Palette.swift`): white text sits on a darker orange
+    (`Color.brandFill`: chips, Log in, Unlock), and orange/green/red text on light tints uses
+    darker shades in light mode (`brandText`, `openText`, `closedText`; dark mode keeps the
+    system colours). This covers the badges, the Live indicator, the pending markers, Near Me
+    distances and error text. The decorative logo images on Login and Unlock are hidden from
+    VoiceOver.
 
-Demo (simulator):
-
-```bash
-xcrun simctl location booted set 44.427,26.103   # campus centre, Bucharest
-```
-
-Open **Near Me** → allow location → spots sorted by distance. Back on **Spots**, PATCH a spot
-with curl (below) → banner "Pizza Stop (new oven) was updated".
-
-The simulator cannot run background tasks: `submit` fails with "not available on this platform"
-(logged under `com.unieats.app` / `sync` and ignored). On a device, pause in the debugger after
-sending the app to the background and run
-
-```
-e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.unieats.app.outbox-sync"]
-```
+Check it: `xcrun simctl ui booted appearance dark`, and Accessibility Inspector (Xcode › Open
+Developer Tool) pointed at the simulator on the list, chips, detail and Add review sheet.
 
 ## Already in the app (earlier tags)
 
@@ -56,6 +49,17 @@ e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWith
 | l07 | SwiftData source of truth, "Edit spot" → outbox → replay (launch, reconnect, every edit, retry with backoff), edits during a sync sent in the same run, 409 last-write-wins, "N changes pending" | `Repository/SpotRepository.swift` |
 | l08 | Login, JWT in Keychain, Bearer on mutations, 401 → login (queued edits kept, each records its user), Log out discards them, add review with one Idempotency-Key per draft, deep link kept while logged out or locked | `ViewModels/SessionStore.swift`, `Keychain/KeychainHelper.swift`, `Models/ReviewDraft.swift` |
 | l08 | Opt-in biometric unlock (Account menu): `.biometryCurrentSet` Keychain item read with an evaluated `LAContext`, "Unlock UniEats" screen, "Use password instead" logs out | `Keychain/BiometricAuth.swift`, `Views/UnlockView.swift` |
+| l09 | Tabs (Spots, Near Me) with shared favourites; a deep link selects the Spots tab | `UniEatsApp.swift`, `ViewModels/FavouritesStore.swift` |
+| l09 | Near Me tab (CoreLocation when-in-use, 2 km, updates only while visible), local notification from live `spot.updated` | `Views/NearMeView.swift`, `Location/LocationManager.swift`, `Notifications/SpotChangeNotifier.swift` |
+| l09 | Background replay of pending edits (`BGAppRefreshTask` `com.unieats.app.outbox-sync`, scheduled when the app goes to the background with edits queued) | `Repository/SpotRepository.swift`, `UniEatsApp.swift`, `Info.plist` |
+
+The simulator cannot run the l09 background replay: `submit` fails with "not available on this
+platform" (logged under `com.unieats.app` / `sync` and ignored). On a device, pause in the
+debugger after sending the app to the background and run
+
+```
+e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.unieats.app.outbox-sync"]
+```
 
 ## Run
 

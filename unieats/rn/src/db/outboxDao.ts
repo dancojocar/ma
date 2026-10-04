@@ -11,10 +11,9 @@ export function enqueue(op: Omit<OutboxOp, "seq">) {
   );
 }
 
-export function allInOrder(): OutboxOp[] {
-  return getDb()
-    .getAllSync<OutboxRow>("SELECT * FROM outbox ORDER BY seq")
-    .map((row) => ({ ...row, payload: JSON.parse(row.payload) as OutboxOp["payload"] }));
+export function oldest(): OutboxOp | null {
+  const row = getDb().getFirstSync<OutboxRow>("SELECT * FROM outbox ORDER BY seq LIMIT 1");
+  return row ? { ...row, payload: JSON.parse(row.payload) as OutboxOp["payload"] } : null;
 }
 
 export function remove(seq: number) {
@@ -28,6 +27,22 @@ export function hasOpsFor(entityId: string): boolean {
 
 export function count(): number {
   return getDb().getFirstSync<{ n: number }>("SELECT COUNT(*) AS n FROM outbox")?.n ?? 0;
+}
+
+export function rebase(entityId: string, updatedAt: number) {
+  getDb().runSync(
+    "UPDATE outbox SET payload = json_set(payload, '$.updatedAt', ?) WHERE entityId = ?",
+    [updatedAt, entityId],
+  );
+}
+
+/** Edits based on a version older than the server's would be rejected with 409 as well. */
+export function removeStale(entityId: string, serverUpdatedAt: number) {
+  getDb().runSync(
+    "DELETE FROM outbox WHERE entityId = ? AND json_extract(payload, '$.updatedAt') < ?",
+    [entityId, serverUpdatedAt],
+  );
+  notifyChanged("outbox");
 }
 
 export function clear(): number {

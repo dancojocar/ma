@@ -11,17 +11,17 @@ enum ApiError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .http(let statusCode, let message):
-            "Server error \(statusCode): \(message)"
+            String(localized: "Server error \(statusCode): \(message)")
         case .unauthorized:
-            "Please log in again."
+            String(localized: "Please log in again.")
         case .noConnectivity:
-            "Can't reach the server. Is it running (npm start in unieats/server)?"
+            String(localized: "Can't reach the server. Is it running (npm start in unieats/server)?")
         case .timeout:
-            "The server took too long to answer."
+            String(localized: "The server took too long to answer.")
         case .decodingFailed:
-            "The server sent data the app could not read."
+            String(localized: "The server sent data the app could not read.")
         case .conflict:
-            "Someone else changed this spot first."
+            String(localized: "Someone else changed this spot first.")
         }
     }
 }

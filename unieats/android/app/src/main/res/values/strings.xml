@@ -1,4 +1,100 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">UniEats</string>
+
+    <string name="action_back">Back</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add_favourite">Add to favourites</string>
+    <string name="action_remove_favourite">Remove from favourites</string>
+    <string name="status_open">Open</string>
+    <string name="status_open_now">Open now</string>
+    <string name="status_closed">Closed</string>
+    <string name="status_waiting_to_sync">Waiting to sync</string>
+    <string name="rated">Rated %1$s</string>
+    <string name="price_level">Price level %1$d</string>
+
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_submit">Sign In</string>
+    <string name="login_demo_account">Demo account: student@unieats.app / password</string>
+    <string name="biometrics_changed_notice">Biometrics changed on this device. Sign in again.</string>
+
+    <string name="unlock_title">Unlock UniEats</string>
+    <string name="unlock_signed_in_as">Signed in as %1$s</string>
+    <string name="unlock_action">Unlock</string>
+    <string name="unlock_use_password_instead">Use password instead</string>
+    <string name="unlock_prompt_negative">Use password</string>
+    <string name="biometric_enable_prompt_title">Turn on biometric unlock</string>
+
+    <string name="list_search_placeholder">Search spots</string>
+    <string name="list_clear_search">Clear search</string>
+    <string name="list_filter_all">All</string>
+    <string name="list_empty">No spots match your search.</string>
+    <string name="list_nearby">Spots near me</string>
+    <string name="list_more_options">More options</string>
+    <string name="list_sort_by_rating">Sort by rating</string>
+    <string name="list_sort_default">Default order</string>
+    <string name="list_biometric_unlock">Unlock with biometrics</string>
+    <string name="toggle_on">On</string>
+    <string name="toggle_off">Off</string>
+    <string name="list_log_out">Log out</string>
+    <plurals name="list_changes_pending">
+        <item quantity="one">%d change pending</item>
+        <item quantity="other">%d changes pending</item>
+    </plurals>
+    <string name="live_badge_live">● Live</string>
+    <string name="live_badge_offline">○ Offline</string>
+    <string name="live_updates_on">Live updates on</string>
+    <string name="live_updates_offline">Offline</string>
+    <string name="list_select_a_spot">Select a spot</string>
+
+    <string name="detail_title_fallback">Spot</string>
+    <string name="detail_not_found">Spot not found</string>
+    <string name="detail_stale_data">Showing saved data. %1$s</string>
+    <string name="detail_rating_line">★ %1$s / 5 · %2$s</string>
+    <string name="detail_rating_description">Rated %1$s out of 5, price level %2$d</string>
+    <string name="detail_edit_spot">Edit spot</string>
+    <plurals name="detail_reviews_header">
+        <item quantity="one">Reviews (%d)</item>
+        <item quantity="other">Reviews (%d)</item>
+    </plurals>
+    <string name="detail_add_review">Add review</string>
+    <string name="detail_no_reviews">No reviews yet.</string>
+    <plurals name="review_stars">
+        <item quantity="one">%d out of 5 stars</item>
+        <item quantity="other">%d out of 5 stars</item>
+    </plurals>
+
+    <string name="about_title">About</string>
+    <string name="about_expanded">Expanded</string>
+    <string name="about_collapsed">Collapsed</string>
+    <string name="about_price_level">Price level</string>
+    <string name="about_location">Location</string>
+    <string name="about_last_updated">Last updated</string>
+
+    <string name="edit_name">Name</string>
+    <string name="edit_description">Description</string>
+    <string name="edit_save">Save</string>
+
+    <string name="review_your_review">Your review</string>
+    <string name="review_post">Post</string>
+    <string name="review_posting">Posting…</string>
+    <plurals name="review_star_option">
+        <item quantity="one">%d star</item>
+        <item quantity="other">%d stars</item>
+    </plurals>
+
+    <string name="nearby_empty">No spots within 2 km of you.\n\nOn the emulator, set the location to the campus (44.427, 26.103) in Extended controls → Location.</string>
+    <string name="nearby_permission_denied">Location is turned off for UniEats. Enable it in Settings to see spots near you.</string>
+    <string name="nearby_permission_rationale">Without your location UniEats cannot tell which spots are within walking distance. It is used only while this screen is open.</string>
+    <string name="nearby_permission_explainer">UniEats uses your location only while this screen is open, to list spots within 2 km.</string>
+    <string name="nearby_open_settings">Open settings</string>
+    <string name="nearby_allow_location">Allow location</string>
+    <string name="nearby_row_details">%1$d m · %2$s · %3$s</string>
+
+    <string name="notification_channel_name">Spot updates</string>
+    <string name="notification_channel_description">A spot you can see in UniEats was changed</string>
+    <string name="notification_spot_updated">%1$s was updated</string>
 </resources>

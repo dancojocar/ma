@@ -9,6 +9,7 @@ struct SpotListView: View {
     @Binding var pendingSpotId: String?
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
+    @Namespace private var photoTransition
     @Environment(\.scenePhase) private var scenePhase
 
     init(
@@ -29,7 +30,7 @@ struct SpotListView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            SpotListContent(viewModel: viewModel, favourites: favourites)
+            SpotListContent(viewModel: viewModel, favourites: favourites, photoTransition: photoTransition)
                 .safeAreaInset(edge: .top) { SyncStatusBanner(repository: repository) }
                 .refreshable { await viewModel.refresh() }
                 .task { await viewModel.refresh() }
@@ -48,7 +49,7 @@ struct SpotListView: View {
                         Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
                             .labelStyle(.titleAndIcon)
                             .font(.caption)
-                            .foregroundStyle(viewModel.isLive ? .green : .secondary)
+                            .foregroundStyle(viewModel.isLive ? Color.openText : .secondary)
                     }
                 }
                 .navigationTitle("UniEats")
@@ -63,6 +64,7 @@ struct SpotListView: View {
                         onToggleFavourite: { favourites.toggle(spotId) },
                         repository: repository
                     )
+                        .navigationTransition(.zoom(sourceID: spotId, in: photoTransition))
                 }
         }
         .onChange(of: pendingSpotId, initial: true) { _, spotId in
@@ -91,11 +93,13 @@ struct SpotListView: View {
 private struct SpotListContent: View {
     let viewModel: SpotListViewModel
     let favourites: FavouritesStore
+    let photoTransition: Namespace.ID
     @Query private var spots: [SpotEntity]
 
-    init(viewModel: SpotListViewModel, favourites: FavouritesStore) {
+    init(viewModel: SpotListViewModel, favourites: FavouritesStore, photoTransition: Namespace.ID) {
         self.viewModel = viewModel
         self.favourites = favourites
+        self.photoTransition = photoTransition
         let query = viewModel.searchQuery
         let category = viewModel.categoryFilter ?? ""
         _spots = Query(
@@ -124,9 +128,11 @@ private struct SpotListContent: View {
                         spot: entity.spot,
                         isFavourite: favourites.contains(entity.id),
                         isPending: entity.pendingSync,
+                        photoTransition: photoTransition,
                         onToggleFavourite: { favourites.toggle(entity.id) }
                     )
                 }
+                .transition(.move(edge: .leading).combined(with: .opacity))
                 .task {
                     if entity.id == spots.last?.id { await viewModel.loadMore() }
                 }
@@ -136,6 +142,7 @@ private struct SpotListContent: View {
                 .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
+        .animation(.easeInOut(duration: 0.25), value: spots.map(\.id))
         .overlay { emptyOrErrorState }
     }
 

@@ -24,8 +24,11 @@ import javax.inject.Singleton
 class SpotNotificationService @Inject constructor(@param:ApplicationContext private val context: Context) {
 
     init {
-        val channel = NotificationChannel(CHANNEL_ID, "Spot updates", NotificationManager.IMPORTANCE_DEFAULT)
-            .apply { description = "A spot you can see in UniEats was changed" }
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            context.getString(R.string.notification_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply { description = context.getString(R.string.notification_channel_description) }
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
@@ -46,7 +49,7 @@ class SpotNotificationService @Inject constructor(@param:ApplicationContext priv
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("${spot.name} was updated")
+            .setContentTitle(context.getString(R.string.notification_spot_updated, spot.name))
             .setContentText(spot.description)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

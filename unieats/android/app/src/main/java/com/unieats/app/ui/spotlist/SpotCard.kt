@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,25 +71,28 @@ fun SpotCard(
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.tertiary
                     )
+                    val rated = stringResource(R.string.rated, spot.ratingText())
                     Text(
                         spot.ratingText(),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.semantics { contentDescription = "Rated ${spot.ratingText()}" }
+                        modifier = Modifier.semantics { contentDescription = rated }
                     )
+                    val priceLevel = stringResource(R.string.price_level, spot.priceLevel)
                     Text(
                         spot.priceText(),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { contentDescription = priceLevel }
                     )
                     Text(
-                        text = if (spot.openNow) "Open" else "Closed",
+                        text = stringResource(if (spot.openNow) R.string.status_open else R.string.status_closed),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (spot.openNow) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
                     )
                 }
                 if (isPending) {
                     Text(
-                        "Waiting to sync",
+                        stringResource(R.string.status_waiting_to_sync),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary
                     )
@@ -97,7 +101,7 @@ fun SpotCard(
             IconButton(onClick = onToggleFavourite) {
                 Icon(
                     painter = painterResource(if (isFavourite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
-                    contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                    contentDescription = stringResource(if (isFavourite) R.string.action_remove_favourite else R.string.action_add_favourite),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }

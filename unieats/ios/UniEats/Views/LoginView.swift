@@ -12,6 +12,7 @@ struct LoginView: View {
             Image(systemName: "fork.knife.circle.fill")
                 .font(.system(size: 80))
                 .foregroundStyle(.orange)
+                .accessibilityHidden(true)
 
             Text("UniEats")
                 .font(.largeTitle.bold())
@@ -38,7 +39,7 @@ struct LoginView: View {
 
             if let message = session.errorMessage {
                 Text(message)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.closedText)
                     .font(.callout)
                     .multilineTextAlignment(.center)
             }
@@ -53,7 +54,7 @@ struct LoginView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.orange)
+                .background(Color.brandFill)
                 .foregroundStyle(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             }

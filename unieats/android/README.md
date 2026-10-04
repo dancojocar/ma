@@ -1,4 +1,4 @@
-# UniEats Android — tag `l09-push-location`
+# UniEats Android — tag `l10-polish`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -13,6 +13,7 @@ cd unieats/server && npm install && npm start      # http://localhost:3000
 
 On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
 `./gradlew -p unieats/android :app:installDebug -Punieats.serverHost=localhost:3000`.
+For profiling, install the minified build instead: `./gradlew -p unieats/android :app:installRelease`.
 
 ## What to look at
 
@@ -156,6 +157,30 @@ reviews and live badge, and the light/dark theme.
   notifications arrive while you use the app; try it with the curl PATCH below while the list is
   open. (Local notifications driven by the WebSocket only; FCM/APNs push is not used.)
 - **Sort by rating** moved from the top bar into the ⋮ menu to make room for the location icon.
+
+## Animations + performance (new in l10)
+
+- List rows keep `Modifier.animateItem()` (⋮ → Sort by rating shows the reorder).
+- Detail screen: tap the **About** card (`ui/spotdetail/AboutCard.kt`). It expands with
+  `animateContentSize()` (spring) to show the full description, price level, coordinates and last
+  update. The arrow is a Material Symbols drawable (`ic_keyboard_arrow_down` / `_up`), and
+  TalkBack reads the card's state as "Collapsed" / "Expanded".
+- Screen changes slide and fade (`NavDisplay` `transitionSpec` / `popTransitionSpec` /
+  `predictivePopTransitionSpec` in `ui/navigation/NavGraph.kt`).
+- `PERFORMANCE.md` — the profiling steps from the lecture (HWUI bars, Layout Inspector
+  recomposition counts, Perfetto, Memory Profiler), on a release build.
+- Release build: `isMinifyEnabled = true` and `isShrinkResources = true`, so R8 shrinks, optimises
+  and obfuscates the code and drops unused resources. Hilt, Room, WorkManager,
+  kotlinx.serialization (including the `@Serializable` `NavKey`s that `rememberNavBackStack`
+  saves), Ktor, OkHttp and Coil ship their own keep rules, so `app/proguard-rules.pro` is empty
+  until R8 asks for a rule. The release type is signed with the debug key so that
+  `./gradlew -p unieats/android :app:installRelease` works without a keystore; that is for the
+  course only, a store build signs with its own upload key.
+- Every text on screen, every content description and the notification texts are in
+  `res/values/strings.xml` (`stringResource` / `pluralStringResource`, plurals for "N changes
+  pending", "Reviews (n)" and the star counts). Messages built outside the UI stay in Kotlin:
+  server and network errors (`data/remote/ApiResult.kt`), "Wrong email or password." and the
+  category names (`Category.label`).
 
 ## Demo: offline edit → reconnect → sync
 

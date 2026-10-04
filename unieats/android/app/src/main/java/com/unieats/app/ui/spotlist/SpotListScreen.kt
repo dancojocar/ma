@@ -40,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -109,10 +111,11 @@ fun SpotListContent(
     }
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
+    val retryLabel = stringResource(R.string.action_retry)
 
     if (state.spots.isNotEmpty() && state.errorMessage != null) {
         LaunchedEffect(state.errorMessage) {
-            val result = snackbarHostState.showSnackbar(state.errorMessage, actionLabel = "Retry")
+            val result = snackbarHostState.showSnackbar(state.errorMessage, actionLabel = retryLabel)
             if (result == SnackbarResult.ActionPerformed) onRetry() else onErrorShown()
         }
     }
@@ -125,11 +128,11 @@ fun SpotListContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("UniEats") },
+                title = { Text(stringResource(R.string.app_name)) },
                 actions = {
                     LiveBadge(isLive = state.isLive)
                     IconButton(onClick = onNearbyClick) {
-                        Icon(painterResource(R.drawable.ic_location_on), contentDescription = "Spots near me")
+                        Icon(painterResource(R.drawable.ic_location_on), contentDescription = stringResource(R.string.list_nearby))
                     }
                     OverflowMenu(
                         sortByRating = sortByRating,
@@ -166,7 +169,7 @@ fun SpotListContent(
                     state.isLoading && state.spots.isEmpty() -> ScrollableState { LoadingView() }
                     state.errorMessage != null && state.spots.isEmpty() ->
                         ScrollableState { ErrorView(message = state.errorMessage, onRetry = onRetry) }
-                    spots.isEmpty() -> ScrollableState { MessageView("No spots match your search.") }
+                    spots.isEmpty() -> ScrollableState { MessageView(stringResource(R.string.list_empty)) }
                     else -> LazyColumn(
                         state = listState,
                         contentPadding = PaddingValues(16.dp),
@@ -219,29 +222,30 @@ private fun OverflowMenu(
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
-            Icon(painterResource(R.drawable.ic_more_vert), contentDescription = "More options")
+            Icon(painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.list_more_options))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
-                text = { Text(if (sortByRating) "Default order" else "Sort by rating") },
+                text = { Text(stringResource(if (sortByRating) R.string.list_sort_default else R.string.list_sort_by_rating)) },
                 onClick = {
                     expanded = false
                     onToggleSort()
                 }
             )
             if (showBiometricToggle) {
+                val toggleState = stringResource(if (biometricEnabled) R.string.toggle_on else R.string.toggle_off)
                 DropdownMenuItem(
-                    text = { Text("Unlock with biometrics") },
+                    text = { Text(stringResource(R.string.list_biometric_unlock)) },
                     trailingIcon = { Switch(checked = biometricEnabled, onCheckedChange = null) },
                     onClick = {
                         expanded = false
                         onToggleBiometric(!biometricEnabled)
                     },
-                    modifier = Modifier.semantics { stateDescription = if (biometricEnabled) "On" else "Off" }
+                    modifier = Modifier.semantics { stateDescription = toggleState }
                 )
             }
             DropdownMenuItem(
-                text = { Text("Log out") },
+                text = { Text(stringResource(R.string.list_log_out)) },
                 onClick = {
                     expanded = false
                     onLogout()
@@ -254,7 +258,7 @@ private fun OverflowMenu(
 @Composable
 private fun PendingChangesBanner(count: Int) {
     Text(
-        text = if (count == 1) "1 change pending" else "$count changes pending",
+        text = pluralStringResource(R.plurals.list_changes_pending, count, count),
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.onTertiaryContainer,
         modifier = Modifier
@@ -267,11 +271,10 @@ private fun PendingChangesBanner(count: Int) {
 
 @Composable
 private fun LiveBadge(isLive: Boolean) {
+    val description = stringResource(if (isLive) R.string.live_updates_on else R.string.live_updates_offline)
     Text(
-        text = if (isLive) "● Live" else "○ Offline",
-        modifier = Modifier.clearAndSetSemantics {
-            contentDescription = if (isLive) "Live updates on" else "Offline"
-        },
+        text = stringResource(if (isLive) R.string.live_badge_live else R.string.live_badge_offline),
+        modifier = Modifier.clearAndSetSemantics { contentDescription = description },
         style = MaterialTheme.typography.labelMedium,
         color = if (isLive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     )

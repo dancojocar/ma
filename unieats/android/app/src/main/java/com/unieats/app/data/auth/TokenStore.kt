@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.unieats.app.R
 import com.unieats.app.di.ApplicationScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +64,7 @@ private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataS
  */
 @Singleton
 class TokenStore @Inject constructor(
-    @ApplicationContext context: Context,
+    @param:ApplicationContext private val context: Context,
     @ApplicationScope scope: CoroutineScope
 ) : AuthTokens {
 
@@ -164,7 +165,7 @@ class TokenStore @Inject constructor(
             biometricCipher.decryptCipher(sealed)
         } catch (e: KeyPermanentlyInvalidatedException) {
             clear()
-            _notice.value = "Biometrics changed on this device. Sign in again."
+            _notice.value = context.getString(R.string.biometrics_changed_notice)
             null
         }
     }

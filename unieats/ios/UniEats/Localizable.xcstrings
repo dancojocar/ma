@@ -1,0 +1,133 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ is not available. Please log in with your password." : {},
+    "%@ was updated" : {},
+    "%lld changes pending" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld change pending"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld changes pending"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld out of 5 stars" : {},
+    "%lld stars" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld star"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld stars"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Account" : {},
+    "Add review" : {},
+    "Add to favourites" : {},
+    "All" : {},
+    "Allow UniEats to use your location in Settings to see spots within 2 km." : {},
+    "Bakery" : {},
+    "Bar" : {},
+    "Biometrics changed on this device. Please log in with your password." : {},
+    "Cafe" : {},
+    "Can't reach the server. Is it running (npm start in unieats/server)?" : {},
+    "Cancel" : {},
+    "Canteen" : {},
+    "Closed" : {},
+    "Couldn't load spots" : {},
+    "Couldn't load this spot" : {},
+    "Demo account: student@unieats.app / password" : {},
+    "Description" : {},
+    "Edit spot" : {},
+    "Email" : {},
+    "Enable location" : {},
+    "Fast Food" : {},
+    "Finding your location…" : {},
+    "Live" : {},
+    "Loading spots…" : {},
+    "Location is off" : {},
+    "Log in" : {},
+    "Log out" : {},
+    "Name" : {},
+    "Near Me" : {},
+    "No reviews yet." : {},
+    "No spots found" : {},
+    "Nothing within 2 km" : {},
+    "Offline" : {},
+    "Open" : {},
+    "Open now" : {},
+    "Password" : {},
+    "Pending sync" : {},
+    "Please log in again." : {},
+    "Post" : {},
+    "Price level %lld of 3" : {},
+    "Rated %@ out of 5" : {},
+    "Rating" : {},
+    "Rating %@ out of 5" : {},
+    "Remove from favourites" : {},
+    "Retry" : {},
+    "Review" : {},
+    "Reviews (%lld)" : {},
+    "Save" : {},
+    "Saved on this device, waiting to sync" : {},
+    "Search spots" : {},
+    "Server error %lld: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Server error %1$lld: %2$@"
+          }
+        }
+      }
+    },
+    "Showing saved spots. %@" : {},
+    "Simulator: Features › Location › Custom Location… 44.427, 26.103" : {},
+    "Someone else changed this spot first." : {},
+    "Spots" : {},
+    "Spots near you" : {},
+    "Stars" : {},
+    "Sync now" : {},
+    "The server sent data the app could not read." : {},
+    "The server took too long to answer." : {},
+    "Try another search or category." : {},
+    "UniEats" : {},
+    "UniEats uses your location only while this screen is open." : {},
+    "Unlock UniEats" : {},
+    "Unlock with %@" : {},
+    "Use %@ to unlock UniEats" : {},
+    "Use password instead" : {},
+    "What did you think?" : {},
+    "Wrong email or password." : {},
+    "Your session expired. Please log in again." : {},
+    "biometrics" : {}
+  },
+  "version" : "1.0"
+}

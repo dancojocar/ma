@@ -28,6 +28,7 @@ struct ReviewsSection: View {
                         Spacer()
                         Text(String(repeating: "★", count: review.stars))
                             .foregroundStyle(.yellow)
+                            .accessibilityLabel("\(review.stars) out of 5 stars")
                     }
                     Text(review.text)
                         .font(.subheadline)

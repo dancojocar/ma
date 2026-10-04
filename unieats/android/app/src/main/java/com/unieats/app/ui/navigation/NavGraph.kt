@@ -1,6 +1,11 @@
 package com.unieats.app.ui.navigation
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -14,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,6 +29,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.unieats.app.R
 import com.unieats.app.data.auth.SessionState
 import com.unieats.app.ui.auth.UnlockScreen
 import com.unieats.app.ui.auth.authenticate
@@ -98,6 +105,8 @@ fun UniEatsNavDisplay(
     val scope = rememberCoroutineScope()
     val biometricAvailable = rememberBiometricUnlockAvailable()
     val biometricEnabled by sessionViewModel.biometricEnabled.collectAsStateWithLifecycle()
+    val enablePromptTitle = stringResource(R.string.biometric_enable_prompt_title)
+    val enablePromptNegative = stringResource(R.string.action_cancel)
 
     NavDisplay(
         backStack = backStack,
@@ -108,6 +117,18 @@ fun UniEatsNavDisplay(
             rememberViewModelStoreNavEntryDecorator()
         ),
         sceneStrategies = listOf(rememberListDetailSceneStrategy()),
+        transitionSpec = {
+            (slideInHorizontally(initialOffsetX = { it }) + fadeIn()) togetherWith
+                (slideOutHorizontally(targetOffsetX = { -it / 3 }) + fadeOut())
+        },
+        popTransitionSpec = {
+            (slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn()) togetherWith
+                (slideOutHorizontally(targetOffsetX = { it }) + fadeOut())
+        },
+        predictivePopTransitionSpec = { _ ->
+            (slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn()) togetherWith
+                (slideOutHorizontally(targetOffsetX = { it }) + fadeOut())
+        },
         entryProvider = entryProvider {
             entry<Login> { LoginScreen() }
 
@@ -126,7 +147,7 @@ fun UniEatsNavDisplay(
                         if (enable) {
                             scope.launch {
                                 sessionViewModel.enableBiometric { cipher ->
-                                    activity.authenticate(cipher, "Turn on biometric unlock", "Cancel")
+                                    activity.authenticate(cipher, enablePromptTitle, enablePromptNegative)
                                 }
                             }
                         } else {
@@ -158,6 +179,6 @@ fun UniEatsNavDisplay(
 @Composable
 private fun SelectASpotPlaceholder() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Select a spot", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.list_select_a_spot), style = MaterialTheme.typography.titleMedium)
     }
 }

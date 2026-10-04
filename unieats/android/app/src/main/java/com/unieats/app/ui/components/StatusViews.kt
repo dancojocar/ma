@@ -12,8 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.unieats.app.R
 
 @Composable
 fun LoadingView(modifier: Modifier = Modifier) {
@@ -41,6 +43,6 @@ fun ErrorView(message: String, onRetry: () -> Unit, modifier: Modifier = Modifie
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
     ) {
         Text(message, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.error)
-        Button(onClick = onRetry) { Text("Retry") }
+        Button(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
     }
 }

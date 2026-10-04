@@ -11,6 +11,7 @@ struct UnlockView: View {
             Image(systemName: "lock.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.orange)
+                .accessibilityHidden(true)
 
             Text("Unlock UniEats")
                 .font(.largeTitle.bold())
@@ -22,7 +23,7 @@ struct UnlockView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.orange)
+                    .background(Color.brandFill)
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }

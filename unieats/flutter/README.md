@@ -73,7 +73,7 @@ the token back in the normal store. Files: `token_store.dart`, `auth_repository.
 on the emulator, turn the switch on, restart the app and run `adb -e emu finger touch 1`; on the iOS
 Simulator use Features → Face ID → Enrolled, then Matching Face.
 
-This tag (`l09-push-location`) adds:
+Since `l09-push-location`:
 - **Spots near me** (`/nearby`, the arrow next to the list's ⋮ menu,
   `lib/ui/nearby/nearby_spots_screen.dart`): spots within 2 km, nearest first, from `geolocator`
   (`lib/services/location_service.dart`). The screen explains why before the system permission prompt
@@ -90,6 +90,14 @@ This tag (`l09-push-location`) adds:
   `ios/Runner/AppDelegate.swift` sets the notification-center delegate so they also show while the app
   is in the foreground. The plugin needs core library desugaring (`android/app/build.gradle.kts`). Try:
   `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
+
+This tag (`l10-polish`) adds motion: the spot photo flies from the list card to the detail header
+(`Hero(tag: 'spot-photo-<id>')`; it animates because go_router builds a `MaterialPage` for each route) and
+cards fade/slide in, the first ten 40 ms apart (`AnimatedEntrance` in
+`lib/ui/spot_list/spot_list_screen.dart`, an `AnimationController` per card, disposed with it, skipped
+under "reduce motion"). The Live dot watches `liveEventsProvider.select(...)`, so a live event alone does
+not rebuild the list screen; the list changes when the event reaches Drift. Profiling steps:
+[PERFORMANCE.md](PERFORMANCE.md).
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

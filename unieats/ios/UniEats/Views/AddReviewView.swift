@@ -13,7 +13,9 @@ struct AddReviewView: View {
                 Section("Rating") {
                     Picker("Stars", selection: $draft.stars) {
                         ForEach(1...5, id: \.self) { value in
-                            Text(String(repeating: "★", count: value)).tag(value)
+                            Text(String(repeating: "★", count: value))
+                                .accessibilityLabel("\(value) stars")
+                                .tag(value)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -23,7 +25,7 @@ struct AddReviewView: View {
                         .lineLimit(3...6)
                 }
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(Color.closedText)
                 }
             }
             .navigationTitle("Add review")

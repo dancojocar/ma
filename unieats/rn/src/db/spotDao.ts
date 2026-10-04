@@ -3,13 +3,9 @@ import type { CategoryFilter } from "../store/spotsStore";
 import { notifyChanged } from "./changes";
 import { getDb } from "./database";
 
-type SpotRow = Omit<LocalSpot, "openNow" | "pendingSync"> & {
-  openNow: number;
-  pendingSync: number;
-  serverUpdatedAt: number;
-};
+type SpotRow = Omit<LocalSpot, "openNow" | "pendingSync"> & { openNow: number; pendingSync: number };
 
-const toLocalSpot = ({ serverUpdatedAt: _, ...row }: SpotRow): LocalSpot => ({
+const toLocalSpot = (row: SpotRow): LocalSpot => ({
   ...row,
   openNow: row.openNow === 1,
   pendingSync: row.pendingSync === 1,
@@ -17,21 +13,20 @@ const toLocalSpot = ({ serverUpdatedAt: _, ...row }: SpotRow): LocalSpot => ({
 
 const spotParams = (s: Spot) => [
   s.id, s.name, s.category, s.rating, s.priceLevel, s.lat, s.lng,
-  s.openNow ? 1 : 0, s.photoUrl, s.description, s.updatedAt, s.updatedAt,
+  s.openNow ? 1 : 0, s.photoUrl, s.description, s.updatedAt,
 ];
 
 const COLUMNS =
-  "id, name, category, rating, priceLevel, lat, lng, openNow, photoUrl, description, updatedAt, serverUpdatedAt, pendingSync";
+  "id, name, category, rating, priceLevel, lat, lng, openNow, photoUrl, description, updatedAt, pendingSync";
 
 // Upsert, never delete-then-insert, and leave rows with unsynced local edits alone.
 const UPSERT_FROM_SERVER = `
-  INSERT INTO spots (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+  INSERT INTO spots (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
   ON CONFLICT(id) DO UPDATE SET
     name = excluded.name, category = excluded.category, rating = excluded.rating,
     priceLevel = excluded.priceLevel, lat = excluded.lat, lng = excluded.lng,
     openNow = excluded.openNow, photoUrl = excluded.photoUrl,
-    description = excluded.description, updatedAt = excluded.updatedAt,
-    serverUpdatedAt = excluded.serverUpdatedAt
+    description = excluded.description, updatedAt = excluded.updatedAt
   WHERE spots.pendingSync = 0`;
 
 export function upsertFromServer(spots: Spot[]) {
@@ -66,26 +61,22 @@ export function getPendingSync(): LocalSpot[] {
   return getDb().getAllSync<SpotRow>("SELECT * FROM spots WHERE pendingSync = 1").map(toLocalSpot);
 }
 
-/** The server `updatedAt` this device last saw; sent as the base version of the next PATCH. */
-export function getServerVersion(id: string): number | null {
-  return getDb().getFirstSync<{ v: number }>("SELECT serverUpdatedAt AS v FROM spots WHERE id = ?", [id])?.v ?? null;
+export function recordServerVersion(id: string, updatedAt: number) {
+  getDb().runSync("UPDATE spots SET updatedAt = ? WHERE id = ?", [updatedAt, id]);
 }
 
-export function recordServerVersion(id: string, serverUpdatedAt: number) {
-  getDb().runSync("UPDATE spots SET serverUpdatedAt = ? WHERE id = ?", [serverUpdatedAt, id]);
-}
-
-export function applyLocalEdit(id: string, edit: SpotEdit, updatedAt: number) {
+/** Keeps `updatedAt`: a pending row carries the server version its edit is based on. */
+export function applyLocalEdit(id: string, edit: SpotEdit) {
   getDb().runSync(
-    "UPDATE spots SET name = ?, description = ?, openNow = ?, updatedAt = ?, pendingSync = 1 WHERE id = ?",
-    [edit.name, edit.description, edit.openNow ? 1 : 0, updatedAt, id],
+    "UPDATE spots SET name = ?, description = ?, openNow = ?, pendingSync = 1 WHERE id = ?",
+    [edit.name, edit.description, edit.openNow ? 1 : 0, id],
   );
 }
 
 /** Replace the row with the server copy and clear the pending flag. */
 export function markSynced(spot: Spot) {
   getDb().runSync(
-    `INSERT OR REPLACE INTO spots (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+    `INSERT OR REPLACE INTO spots (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
     spotParams(spot),
   );
   notifyChanged("spots");

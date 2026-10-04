@@ -23,6 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
@@ -39,14 +41,14 @@ fun AddReviewDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add review") },
+        title = { Text(stringResource(R.string.detail_add_review)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 StarPicker(stars = stars, onSelect = { stars = it })
                 OutlinedTextField(
                     value = text,
                     onValueChange = { text = it },
-                    label = { Text("Your review") },
+                    label = { Text(stringResource(R.string.review_your_review)) },
                     minLines = 2,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -57,10 +59,10 @@ fun AddReviewDialog(
         },
         confirmButton = {
             TextButton(onClick = { onSubmit(stars, text) }, enabled = text.isNotBlank() && !isSubmitting) {
-                Text(if (isSubmitting) "Posting…" else "Post")
+                Text(stringResource(if (isSubmitting) R.string.review_posting else R.string.review_post))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -77,7 +79,7 @@ private fun StarPicker(stars: Int, onSelect: (Int) -> Unit) {
             ) {
                 Icon(
                     painter = painterResource(if (value <= stars) R.drawable.ic_star else R.drawable.ic_star_border),
-                    contentDescription = if (value == 1) "1 star" else "$value stars",
+                    contentDescription = pluralStringResource(R.plurals.review_star_option, value, value),
                     tint = MaterialTheme.colorScheme.tertiary
                 )
             }

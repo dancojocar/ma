@@ -12,7 +12,7 @@ final class SpotChangeNotifier: NSObject, UNUserNotificationCenterDelegate, Send
     func notifySpotUpdated(_ spot: Spot) {
         let content = UNMutableNotificationContent()
         content.title = "UniEats"
-        content.body = "\(spot.name) was updated"
+        content.body = String(localized: "\(spot.name) was updated")
         content.sound = .default
         let request = UNNotificationRequest(identifier: "spot-updated-\(spot.id)", content: content, trigger: nil)
         center.add(request)

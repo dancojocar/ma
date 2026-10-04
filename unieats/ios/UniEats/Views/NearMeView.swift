@@ -75,7 +75,7 @@ struct NearMeView: View {
                             Text(Measurement(value: item.distance, unit: UnitLength.meters),
                                  format: .measurement(width: .abbreviated, usage: .road))
                                 .font(.callout)
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Color.brandText)
                         }
                     }
                 }

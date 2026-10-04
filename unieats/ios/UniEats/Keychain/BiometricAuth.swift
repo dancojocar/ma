@@ -24,7 +24,7 @@ struct BiometricAuth: BiometricAuthenticating {
         case .faceID: "Face ID"
         case .touchID: "Touch ID"
         case .opticID: "Optic ID"
-        default: "biometrics"
+        default: String(localized: "biometrics")
         }
     }
 

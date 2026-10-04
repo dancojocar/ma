@@ -4,6 +4,7 @@ struct SpotRow: View {
     let spot: Spot
     let isFavourite: Bool
     var isPending = false
+    let photoTransition: Namespace.ID
     let onToggleFavourite: () -> Void
 
     var body: some View {
@@ -11,6 +12,7 @@ struct SpotRow: View {
             SpotPhoto(url: spot.photoUrl)
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .matchedTransitionSource(id: spot.id, in: photoTransition)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -20,7 +22,7 @@ struct SpotRow: View {
                     if isPending {
                         Image(systemName: "clock.arrow.circlepath")
                             .font(.caption)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.brandText)
                             .accessibilityLabel("Pending sync")
                     }
                     Spacer()
@@ -51,12 +53,15 @@ struct SpotRow: View {
             Text(spot.rating, format: .number.precision(.fractionLength(1)))
                 .font(.caption)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rating \(spot.rating, format: .number.precision(.fractionLength(1))) out of 5")
     }
 
     private var priceLevel: some View {
         Text(String(repeating: "$", count: spot.priceLevel))
             .font(.caption)
             .foregroundStyle(.secondary)
+            .accessibilityLabel("Price level \(spot.priceLevel) of 3")
     }
 }
 
@@ -69,7 +74,7 @@ struct OpenBadge: View {
             .padding(.horizontal, 7)
             .padding(.vertical, 3)
             .background(openNow ? Color.green.opacity(0.15) : Color.red.opacity(0.1))
-            .foregroundStyle(openNow ? .green : .red)
+            .foregroundStyle(openNow ? Color.openText : Color.closedText)
             .clipShape(Capsule())
     }
 }
@@ -83,7 +88,7 @@ struct CategoryBadge: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(Color.orange.opacity(0.15))
-            .foregroundStyle(.orange)
+            .foregroundStyle(Color.brandText)
             .clipShape(Capsule())
     }
 }

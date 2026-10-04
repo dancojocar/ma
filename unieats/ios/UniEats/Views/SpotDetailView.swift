@@ -95,13 +95,14 @@ private struct SpotDetailContent: View {
                             Text(String(repeating: "$", count: spot.priceLevel))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
+                                .accessibilityLabel("Price level \(spot.priceLevel) of 3")
                         }
                     }
 
                     if isPending {
                         Label("Saved on this device, waiting to sync", systemImage: "clock.arrow.circlepath")
                             .font(.footnote)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.brandText)
                     }
 
                     Text(spot.spotDescription)
@@ -126,5 +127,7 @@ private struct SpotDetailContent: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rated \(spot.rating, format: .number.precision(.fractionLength(1))) out of 5")
     }
 }

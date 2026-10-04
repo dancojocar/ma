@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -72,10 +73,10 @@ fun NearbyScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Spots near me") },
+                title = { Text(stringResource(R.string.list_nearby)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
+                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.action_back))
                     }
                 }
             )
@@ -95,8 +96,7 @@ fun NearbyScreen(
             }
             state.location == null -> LoadingView(contentModifier)
             state.spots.isEmpty() -> MessageView(
-                "No spots within 2 km of you.\n\nOn the emulator, set the location to the campus " +
-                    "(44.427, 26.103) in Extended controls → Location.",
+                stringResource(R.string.nearby_empty),
                 contentModifier
             )
             else -> LazyColumn(
@@ -128,12 +128,13 @@ private fun PermissionRequest(
         verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
     ) {
         Text(
-            text = when {
-                permanentlyDenied -> "Location is turned off for UniEats. Enable it in Settings to see spots near you."
-                showRationale -> "Without your location UniEats cannot tell which spots are within walking distance. " +
-                    "It is used only while this screen is open."
-                else -> "UniEats uses your location only while this screen is open, to list spots within 2 km."
-            },
+            text = stringResource(
+                when {
+                    permanentlyDenied -> R.string.nearby_permission_denied
+                    showRationale -> R.string.nearby_permission_rationale
+                    else -> R.string.nearby_permission_explainer
+                }
+            ),
             textAlign = TextAlign.Center
         )
         if (permanentlyDenied) {
@@ -141,9 +142,9 @@ private fun PermissionRequest(
                 context.startActivity(
                     Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:${context.packageName}".toUri())
                 )
-            }) { Text("Open settings") }
+            }) { Text(stringResource(R.string.nearby_open_settings)) }
         } else {
-            Button(onClick = onRequest) { Text("Allow location") }
+            Button(onClick = onRequest) { Text(stringResource(R.string.nearby_allow_location)) }
         }
     }
 }
@@ -154,8 +155,12 @@ private fun NearbyRow(nearby: NearbySpot, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(nearby.spot.name, style = MaterialTheme.typography.titleMedium)
             Text(
-                "${nearby.distanceMeters.roundToInt()} m · ${nearby.spot.category.label} · " +
-                    if (nearby.spot.openNow) "Open" else "Closed",
+                stringResource(
+                    R.string.nearby_row_details,
+                    nearby.distanceMeters.roundToInt(),
+                    nearby.spot.category.label,
+                    stringResource(if (nearby.spot.openNow) R.string.status_open else R.string.status_closed)
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

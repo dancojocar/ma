@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
 import com.unieats.app.data.model.Category
@@ -27,12 +28,12 @@ fun SpotSearchBar(
     OutlinedTextField(
         value = query,
         onValueChange = onQueryChange,
-        placeholder = { Text("Search spots") },
+        placeholder = { Text(stringResource(R.string.list_search_placeholder)) },
         leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
         trailingIcon = {
             if (query.isNotEmpty()) {
                 IconButton(onClick = { onQueryChange("") }) {
-                    Icon(painterResource(R.drawable.ic_close), contentDescription = "Clear search")
+                    Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.list_clear_search))
                 }
             }
         },
@@ -53,7 +54,7 @@ fun CategoryFilterRow(
             .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text("All") })
+        FilterChip(selected = selected == null, onClick = { onSelect(null) }, label = { Text(stringResource(R.string.list_filter_all)) })
         Category.entries.forEach { category ->
             FilterChip(
                 selected = selected == category,

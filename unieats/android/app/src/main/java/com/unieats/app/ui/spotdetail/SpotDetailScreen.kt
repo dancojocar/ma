@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -101,17 +103,17 @@ fun SpotDetailContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(spot?.name ?: "Spot") },
+                title = { Text(spot?.name ?: stringResource(R.string.detail_title_fallback)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
+                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = stringResource(R.string.action_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = onToggleFavourite) {
                         Icon(
                             painter = painterResource(if (isFavourite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
-                            contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                            contentDescription = stringResource(if (isFavourite) R.string.action_remove_favourite else R.string.action_add_favourite),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -123,7 +125,7 @@ fun SpotDetailContent(
         when {
             spot == null && state.isLoading -> LoadingView(contentModifier)
             spot == null && state.errorMessage != null -> ErrorView(state.errorMessage, onRetry, contentModifier)
-            spot == null -> MessageView("Spot not found", contentModifier)
+            spot == null -> MessageView(stringResource(R.string.detail_not_found), contentModifier)
             else -> LazyColumn(modifier = contentModifier.fillMaxSize()) {
                 if (state.errorMessage != null) {
                     item { StaleDataNotice(state.errorMessage, onRetry) }
@@ -145,12 +147,12 @@ private fun StaleDataNotice(message: String, onRetry: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            "Showing saved data. $message",
+            stringResource(R.string.detail_stale_data, message),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             modifier = Modifier.weight(1f)
         )
-        TextButton(onClick = onRetry) { Text("Retry") }
+        TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
     }
 }
 
@@ -173,18 +175,17 @@ private fun SpotHeader(spot: Spot, isPendingSync: Boolean, onEdit: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatusLabel(spot.category.label)
-                StatusLabel(if (spot.openNow) "Open now" else "Closed")
-                if (isPendingSync) StatusLabel("Waiting to sync")
+                StatusLabel(stringResource(if (spot.openNow) R.string.status_open_now else R.string.status_closed))
+                if (isPendingSync) StatusLabel(stringResource(R.string.status_waiting_to_sync))
             }
+            val ratingDescription = stringResource(R.string.detail_rating_description, spot.ratingText(), spot.priceLevel)
             Text(
-                "★ ${spot.ratingText()} / 5 · ${spot.priceText()}",
+                stringResource(R.string.detail_rating_line, spot.ratingText(), spot.priceText()),
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.semantics {
-                    contentDescription = "Rated ${spot.ratingText()} out of 5, price level ${spot.priceLevel}"
-                }
+                modifier = Modifier.semantics { contentDescription = ratingDescription }
             )
-            Text(spot.description, style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton(onClick = onEdit) { Text("Edit spot") }
+            AboutCard(spot)
+            OutlinedButton(onClick = onEdit) { Text(stringResource(R.string.detail_edit_spot)) }
         }
     }
 }
@@ -214,15 +215,15 @@ private fun ReviewsHeader(count: Int, onAddReview: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Reviews ($count)",
+                text = pluralStringResource(R.plurals.detail_reviews_header, count, count),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
-            TextButton(onClick = onAddReview) { Text("Add review") }
+            TextButton(onClick = onAddReview) { Text(stringResource(R.string.detail_add_review)) }
         }
         if (count == 0) {
             Text(
-                "No reviews yet.",
+                stringResource(R.string.detail_no_reviews),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -238,12 +239,11 @@ private fun ReviewRow(review: Review) {
             .semantics(mergeDescendants = true) {}
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            val starsDescription = pluralStringResource(R.plurals.review_stars, review.stars, review.stars)
             Text(
                 "★".repeat(review.stars),
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.clearAndSetSemantics {
-                    contentDescription = "${review.stars} out of 5 stars"
-                }
+                modifier = Modifier.clearAndSetSemantics { contentDescription = starsDescription }
             )
             Text(review.author, style = MaterialTheme.typography.labelLarge)
         }

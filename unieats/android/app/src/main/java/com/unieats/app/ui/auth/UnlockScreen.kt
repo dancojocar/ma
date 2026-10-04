@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -39,9 +40,11 @@ fun UnlockScreen(
     val displayName by viewModel.displayName.collectAsStateWithLifecycle()
     // The prompt is tied to this composition: leaving the screen cancels it (invokeOnCancellation).
     val scope = rememberCoroutineScope()
+    val promptTitle = stringResource(R.string.unlock_title)
+    val promptNegative = stringResource(R.string.unlock_prompt_negative)
     val unlock: () -> Unit = {
         scope.launch {
-            viewModel.unlock { cipher -> activity.authenticate(cipher, "Unlock UniEats", "Use password") }
+            viewModel.unlock { cipher -> activity.authenticate(cipher, promptTitle, promptNegative) }
         }
     }
     var prompted by rememberSaveable { mutableStateOf(false) }
@@ -71,16 +74,16 @@ fun UnlockContent(displayName: String, onUnlock: () -> Unit, onUsePassword: () -
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(64.dp)
             )
-            Text("Unlock UniEats", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.unlock_title), style = MaterialTheme.typography.headlineSmall)
             if (displayName.isNotEmpty()) {
                 Text(
-                    "Signed in as $displayName",
+                    stringResource(R.string.unlock_signed_in_as, displayName),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Button(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) { Text("Unlock") }
-            TextButton(onClick = onUsePassword) { Text("Use password instead") }
+            Button(onClick = onUnlock, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.unlock_action)) }
+            TextButton(onClick = onUsePassword) { Text(stringResource(R.string.unlock_use_password_instead)) }
         }
     }
 }

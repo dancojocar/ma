@@ -17,7 +17,7 @@ struct SyncStatusBanner: View {
                 } else {
                     Image(systemName: "arrow.triangle.2.circlepath")
                 }
-                Text(outbox.count == 1 ? "1 change pending" : "\(outbox.count) changes pending")
+                Text("\(outbox.count) changes pending")
                     .font(.footnote.weight(.medium))
                 Spacer()
                 Button("Sync now") { Task { await repository.sync() } }

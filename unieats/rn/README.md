@@ -1,19 +1,31 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l09-push-location`: a **Nearby** tab (`app/(tabs)/nearby.tsx`) lists the spots stored in SQLite that
-are within 2 km of you, nearest first (`src/domain/geo.ts`, haversine). Before asking it explains why it
-needs location ("Allow location"), then asks with `expo-location` (`requestForegroundPermissionsAsync`); when
-the OS will not ask again it shows "Open Settings" instead. The position is watched with `watchPositionAsync`
-only while the tab is focused: `useFocusEffect` in `src/hooks/useNearbySpots.ts` removes the subscription on
-blur and unmount. The tab also opens the live-updates socket while it is focused, like the Spots list.
+Tag `l10-polish`: list rows enter with Reanimated 4 `FadeInDown` (staggered by index) and can be
+swiped away (left or right) to hide them for the session: `src/components/SwipeToDismiss.tsx` uses a
+`react-native-gesture-handler` `Gesture.Pan()` driving a `useSharedValue` with `withTiming`, all on the UI
+thread, and hands the dismissal back to React with `scheduleOnRN` (`react-native-worklets`); "Show N hidden"
+brings them back. Screen-reader users cannot swipe, so each card also offers a "Hide" accessibility action
+(TalkBack actions menu, VoiceOver rotor "Actions"). `SpotCard` is wrapped in `memo` and receives
+id-taking callbacks from a `useCallback` `renderItem`, so a change to one row does not re-render the
+others. Profiling steps: `PERFORMANCE.md`.
 
-Notifications are local, driven by the WebSocket (no FCM/APNs): when a live `spot.updated` event is news to
-this device, i.e. not the echo of this device's own edit (`applyLiveEvent` in
-`src/repository/spotRepository.ts` compares it with the SQLite row), `src/notifications/spotNotifications.ts`
-shows "<spot> was updated" through `expo-notifications` (Android channel "Spot updates"). Once the session is
-signed in, `app/(tabs)/_layout.tsx` asks for notification permission (POST_NOTIFICATIONS on Android 13+) and
-listens for taps, which open the spot; the listener is removed when the session ends. `app.json` configures
-both plugins (the iOS location usage text and the Android notification colour).
+Sync bookkeeping is simpler since this tag: a queued edit carries only the server `updatedAt` it was based
+on, and a pending row keeps that base version in its own `updatedAt`, so the separate `serverUpdatedAt`
+column is gone (migration v3 in `src/db/database.ts` moves it into ops already queued). The server answers
+409 only when its copy is newer than that base, so a 409 now keeps the server copy from the response and
+drops the op, together with the edits of that spot queued behind it (based on the same stale version);
+nothing is resent and the time of the edit no longer matters. The replay loop re-reads the head of the
+outbox (`outboxDao.oldest()`) before every request, because an accepted write moves the queued edits of the
+same spot onto the new server version (`outboxDao.rebase`).
+
+Kept from l09: a **Nearby** tab (`app/(tabs)/nearby.tsx`) lists the spots stored in SQLite within 2 km,
+nearest first (`src/domain/geo.ts`, haversine). It explains why it needs location before asking with
+`expo-location` ("Open Settings" when the OS will not ask again) and watches the position with
+`watchPositionAsync` only while the tab is focused (`useFocusEffect` in `src/hooks/useNearbySpots.ts`).
+A live `spot.updated` event that is news to this device (not the echo of its own edit, see `applyLiveEvent`)
+shows a local notification "<spot> was updated" (`src/notifications/spotNotifications.ts`,
+`expo-notifications`, no FCM/APNs); after sign-in `app/(tabs)/_layout.tsx` asks for notification permission
+(POST_NOTIFICATIONS on Android 13+) and opens the spot on a tap. `app.json` configures both plugins.
 
 Emulator location (the seed is in Bucharest): `adb emu geo fix 26.1025 44.4268`; iOS simulator:
 Features → Location → Custom Location 44.4268, 26.1025. Trigger a notification while the Spots or Nearby tab
@@ -103,7 +115,9 @@ the offline / pending-changes banner; the edit form's fields and "Open now" swit
 The login fields are labelled "Email" and "Password" and the session notice is a polite live region; the
 review star picker is a "Rating" radio group whose stars read "1 star" … "5 stars" with a checked state; the
 biometric switch is labelled with its visible text. On Nearby the rationale title is a header, "Allow location" and
-"Open Settings" are buttons, and each nearby spot is a button read as "<name>, <n> metres away".
+"Open Settings" are buttons, and each nearby spot is a button read as "<name>, <n> metres away". Each list
+card has a "Hide" action instead of the swipe, the red "Hide" text behind a row is hidden from screen
+readers, and "Show N hidden" is a button.
 
 ## Run
 
@@ -136,9 +150,9 @@ Without `.expo/types` (written by `expo start` or the `customize` line above) `t
 check route hrefs. The committed `tsconfig.json` is already in the form both commands write, so the
 `git checkout` is only a safety net.
 
-`react-dom`, `react-native-reanimated` and `react-native-worklets` are not used by the app yet (no web target;
-animations arrive in l10), but they stay in `package.json` pinned to the SDK 57 versions: expo-router's
-dependencies declare them as peers, and without the pins npm resolves releases that need a newer React /
+`react-native-reanimated` and `react-native-worklets` drive the l10 animations. `react-dom` is not used (no
+web target), but it stays in `package.json` pinned to the SDK 57 version like the other two: expo-router's
+dependencies declare all three as peers, and without the pins npm resolves releases that need a newer React /
 React Native and `npm ci` fails.
 
 ## API base URL
