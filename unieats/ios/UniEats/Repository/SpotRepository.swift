@@ -1,8 +1,12 @@
+import BackgroundTasks
 import Foundation
+import OSLog
 import SwiftData
 
 @Observable
 final class SpotRepository {
+    static let backgroundSyncTaskId = "com.unieats.app.outbox-sync"
+
     private(set) var isSyncing = false
     private(set) var lastSyncError: String?
 
@@ -25,6 +29,13 @@ final class SpotRepository {
         let result = try await api.listSpots(page: page, query: query, category: category)
         upsert(result.spots)
         return result
+    }
+
+    func fetchAllPages() async {
+        var page = 1
+        while let result = try? await fetchPage(page, query: "", category: nil), result.hasNextPage {
+            page += 1
+        }
     }
 
     func refreshSpot(id: String) async throws {
@@ -138,6 +149,26 @@ final class SpotRepository {
             }
         }
         retryAttempt = 0
+    }
+
+    func syncInBackground() async {
+        await sync()
+        scheduleBackgroundSync()
+    }
+
+    /// Asks the system for a `BGAppRefreshTask` while edits are still queued; iOS decides when (or
+    /// whether) it runs.
+    func scheduleBackgroundSync() {
+        guard !outboxEntries().isEmpty else { return }
+        let request = BGAppRefreshTaskRequest(identifier: Self.backgroundSyncTaskId)
+        request.earliestBeginDate = .now + 15 * 60
+        do {
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            // The simulator always refuses with BGTaskScheduler.Error.unavailable.
+            Logger(subsystem: "com.unieats.app", category: "sync")
+                .info("Background sync not scheduled: \(error.localizedDescription)")
+        }
     }
 
     private enum ReplayResult {

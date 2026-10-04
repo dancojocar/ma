@@ -59,6 +59,18 @@
           "faceIDPermission": "UniEats uses Face ID to unlock your saved session."
         }
       ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "UniEats uses your location to show food spots within 2 km of you."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#e87c2a"
+        }
+      ],
       "./plugins/withPrefabNativeAccess"
     ]
   }

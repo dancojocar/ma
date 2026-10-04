@@ -18,6 +18,7 @@ import com.unieats.app.data.remote.LiveUpdates
 import com.unieats.app.data.remote.apiCall
 import com.unieats.app.data.sync.SyncScheduler
 import com.unieats.app.di.ApplicationScope
+import com.unieats.app.notification.SpotNotificationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,6 +43,7 @@ class SpotRepository @Inject constructor(
     private val json: Json,
     private val tokens: AuthTokens,
     private val syncScheduler: SyncScheduler,
+    private val notifications: SpotNotificationService,
     liveUpdates: LiveUpdates,
     @ApplicationScope appScope: CoroutineScope
 ) {
@@ -77,6 +79,15 @@ class SpotRepository @Inject constructor(
         val response = api.listSpots(page, query, category)
         saveFromServer(response.spots)
         response.hasNextPage
+    }
+
+    /** Every page, for screens that need the whole catalogue (Nearby). */
+    suspend fun refreshAllSpots(): Result<Unit> = apiCall {
+        var page = 1
+        do {
+            val response = api.listSpots(page++, query = "", category = null)
+            saveFromServer(response.spots)
+        } while (response.hasNextPage)
     }
 
     suspend fun refreshSpot(id: String): Result<Unit> = apiCall { saveFromServer(listOf(api.getSpot(id))) }
@@ -128,7 +139,10 @@ class SpotRepository @Inject constructor(
     private suspend fun applyLiveEvent(event: LiveEvent) {
         when (event) {
             is LiveEvent.SpotCreated -> saveFromServer(listOf(event.spot))
-            is LiveEvent.SpotUpdated -> saveFromServer(listOf(event.spot))
+            is LiveEvent.SpotUpdated -> {
+                saveFromServer(listOf(event.spot))
+                notifications.notifySpotUpdated(event.spot)
+            }
             is LiveEvent.SpotDeleted -> db.withTransaction {
                 if (spotDao.getById(event.id)?.pendingSync != true) spotDao.deleteById(event.id)
             }

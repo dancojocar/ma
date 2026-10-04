@@ -30,11 +30,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.unieats.app.ui.permissions.LOCAL_NETWORK_PERMISSIONS
+import com.unieats.app.ui.permissions.RequestPermissionsOnce
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val notice by viewModel.notice.collectAsStateWithLifecycle()
+    RequestPermissionsOnce(LOCAL_NETWORK_PERMISSIONS)
     LoginContent(
         state = state,
         notice = notice,

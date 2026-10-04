@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart' show Position;
 import 'package:local_auth/local_auth.dart';
 
 import '../data/auth/auth_interceptor.dart';
@@ -17,6 +18,8 @@ import '../data/network/live_updates.dart';
 import '../data/repository/review_repository.dart';
 import '../data/repository/spot_repository.dart';
 import '../domain/models.dart';
+import '../services/location_service.dart';
+import '../services/notification_service.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -363,15 +366,27 @@ final visibleSpotsProvider = StreamProvider.autoDispose<List<Spot>>((ref) {
       .watchSpots(query: query, category: category);
 });
 
-/// Writes live WebSocket events into the database (the list and detail
-/// screens update from there) and replays the outbox whenever the socket
-/// (re)connects, because then the server is reachable.
+final notificationServiceProvider = Provider<NotificationService>(
+  (_) => NotificationService(),
+);
+
+/// Writes live WebSocket events into the database (the list, detail and
+/// Nearby screens update from there), notifies "`<spot>` was updated" for
+/// `spot.updated`, and replays the outbox whenever the socket (re)connects,
+/// because then the server is reachable.
 final liveSyncProvider = Provider.autoDispose<void>((ref) {
   final repo = ref.watch(spotRepositoryProvider);
+  final notifications = ref.watch(notificationServiceProvider);
+  unawaited(notifications.init());
   ref.listen(liveEventsProvider, (_, next) {
     switch (next.value) {
       case LiveConnected():
         unawaited(repo.syncOutbox());
+      case final SpotChanged event when !event.created:
+        unawaited(repo.applyLiveEvent(event));
+        unawaited(
+          notifications.showSpotUpdated(event.spot.id, event.spot.name),
+        );
       case final event?:
         unawaited(repo.applyLiveEvent(event));
       case null:
@@ -472,3 +487,37 @@ class AddReviewController extends AsyncNotifier<void> {
 
 final addReviewProvider = AsyncNotifierProvider.autoDispose
     .family<AddReviewController, void, String>(AddReviewController.new);
+
+final locationServiceProvider = Provider<LocationService>(
+  (_) => LocationService(),
+);
+
+/// Asked again whenever the Nearby screen invalidates it (after the user
+/// taps "Allow location" or returns from settings).
+final locationAccessProvider = FutureProvider.autoDispose<LocationAccess>(
+  (ref) => ref.watch(locationServiceProvider).checkAccess(),
+);
+
+/// Live position while the Nearby screen is open and the app is in the
+/// foreground: closing the screen (autoDispose) or backgrounding the app
+/// cancels the stream, and with it the GPS updates.
+final positionProvider = StreamProvider.autoDispose<Position>((ref) {
+  final foreground = ref.watch(
+    appLifecycleProvider.select(
+      (s) => s == AppLifecycleState.resumed || s == AppLifecycleState.inactive,
+    ),
+  );
+  if (!foreground) return const Stream.empty();
+  return ref.watch(locationServiceProvider).positions();
+});
+
+final nearbySpotsProvider =
+    StreamProvider.autoDispose<List<({Spot spot, double meters})>>((ref) {
+      final position = ref.watch(positionProvider.select((p) => p.value));
+      if (position == null) return const Stream.empty();
+      final location = ref.watch(locationServiceProvider);
+      return ref
+          .watch(spotRepositoryProvider)
+          .watchSpots()
+          .map((spots) => location.nearby(position, spots));
+    });

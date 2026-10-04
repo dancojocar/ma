@@ -66,6 +66,11 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
               _ => true,
             },
           ),
+          IconButton(
+            tooltip: 'Spots near me',
+            icon: const Icon(Icons.near_me_outlined),
+            onPressed: () => context.push('/nearby'),
+          ),
           const _AccountMenu(),
         ],
       ),

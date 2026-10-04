@@ -4,7 +4,6 @@ import Foundation
 final class SpotListViewModel {
     private(set) var searchQuery = ""
     private(set) var categoryFilter: String?
-    private(set) var favouriteIds: Set<String> = []
     private(set) var isLoading = false
     private(set) var isLoadingMore = false
     private(set) var errorMessage: String?
@@ -13,10 +12,12 @@ final class SpotListViewModel {
     private(set) var isLive = false
 
     private let repository: SpotRepository
+    private let notifier: SpotChangeNotifier
     private var reloadTask: Task<Void, Never>?
 
-    init(repository: SpotRepository) {
+    init(repository: SpotRepository, notifier: SpotChangeNotifier) {
         self.repository = repository
+        self.notifier = notifier
     }
 
     func onQueryChange(_ query: String) {
@@ -29,14 +30,6 @@ final class SpotListViewModel {
         guard category != categoryFilter else { return }
         categoryFilter = category
         scheduleReload(debounce: .zero)
-    }
-
-    func toggleFavourite(_ spotId: String) {
-        if favouriteIds.contains(spotId) {
-            favouriteIds.remove(spotId)
-        } else {
-            favouriteIds.insert(spotId)
-        }
     }
 
     func refresh() async {
@@ -67,6 +60,9 @@ final class SpotListViewModel {
             if errorMessage != nil { await refresh() }
         case .disconnected:
             isLive = false
+        case .spotUpdated(let spot):
+            repository.apply(update)
+            notifier.notifySpotUpdated(spot)
         default:
             repository.apply(update)
         }

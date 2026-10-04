@@ -1,5 +1,6 @@
 package com.unieats.app.ui.spotlist
 
+import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +27,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -39,8 +39,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -52,10 +52,14 @@ import com.unieats.app.data.model.Category
 import com.unieats.app.ui.components.ErrorView
 import com.unieats.app.ui.components.LoadingView
 import com.unieats.app.ui.components.MessageView
+import com.unieats.app.ui.permissions.LOCAL_NETWORK_PERMISSIONS
+import com.unieats.app.ui.permissions.NOTIFICATION_PERMISSIONS
+import com.unieats.app.ui.permissions.RequestPermissionsOnce
 
 @Composable
 fun SpotListScreen(
     onSpotClick: (String) -> Unit,
+    onNearbyClick: () -> Unit,
     onLogout: () -> Unit,
     biometricAvailable: Boolean,
     biometricEnabled: Boolean,
@@ -73,6 +77,7 @@ fun SpotListScreen(
         onRetry = viewModel::retry,
         onErrorShown = viewModel::errorShown,
         onSpotClick = onSpotClick,
+        onNearbyClick = onNearbyClick,
         onLogout = onLogout,
         biometricAvailable = biometricAvailable,
         biometricEnabled = biometricEnabled,
@@ -92,6 +97,7 @@ fun SpotListContent(
     onRetry: () -> Unit,
     onErrorShown: () -> Unit,
     onSpotClick: (String) -> Unit,
+    onNearbyClick: () -> Unit,
     onLogout: () -> Unit,
     biometricAvailable: Boolean,
     biometricEnabled: Boolean,
@@ -111,6 +117,10 @@ fun SpotListContent(
         }
     }
     InfiniteScrollEffect(listState, state, onLoadMore)
+    // A load started before ACCESS_LOCAL_NETWORK was granted has already failed; reload once it is.
+    RequestPermissionsOnce(LOCAL_NETWORK_PERMISSIONS + NOTIFICATION_PERMISSIONS) { granted ->
+        if (granted[Manifest.permission.ACCESS_LOCAL_NETWORK] == true) onRefresh()
+    }
 
     Scaffold(
         topBar = {
@@ -118,10 +128,12 @@ fun SpotListContent(
                 title = { Text("UniEats") },
                 actions = {
                     LiveBadge(isLive = state.isLive)
-                    TextButton(onClick = { sortByRating = !sortByRating }) {
-                        Text(if (sortByRating) "Sort: rating" else "Sort: default")
+                    IconButton(onClick = onNearbyClick) {
+                        Icon(painterResource(R.drawable.ic_location_on), contentDescription = "Spots near me")
                     }
                     OverflowMenu(
+                        sortByRating = sortByRating,
+                        onToggleSort = { sortByRating = !sortByRating },
                         onLogout = onLogout,
                         // Also shown when biometrics were removed meanwhile, so it can be turned off.
                         showBiometricToggle = biometricAvailable || biometricEnabled,
@@ -197,6 +209,8 @@ private fun ScrollableState(content: @Composable () -> Unit) {
 
 @Composable
 private fun OverflowMenu(
+    sortByRating: Boolean,
+    onToggleSort: () -> Unit,
     onLogout: () -> Unit,
     showBiometricToggle: Boolean,
     biometricEnabled: Boolean,
@@ -208,6 +222,13 @@ private fun OverflowMenu(
             Icon(painterResource(R.drawable.ic_more_vert), contentDescription = "More options")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(if (sortByRating) "Default order" else "Sort by rating") },
+                onClick = {
+                    expanded = false
+                    onToggleSort()
+                }
+            )
             if (showBiometricToggle) {
                 DropdownMenuItem(
                     text = { Text("Unlock with biometrics") },

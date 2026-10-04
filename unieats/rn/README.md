@@ -1,9 +1,30 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l08-auth`: sign in (`student@unieats.app` / `password`) before the tabs open. The JWT from
+Tag `l09-push-location`: a **Nearby** tab (`app/(tabs)/nearby.tsx`) lists the spots stored in SQLite that
+are within 2 km of you, nearest first (`src/domain/geo.ts`, haversine). Before asking it explains why it
+needs location ("Allow location"), then asks with `expo-location` (`requestForegroundPermissionsAsync`); when
+the OS will not ask again it shows "Open Settings" instead. The position is watched with `watchPositionAsync`
+only while the tab is focused: `useFocusEffect` in `src/hooks/useNearbySpots.ts` removes the subscription on
+blur and unmount. The tab also opens the live-updates socket while it is focused, like the Spots list.
+
+Notifications are local, driven by the WebSocket (no FCM/APNs): when a live `spot.updated` event is news to
+this device, i.e. not the echo of this device's own edit (`applyLiveEvent` in
+`src/repository/spotRepository.ts` compares it with the SQLite row), `src/notifications/spotNotifications.ts`
+shows "<spot> was updated" through `expo-notifications` (Android channel "Spot updates"). Once the session is
+signed in, `app/(tabs)/_layout.tsx` asks for notification permission (POST_NOTIFICATIONS on Android 13+) and
+listens for taps, which open the spot; the listener is removed when the session ends. `app.json` configures
+both plugins (the iOS location usage text and the Android notification colour).
+
+Emulator location (the seed is in Bucharest): `adb emu geo fix 26.1025 44.4268`; iOS simulator:
+Features → Location → Custom Location 44.4268, 26.1025. Trigger a notification while the Spots or Nearby tab
+is open:
+`curl -X PATCH localhost:3000/api/spots/spot-3 -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"rating":4.9}'`
+(get `$TOKEN` from `POST /api/auth/login`).
+
+Kept from l08: sign in (`student@unieats.app` / `password`) before the tabs open. The JWT from
 `POST /api/auth/login` is kept in memory in a Zustand store (`src/store/sessionStore.ts`) and persisted with
 `expo-secure-store` (`keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY`, `src/auth/sessionStorage.ts`).
-Every mutation — outbox replay of "Edit spot" and the new "Add a review" form
+Every mutation — outbox replay of "Edit spot" and the "Add a review" form
 (`src/components/AddReviewForm.tsx`, `POST /spots/:id/reviews` with an `Idempotency-Key`) — sends
 `Authorization: Bearer <jwt>`; a 401 (or an expired token at start-up) signs you out and returns to the login
 screen with a notice. Reviews stay online-only: their `useMutation` in `app/(tabs)/spots/[id].tsx` sets
@@ -81,22 +102,26 @@ and the header photo is labelled; loading spinners are labelled "Loading"; the l
 the offline / pending-changes banner; the edit form's fields and "Open now" switch are labelled; the tab-bar emoji is hidden because the tab already announces its title.
 The login fields are labelled "Email" and "Password" and the session notice is a polite live region; the
 review star picker is a "Rating" radio group whose stars read "1 star" … "5 stars" with a checked state; the
-biometric switch is labelled with its visible text.
+biometric switch is labelled with its visible text. On Nearby the rationale title is a header, "Allow location" and
+"Open Settings" are buttons, and each nearby spot is a button read as "<name>, <n> metres away".
 
 ## Run
 
 ```bash
 cd unieats/rn
 npm ci
-npx expo start        # scan the QR code with Expo Go (SDK 57), or press a (Android emulator) / i (iOS simulator)
+npx expo run:android  # dev build on the emulator (see below for Expo Go)
 ```
 
 The project `.npmrc` sets `legacy-peer-deps=false`, so `npm ci` installs the same complete tree on npm 10 and 11 even if your global `~/.npmrc` enables legacy peer deps.
 
-Expo Go runs this tag (every module it uses ships inside Expo Go for SDK 57) except biometric unlock, whose
-switch is hidden there; biometric unlock and the `unieats://` and https deep links from l04 need a dev build: `npx expo run:android` (Android Studio's bundled Java 25 is fine: the
-`plugins/withPrefabNativeAccess.js` config plugin makes the generated `android/gradlew` pass the JDK 24+
-native-access flag that AGP 8.12's Prefab step needs).
+Expo Go for SDK 57 can load this tag: `expo-notifications` only logs a warning there, because Expo Go on
+Android has no remote push (since SDK 53) and UniEats uses local notifications only. Expo Go ignores this app's
+`app.json` plugin settings, though, so the location and Face ID usage texts and the notification colour are
+missing and the biometric switch is hidden. Use a dev build for this tag: `npx expo run:android` (Android
+Studio's bundled Java 25 is fine: the `plugins/withPrefabNativeAccess.js` config plugin makes the generated
+`android/gradlew` pass the JDK 24+ native-access flag that AGP 8.12's Prefab step needs). It also enables the
+`unieats://` and https deep links from l04.
 
 Checks:
 

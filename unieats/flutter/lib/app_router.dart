@@ -6,6 +6,7 @@ import 'domain/models.dart';
 import 'providers/providers.dart';
 import 'ui/login/login_screen.dart';
 import 'ui/login/unlock_screen.dart';
+import 'ui/nearby/nearby_spots_screen.dart';
 import 'ui/spot_detail/spot_detail_screen.dart';
 import 'ui/spot_list/spot_list_screen.dart';
 
@@ -40,6 +41,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 SpotDetailScreen(spotId: state.pathParameters['id']!),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/nearby',
+        builder: (context, state) => const NearbySpotsScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

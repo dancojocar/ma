@@ -92,6 +92,8 @@ dependencies {
     implementation(libs.androidx.biometric)
     implementation(libs.androidx.fragment)
 
+    implementation(libs.play.services.location)
+
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)

@@ -28,6 +28,7 @@ import com.unieats.app.ui.auth.UnlockScreen
 import com.unieats.app.ui.auth.authenticate
 import com.unieats.app.ui.auth.rememberBiometricUnlockAvailable
 import com.unieats.app.ui.login.LoginScreen
+import com.unieats.app.ui.nearby.NearbyScreen
 import com.unieats.app.ui.spotdetail.SpotDetailScreen
 import com.unieats.app.ui.spotdetail.SpotDetailViewModel
 import com.unieats.app.ui.spotlist.SpotListScreen
@@ -45,6 +46,9 @@ data object SpotList : NavKey
 
 @Serializable
 data class SpotDetail(val spotId: String) : NavKey
+
+@Serializable
+data object Nearby : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -114,6 +118,7 @@ fun UniEatsNavDisplay(
             ) {
                 SpotListScreen(
                     onSpotClick = { spotId -> backStack.add(SpotDetail(spotId)) },
+                    onNearbyClick = { backStack.add(Nearby) },
                     onLogout = sessionViewModel::logout,
                     biometricAvailable = biometricAvailable,
                     biometricEnabled = biometricEnabled,
@@ -128,6 +133,13 @@ fun UniEatsNavDisplay(
                             sessionViewModel.disableBiometric()
                         }
                     }
+                )
+            }
+
+            entry<Nearby> {
+                NearbyScreen(
+                    onBack = { backStack.removeLastOrNull() },
+                    onSpotClick = { spotId -> backStack.add(SpotDetail(spotId)) }
                 )
             }
 

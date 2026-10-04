@@ -26,10 +26,10 @@ reconnects, at app start, or from "Sync now". A 409 resolves last-write-wins on 
 (`lib/data/sync/sync_conflict_resolver.dart`): a winning local edit is resent from its place in the queue
 with a new `Idempotency-Key`; if the server wins, every queued edit of that spot is dropped. An edit made
 while its spot is syncing stays queued and is sent next. `liveSyncProvider` writes live events into Drift;
-both the list and the detail screen watch it, because Riverpod 3 pauses the list's listeners while the
-detail screen covers it.
+every screen that shows spots watches it (list and detail; Nearby since l09), because Riverpod 3 pauses
+the list's listeners while another screen covers it.
 
-This tag (`l08-auth`) adds sign-in. `lib/app_router.dart` has one `MaterialApp.router` whose
+Since `l08-auth` the app requires sign-in. `lib/app_router.dart` has one `MaterialApp.router` whose
 `authRedirect` sends every location to a gate screen until the session allows it: `/splash` while the
 stored session loads, `/unlock` while it is locked (below), `/login` without one (demo user
 `student@unieats.app` / `password`). Each gate keeps the original destination in `?from=`, so a deep link
@@ -72,6 +72,24 @@ the token back in the normal store. Files: `token_store.dart`, `auth_repository.
 (`USE_BIOMETRIC`) and `ios/Runner/Info.plist` (`NSFaceIDUsageDescription`). Demo: enroll a fingerprint
 on the emulator, turn the switch on, restart the app and run `adb -e emu finger touch 1`; on the iOS
 Simulator use Features → Face ID → Enrolled, then Matching Face.
+
+This tag (`l09-push-location`) adds:
+- **Spots near me** (`/nearby`, the arrow next to the list's ⋮ menu,
+  `lib/ui/nearby/nearby_spots_screen.dart`): spots within 2 km, nearest first, from `geolocator`
+  (`lib/services/location_service.dart`). The screen explains why before the system permission prompt
+  (`ACCESS_FINE_LOCATION`/`ACCESS_COARSE_LOCATION` in the manifest, `NSLocationWhenInUseUsageDescription`
+  in `Info.plist`), offers "Open settings" when access is blocked and checks again when the app comes
+  back to the foreground. `positionProvider` streams positions every 25 m only while the screen is open
+  and the app is in the foreground: closing the screen (autoDispose) or backgrounding the app cancels
+  the stream and the GPS updates. On the emulator set a campus location first:
+  `adb emu geo fix 26.103 44.427` (longitude first), or Simulator → Features → Location → Custom.
+- **Local notifications** "<spot> was updated" (`flutter_local_notifications`,
+  `lib/services/notification_service.dart`) fired by the live WebSocket's `spot.updated` event in
+  `liveSyncProvider`, your own edits included; no FCM/APNs. The permission is asked once, when the first
+  signed-in screen opens (`POST_NOTIFICATIONS` on Android 13+, alert/badge/sound on iOS);
+  `ios/Runner/AppDelegate.swift` sets the notification-center delegate so they also show while the app
+  is in the foreground. The plugin needs core library desugaring (`android/app/build.gradle.kts`). Try:
+  `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

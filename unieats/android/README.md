@@ -1,4 +1,4 @@
-# UniEats Android — tag `l08-auth`
+# UniEats Android — tag `l09-push-location`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -44,10 +44,10 @@ On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
   on edited spots and an "N changes pending" banner on the list.
 - `AndroidManifest.xml` — `INTERNET`, `ACCESS_NETWORK_STATE` (connectivity callback), and
   `ACCESS_LOCAL_NETWORK`: from Android 17 (API 37) apps targeting it need this permission to reach
-  the laptop at `10.0.2.2`. It is only declared here; the runtime request is added at `l09` next to
-  the location prompt. Not verified on an API 37 device yet (the API 37 emulator crashes on the
-  course machine); loopback is not "local network", so `adb reverse` + `localhost:3000` is the
-  fallback. The manifest also removes WorkManager's default initializer, because
+  the laptop at `10.0.2.2`. It is a runtime permission, requested from `l09` on with the other
+  prompts (see "Nearby + notifications"). Not verified on an API 37 device yet (the API 37
+  emulator crashes on the course machine); loopback is not "local network", so `adb reverse` +
+  `localhost:3000` is the fallback. The manifest also removes WorkManager's default initializer, because
   `UniEatsApplication` provides a configuration with `HiltWorkerFactory`.
 
 Unchanged from earlier labs: Navigation 3 with the two-pane layout and deep links,
@@ -123,6 +123,40 @@ reviews and live badge, and the light/dark theme.
   `adb -e emu finger touch 1` when the sensor asks. At the app's prompt, `adb -e emu finger touch 1`
   again. To see the enrollment-change path, add a second fingerprint and relaunch the app.
 
+## Nearby + notifications (new in l09)
+
+- The location icon on the list (`ic_location_on`) opens **Spots near me**: spots within 2 km,
+  nearest first, with the distance. `location/LocationService.kt` wraps the Fused Location
+  Provider (`requestLocationUpdates` every 5 s, `PRIORITY_HIGH_ACCURACY`: the emulator has no
+  network location, so a balanced request never gets a fix there) in a `callbackFlow` whose
+  `awaitClose` calls `removeLocationUpdates`; `NearbyViewModel` collects it with
+  `WhileSubscribed()`, so location stops the moment you leave the screen or background the app. It loads every page once
+  (`SpotRepository.refreshAllSpots()`) and filters the Room copy with `location/Geo.kt`.
+- Location permission UX (`ui/nearby/NearbyScreen.kt`): an explanation and **Allow location**
+  before the system dialog, a stronger rationale when `shouldShowRequestPermissionRationale` is
+  true, and **Open settings** after a permanent denial. The screen re-checks the grant on every
+  resume, so coming back from Settings works.
+- Emulator: with the screen open, set the location to the campus, `adb emu geo fix 26.103 44.427`
+  (longitude first) or Extended controls → Location → 44.427, 26.103. The default emulator
+  location (California) shows "No spots within 2 km". `adb shell dumpsys location | grep -A1 "gps
+  provider:"` shows the GPS request while the screen is open and `ProviderRequest[OFF]` after Back.
+- The other prompts go through `ui/permissions/PermissionRequests.kt`: `RequestPermissionsOnce`
+  asks for the missing ones in a single request (Android drops a second request launched while
+  one is showing).
+  - The list asks for `POST_NOTIFICATIONS` (Android 13+) and `ACCESS_LOCAL_NETWORK` (Android 17+)
+    together. A load started before the answer has already failed, so the list reloads when local
+    network access is granted.
+  - The login screen asks for `ACCESS_LOCAL_NETWORK` only, since signing in is the first request
+    to the laptop. The local-network request was not verified on an API 37 device (the API 37
+    emulator crashes on the course machine).
+- Notifications: every `spot.updated` message from the l06 WebSocket posts a local notification
+  "<spot> was updated" (`notification/SpotNotificationService.kt`, channel "Spot updates");
+  tapping it opens the spot via the `unieats://spots/<id>` deep link, after the unlock screen when
+  biometric unlock is on. The socket runs only while the list or a spot is on screen, so
+  notifications arrive while you use the app; try it with the curl PATCH below while the list is
+  open. (Local notifications driven by the WebSocket only; FCM/APNs push is not used.)
+- **Sort by rating** moved from the top bar into the ⋮ menu to make room for the location icon.
+
 ## Demo: offline edit → reconnect → sync
 
 1. Open a spot, tap **Edit spot**, change the name, Save — the list shows it immediately.
@@ -130,7 +164,8 @@ reviews and live badge, and the light/dark theme.
 3. Turn the network back on (or restart the server): the banner disappears, and the server log shows
    one `PATCH` with the `Idempotency-Key` header.
 4. Conflict: edit a spot offline, change the same spot with curl
-   (`curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"name":"Server name"}'`),
+   (from l08 the server needs a token: `TOKEN=$(curl -s localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | jq -r .token)`,
+   then `curl -X PATCH localhost:3000/api/spots/spot-3 -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"name":"Server name"}'`),
    then go online — the server's newer version wins (409 → the row is replaced, the op dropped).
 
 Kill and relaunch the app at any point: cached spots show instantly and the outbox survives.
