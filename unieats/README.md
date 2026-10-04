@@ -74,11 +74,13 @@ Test gates run where tests exist: client unit tests arrive at `l14-tests` (the R
 | flutter | `flutter analyze` (0 issues), `flutter test`, `flutter build apk --debug` | pass; 26 tests at l14 |
 | rn | `npm ci && npx tsc --noEmit && npm test && npx expo export` | pass; 21 tests at l14 |
 | ios | `xcodebuild … build` (0 warnings), `UniEatsTests` at l14 | pass; 11 tests at l14 |
-| maestro | `maestro check-syntax` on all four flows; iOS and Flutter flows executed on a simulator | pass |
+| maestro | `maestro check-syntax` on all four flows; all four flows executed on an emulator/simulator | pass |
 
 Known limits, stated honestly:
-- No Android emulator was available during the rebuild: Android and RN flows and deep links were
-  verified statically (merged manifest) and against the server from JVM/Node, not on a device.
+- 2026-10-04: the Android, Flutter and React Native Maestro flows pass on a Pixel 7 / API 35
+  emulator (`avdmanager create avd -n unieats35 -k "system-images;android-35;google_apis;arm64-v8a" -d pixel_7`),
+  the iOS and Flutter flows pass on the iPhone 17 simulator, and `unieats://spots/spot-3` opens the
+  Android app via `adb shell am start`. The RN flow needs Metro running (`npx expo start --dev-client`).
 - `https://unieats.app/...` links need a hosted assetlinks/AASA file to open the app directly; the
   custom scheme works everywhere. Flutter on iOS declares only the custom scheme (no associated domain).
 - At `l08` the Android/iOS READMEs and at `l08`–`l09` the Flutter README show a conflict-demo `curl -X PATCH`
