@@ -1,0 +1,35 @@
+# Node / server / RN
+node_modules/
+dist/
+.expo/
+*.log
+npm-debug.*
+
+# Android / Gradle
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+captures/
+.cxx/
+
+# iOS / Xcode
+Pods/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+.swiftpm/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+flutter_*.png
+
+# OS
+.DS_Store
+
+# process scripts (not part of the demo)
+.*-workflow.mjs

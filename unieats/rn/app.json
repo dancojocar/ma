@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "UniEats",
+    "slug": "unieats",
+    "scheme": "unieats",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.unieats.rn",
+      "associatedDomains": [
+        "applinks:unieats.app"
+      ]
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.unieats.rn",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "unieats.app",
+              "pathPrefix": "/spots"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "UniEats uses your location to show food spots within 2 km of you."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#e87c2a"
+        }
+      ]
+    ]
+  }
+}

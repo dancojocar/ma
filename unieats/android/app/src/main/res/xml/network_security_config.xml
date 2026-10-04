@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dev server runs over plain http on the host machine; cleartext is allowed only for the
+     emulator's host alias and localhost, every other host stays https-only. -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
