@@ -2,11 +2,17 @@ import SwiftUI
 
 struct ReviewsSection: View {
     let reviews: [Review]
+    let onAddReview: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Reviews (\(reviews.count))")
-                .font(.headline)
+            HStack {
+                Text("Reviews (\(reviews.count))")
+                    .font(.headline)
+                Spacer()
+                Button("Add review", systemImage: "square.and.pencil", action: onAddReview)
+                    .font(.subheadline)
+            }
 
             if reviews.isEmpty {
                 Text("No reviews yet.")

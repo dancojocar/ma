@@ -57,3 +57,19 @@ data class SpotPatch(
 
 @Serializable
 data class ConflictResponse(val spot: Spot)
+
+@Serializable
+data class User(
+    val id: String,
+    val email: String,
+    val displayName: String
+)
+
+@Serializable
+data class LoginRequest(val email: String, val password: String)
+
+@Serializable
+data class LoginResponse(val token: String, val user: User)
+
+@Serializable
+data class NewReview(val stars: Int, val text: String)

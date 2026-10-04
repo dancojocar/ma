@@ -151,4 +151,14 @@ const reviews = [
   { id: 'review-4', spotId: 'spot-3', author: 'Andrei', stars: 4, text: 'Crispy crust every time.', createdAt: 1700000300000 },
 ];
 
-module.exports = { spots, reviews };
+const users = [
+  {
+    id: 'user-1',
+    email: 'student@unieats.app',
+    displayName: 'Demo Student',
+    // bcrypt (cost 10) of the demo password "password"
+    passwordHash: '$2b$10$h9ySnwD9PgrmduEqrOGDhOFr3uX7j4ENTZY7BO296AUxA3Rrl.yDu',
+  },
+];
+
+module.exports = { spots, reviews, users };

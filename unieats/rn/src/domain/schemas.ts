@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Review, Spot } from "./models";
+import type { Review, Spot, User } from "./models";
 
 export const SpotCategorySchema = z.enum(["cafe", "canteen", "fastfood", "bakery", "bar"]);
 
@@ -25,6 +25,19 @@ export const ReviewSchema: z.ZodType<Review> = z.object({
   text: z.string(),
   createdAt: z.number().int(),
 });
+
+export const UserSchema: z.ZodType<User> = z.object({
+  id: z.string(),
+  email: z.string(),
+  displayName: z.string(),
+});
+
+export const LoginResponseSchema = z.object({
+  token: z.string(),
+  user: UserSchema,
+});
+
+export type LoginResponse = z.infer<typeof LoginResponseSchema>;
 
 export const SpotPageSchema = z.object({
   spots: z.array(SpotSchema),

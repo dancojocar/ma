@@ -1,15 +1,15 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l07-offline`: offline-first. SQLite (`expo-sqlite`, `src/db/`) is the only thing screens read;
-TanStack Query (`useSpotsSync`, keyed `["spots", q, category]`) now just fetches pages and upserts them
-into SQLite without touching rows that have unsynced edits. "Edit spot" on the detail screen
-(name / description / open now) updates the row optimistically (`pendingSync = 1`) and appends
-`{ opId, type: "update", entityId, payload }` to the `outbox` table. `src/repository/spotRepository.ts`
-`syncPending()` replays the outbox in order with `Idempotency-Key: <opId>` whenever
-`@react-native-community/netinfo` reports the server reachable again; a 409 is resolved by
-last-write-wins on `updatedAt` (`src/domain/syncConflict.ts`). The banner shows
-"Offline · N changes pending". Live updates (`/live`) keep working and are written into SQLite.
-Still from earlier tags: infinite scroll, pull-to-refresh, search/filter/favourites, read-only reviews.
+Tag `l08-auth`: sign in (`student@unieats.app` / `password`) before the tabs open. The JWT from
+`POST /api/auth/login` is kept in memory in a Zustand store (`src/store/sessionStore.ts`) and persisted with
+`expo-secure-store` (`keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY`, `src/auth/sessionStorage.ts`).
+Every mutation — outbox replay of "Edit spot" and the new "Add a review" form — sends
+`Authorization: Bearer <jwt>`; a 401 (or an expired token at start-up) signs you out and returns to the login
+screen with a notice. The Profile tab shows the user and "Sign out".
+
+Everything from l07 is kept: SQLite as the only UI source, outbox + NetInfo replay with
+`Idempotency-Key`, 409 last-write-wins, "N changes pending", live updates, infinite scroll, pull-to-refresh,
+search / category filter / favourites.
 
 Demo: edit a spot, toggle airplane mode on the emulator, edit another, turn it off → both PATCHes arrive.
 

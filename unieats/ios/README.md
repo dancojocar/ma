@@ -1,9 +1,30 @@
-# UniEats iOS — l07-offline
+# UniEats iOS — l08-auth
+
+Login + protected mutations on top of the offline-first app (l07).
+
+## What this tag adds
+
+- `Views/LoginView.swift` — email/password (`student@unieats.app` / `password`); the app shows
+  it whenever there is no token (`UniEatsApp` switches on `SessionStore.isLoggedIn`).
+- `ViewModels/SessionStore.swift` — `POST /api/auth/login`, keeps the JWT in memory and in the
+  Keychain, `logout()` ("Log out" in the list toolbar), `sessionExpired()`.
+- `Keychain/KeychainHelper.swift` — generic-password item with
+  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (not in backups, not migrated to a new device);
+  `SecItemUpdate` then `SecItemAdd`, status codes checked.
+- `ApiClient` sends `Authorization: Bearer <jwt>` on every mutation (outbox PATCH replay and
+  review POST). Any 401 → `ApiError.unauthorized` → `sessionExpired()` → back to the login
+  screen with "Your session expired"; queued outbox entries are kept and replay after login.
+- **Add review** (first appears here, POST needs auth): "Add review" in the detail's
+  "Reviews (N)" section → stars + text → `POST /api/spots/:id/reviews` with an
+  `Idempotency-Key`; the new review is stored in SwiftData and shows immediately.
+
+Demo of expiry: restart the server with another secret (`JWT_SECRET=rotated npm start`), edit a
+spot → the app returns to login; log in again → the pending edit syncs.
+
+## From l07 (offline-first, unchanged)
 
 Offline-first: SwiftData is the only thing the UI reads; the server feeds it, and edits made
 offline are queued in an outbox and replayed when the server is reachable again.
-
-## What this tag adds
 
 - `Models/SpotEntity.swift`, `ReviewEntity.swift`, `OutboxEntry.swift` — SwiftData `@Model`s.
   `SpotEntity.pendingSync` flags rows with unsynced edits; `OutboxEntry` stores
