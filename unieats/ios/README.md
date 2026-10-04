@@ -1,42 +1,38 @@
-# UniEats iOS — l10-polish
+# UniEats iOS — l11-cloud
 
-Animations, a profiling checklist, a String Catalog and accessibility fixes.
+A remote-config feature flag and a crash-reporting hook, without any Firebase dependency
+(the deck's legacy demos show the real Remote Config / Crashlytics SDKs).
 
 ## What this tag adds
 
-- Filtered list animates: `.animation(.easeInOut(duration: 0.25), value: spots.map(\.id))` on the
-  `List` in `Views/SpotListView.swift`, rows use
-  `.transition(.move(edge: .leading).combined(with: .opacity))` — tap a category chip or type in
-  search and rows slide/fade instead of jumping.
-- Shared-element style hero: the row photo is a `matchedTransitionSource(id: spot.id, in:)` and
-  the pushed detail uses `.navigationTransition(.zoom(sourceID:in:))` (iOS 18), so the photo
-  zooms into the detail screen and back. (`matchedGeometryEffect` only works between views that
-  coexist in one hierarchy, e.g. a `ZStack`; across a `NavigationStack` push the zoom
-  transition is the supported API.)
-- `PERFORMANCE.md` — Instruments steps (SwiftUI, Animation Hitches, Time Profiler, Allocations).
-- **String Catalog** `UniEats/Localizable.xcstrings` (source language en). SwiftUI literals
-  (`Text("…")`, `Button`, `Label`, `accessibilityLabel`) are keys already; strings built outside
-  views use `String(localized:)`: `ApiError` messages, the `SessionStore` login/unlock notices,
-  the Face ID prompt reasons and the "<spot> was updated" notification. Counts use plural
-  variants instead of a hand-written ternary: `Text("\(outbox.count) changes pending")` in
-  `Views/SyncStatusBanner.swift` has *one* = "%lld change pending", *other* = "%lld changes
-  pending" (same for the review picker's "%lld stars"). Xcode adds new keys to the catalog when
-  it builds the project in the IDE; a command-line build does not.
-- **Accessibility**:
-  - VoiceOver reads ratings and prices as words: the star + number in `SpotRow` and
-    `SpotDetailView` is one element ("Rating 4.5 out of 5"), `$$` reads "Price level 2 of 3",
-    review stars read "5 out of 5 stars" and each segment of the Add review picker "1 star" …
-    "5 stars".
-  - The selected category chip has the `.isSelected` trait.
-  - Contrast of at least 4.5:1 (`Views/Palette.swift`): white text sits on a darker orange
-    (`Color.brandFill`: chips, Log in, Unlock), and orange/green/red text on light tints uses
-    darker shades in light mode (`brandText`, `openText`, `closedText`; dark mode keeps the
-    system colours). This covers the badges, the Live indicator, the pending markers, Near Me
-    distances and error text. The decorative logo images on Login and Unlock are hidden from
-    VoiceOver.
+- **Settings tab** (`Views/SettingsView.swift`, `AppTab.settings` in `UniEatsApp.swift`).
+- **Remote config** (`Cloud/RemoteConfig.swift`): flag `show_new_rating_ui`, default `false`;
+  **Fetch & activate** calls `GET /api/config` and applies the value at once. The app passes
+  `RemoteConfig` down through the SwiftUI environment; when the flag is `true`, spot rows show the
+  new gradient rating badge (`NewRatingBadge` in `Views/SpotRow.swift`, white on the
+  contrast-checked `brandFill` → `accentFill` from `Views/Palette.swift`, read by VoiceOver as
+  "Rating 4.7 out of 5, new rating badge") instead of the plain star.
+- **Crash reporting** (`Cloud/CrashReporter.swift`): `CrashReporter` protocol with a default
+  `LoggingCrashReporter` (os `Logger`), wrapped by `CrashReportingConsent` — an opt-in
+  "Share crash reports" toggle persisted in `UserDefaults`; nothing is recorded while it is off.
+  Debug builds show **Test crash**, which calls `recordError(TestCrash(), …)`.
+- **Settings › Account** now holds what the l08 Account menu on the list did: the
+  "Unlock with Face ID" switch (shown only when biometrics are enrolled) and **Log out**
+  (`SpotRepository.logOut()`, which also discards unsent edits). Logging out returns to the
+  Spots tab for the next login.
+- The new texts are in the String Catalog; the non-SwiftUI ones (`TestCrash`, the Test crash
+  result) use `String(localized:)`.
 
-Check it: `xcrun simctl ui booted appearance dark`, and Accessibility Inspector (Xcode › Open
-Developer Tool) pointed at the simulator on the list, chips, detail and Add review sheet.
+Demo:
+
+```bash
+# flip the flag on the server (token: see Run below)
+curl -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"flags":{"show_new_rating_ui":true}}' localhost:3000/api/config
+```
+
+Settings → **Fetch & activate** → `true` → Spots shows the "4.7 NEW" badges. Test crash with
+the toggle off says "Not sent"; switch it on and the error appears in the Xcode console.
 
 ## Already in the app (earlier tags)
 
@@ -47,11 +43,13 @@ Developer Tool) pointed at the simulator on the list, chips, detail and Add revi
 | l05 | URLSession client, pagination, loading/error/empty states, pull-to-refresh | `Network/ApiClient.swift` |
 | l06 | Live updates over `ws://localhost:3000/live`, reconnect with backoff | `Network/LiveUpdateService.swift` |
 | l07 | SwiftData source of truth, "Edit spot" → outbox → replay (launch, reconnect, every edit, retry with backoff), edits during a sync sent in the same run, 409 last-write-wins, "N changes pending" | `Repository/SpotRepository.swift` |
-| l08 | Login, JWT in Keychain, Bearer on mutations, 401 → login (queued edits kept, each records its user), Log out discards them, add review with one Idempotency-Key per draft, deep link kept while logged out or locked | `ViewModels/SessionStore.swift`, `Keychain/KeychainHelper.swift`, `Models/ReviewDraft.swift` |
-| l08 | Opt-in biometric unlock (Account menu): `.biometryCurrentSet` Keychain item read with an evaluated `LAContext`, "Unlock UniEats" screen, "Use password instead" logs out | `Keychain/BiometricAuth.swift`, `Views/UnlockView.swift` |
+| l08 | Login, JWT in Keychain, Bearer on mutations, 401 → login (queued edits kept, each records its user), Log out (Settings tab from l11) discards them, add review with one Idempotency-Key per draft, deep link kept while logged out or locked | `ViewModels/SessionStore.swift`, `Keychain/KeychainHelper.swift`, `Models/ReviewDraft.swift` |
+| l08 | Opt-in biometric unlock (Settings › Account from l11): `.biometryCurrentSet` Keychain item read with an evaluated `LAContext`, "Unlock UniEats" screen, "Use password instead" logs out | `Keychain/BiometricAuth.swift`, `Views/UnlockView.swift` |
 | l09 | Tabs (Spots, Near Me) with shared favourites; a deep link selects the Spots tab | `UniEatsApp.swift`, `ViewModels/FavouritesStore.swift` |
 | l09 | Near Me tab (CoreLocation when-in-use, 2 km, updates only while visible), local notification from live `spot.updated` | `Views/NearMeView.swift`, `Location/LocationManager.swift`, `Notifications/SpotChangeNotifier.swift` |
 | l09 | Background replay of pending edits (`BGAppRefreshTask` `com.unieats.app.outbox-sync`, scheduled when the app goes to the background with edits queued) | `Repository/SpotRepository.swift`, `UniEatsApp.swift`, `Info.plist` |
+| l10 | Animated filtered list, row photo → detail zoom transition, `PERFORMANCE.md` | `Views/SpotListView.swift`, `Views/SpotRow.swift` |
+| l10 | String Catalog with plural variants, `String(localized:)` outside views; VoiceOver labels for ratings and prices, `.isSelected` chips, 4.5:1 contrast colours | `Localizable.xcstrings`, `Views/Palette.swift` |
 
 The simulator cannot run the l09 background replay: `submit` fails with "not available on this
 platform" (logged under `com.unieats.app` / `sync` and ignored). On a device, pause in the

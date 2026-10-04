@@ -44,7 +44,7 @@ a sealed `Session` (`SignedOut`, `Locked`, `SignedIn`, in `lib/domain/models.dar
 - `lib/data/auth/auth_interceptor.dart` — `Authorization: Bearer` on every mutation, outbox replay
   included. A 401 to a request that carried a token ends the session: the login screen says "Your
   session expired".
-- `lib/ui/login/login_screen.dart` — the sign-in form. "Sign out" is in the list's ⋮ menu.
+- `lib/ui/login/login_screen.dart` — the sign-in form. "Sign out" is in Settings (since `l11-cloud`).
 - "Add review" on the detail screen posts through the outbox (`ReviewRepository.addReview`): the review
   shows at once under a `local:` id ("Waiting to sync") and is swapped for the server's copy on replay.
   `AddReviewController` (like `EditSpotController`) disables the Post button while saving and shows the
@@ -57,7 +57,7 @@ next sign-in. An expired session (401) or a biometric change keeps them, and the
 user signs in again; when a different user signs in, `AuthRepository.login` discards the other user's
 ops before storing the new token. A 401 during replay is not permanent, so the op stays queued.
 
-Biometric unlock is opt-in: "Unlock with biometrics" in the ⋮ menu, shown only when the device has a
+Biometric unlock is opt-in: "Unlock with biometrics" in Settings (since `l11-cloud`), shown only when the device has a
 strong biometric enrolled (`local_auth`), off until you turn it on. Turning it on moves the JWT into a
 second `flutter_secure_storage` store whose key needs a biometric check, so the token cannot be read
 without one: on Android a Keystore AES-GCM key with user authentication (`BIOMETRIC_STRONG`) and
@@ -74,7 +74,7 @@ on the emulator, turn the switch on, restart the app and run `adb -e emu finger 
 Simulator use Features → Face ID → Enrolled, then Matching Face.
 
 Since `l09-push-location`:
-- **Spots near me** (`/nearby`, the arrow next to the list's ⋮ menu,
+- **Spots near me** (`/nearby`, the arrow in the list's app bar,
   `lib/ui/nearby/nearby_spots_screen.dart`): spots within 2 km, nearest first, from `geolocator`
   (`lib/services/location_service.dart`). The screen explains why before the system permission prompt
   (`ACCESS_FINE_LOCATION`/`ACCESS_COARSE_LOCATION` in the manifest, `NSLocationWhenInUseUsageDescription`
@@ -91,13 +91,31 @@ Since `l09-push-location`:
   is in the foreground. The plugin needs core library desugaring (`android/app/build.gradle.kts`). Try:
   `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
 
-This tag (`l10-polish`) adds motion: the spot photo flies from the list card to the detail header
+Since `l10-polish`: the spot photo flies from the list card to the detail header
 (`Hero(tag: 'spot-photo-<id>')`; it animates because go_router builds a `MaterialPage` for each route) and
 cards fade/slide in, the first ten 40 ms apart (`AnimatedEntrance` in
 `lib/ui/spot_list/spot_list_screen.dart`, an `AnimationController` per card, disposed with it, skipped
 under "reduce motion"). The Live dot watches `liveEventsProvider.select(...)`, so a live event alone does
 not rebuild the list screen; the list changes when the event reaches Drift. Profiling steps:
 [PERFORMANCE.md](PERFORMANCE.md).
+
+This tag (`l11-cloud`) adds a Settings screen (`lib/ui/settings/settings_screen.dart`, `/settings`, the gear
+in the list's app bar). The list's ⋮ menu is gone: "Unlock with biometrics" and "Sign out" moved to the
+Settings Account section. Settings is pushed over the list, so after signing out there the login screen
+keeps `?from=/spots` and the next sign-in lands on the list.
+- **Remote config** — one flag, `show_new_rating_ui` (default `false`), held by `RemoteConfigNotifier` in
+  `providers.dart`. "Fetch & activate" calls `GET /api/config` and applies it at once: the rating on the
+  list cards and the detail screen turns into the gradient "★ 4.5 / 5" badge (`NewRatingBadge` in
+  `lib/ui/common/spot_badges.dart`). The fetched value lives in memory, so a restart shows the default
+  until the next fetch. Flip it on the server with `POST /api/config` (Bearer token)
+  `{"flags":{"show_new_rating_ui":true}}`.
+- **Crash reporting** — `CrashReporter` interface (`lib/services/crash_reporter.dart`); the default
+  logs to the `crash` log channel, behind a consent gate (opt-in switch "Share crash reports", stored
+  with `shared_preferences`; every error checks it). `main` wires `FlutterError.onError`,
+  `PlatformDispatcher.instance.onError` and a `runZonedGuarded` zone (with `ensureInitialized` inside it),
+  and hands the same reporter to Riverpod with `crashReporterProvider.overrideWithValue` (next to
+  `retry: (_, _) => null`). Debug builds show a "Test crash" button that calls `recordError()`; nothing
+  is reported until you opt in. No Firebase dependency.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

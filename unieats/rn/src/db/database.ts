@@ -41,6 +41,7 @@ const MIGRATIONS = [
      COALESCE((SELECT serverUpdatedAt FROM spots WHERE spots.id = outbox.entityId), 0));
    UPDATE spots SET updatedAt = serverUpdatedAt WHERE pendingSync = 1;
    ALTER TABLE spots DROP COLUMN serverUpdatedAt;`,
+  `CREATE TABLE settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);`,
 ];
 
 let db: SQLite.SQLiteDatabase | null = null;

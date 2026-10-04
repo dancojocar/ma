@@ -1,15 +1,21 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Stack } from "expo-router";
+import { Stack, type ErrorBoundaryProps } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { queryClient } from "../src/api/queryClient";
+import { installGlobalErrorHandler, loadCrashConsent } from "../src/cloud/crashReporting";
+import { ErrorFallback } from "../src/components/ErrorFallback";
 import { useSessionStore } from "../src/store/sessionStore";
 import { useSyncOnReconnect } from "../src/sync/useSyncOnReconnect";
 
 void SplashScreen.preventAutoHideAsync();
+// At module load rather than in an effect: if the first render throws, the layout's effects never run,
+// and the ErrorBoundary below would report without knowing the user's consent.
+loadCrashConsent();
+installGlobalErrorHandler();
 
 export default function RootLayout() {
   const status = useSessionStore((s) => s.status);
@@ -43,6 +49,14 @@ export default function RootLayout() {
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
+}
+
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  // RootLayout, which normally hides the splash, is not mounted while this screen shows.
+  useEffect(() => {
+    void SplashScreen.hideAsync();
+  }, []);
+  return <ErrorFallback {...props} boundary="root" />;
 }
 
 const styles = StyleSheet.create({

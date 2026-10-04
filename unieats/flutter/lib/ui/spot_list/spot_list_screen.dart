@@ -77,7 +77,11 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
             icon: const Icon(Icons.near_me_outlined),
             onPressed: () => context.push('/nearby'),
           ),
-          const _AccountMenu(),
+          IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
+          ),
         ],
       ),
       body: Column(
@@ -130,61 +134,6 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-enum _MenuItem { biometricUnlock, signOut }
-
-class _AccountMenu extends ConsumerWidget {
-  const _AccountMenu();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final available = ref.watch(biometricAvailableProvider).value ?? false;
-    final biometric = ref.watch(biometricSettingProvider);
-    final enabled = biometric.value ?? false;
-    ref.listen(biometricSettingProvider, (_, next) {
-      if (next case AsyncError(:final error)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              error is BiometricCancelled
-                  ? 'Biometric unlock stays off.'
-                  : "Couldn't change biometric unlock on this device.",
-            ),
-          ),
-        );
-      }
-    });
-
-    return PopupMenuButton<_MenuItem>(
-      tooltip: 'More',
-      onSelected: (item) {
-        switch (item) {
-          case _MenuItem.biometricUnlock:
-            ref.read(biometricSettingProvider.notifier).set(!enabled);
-          case _MenuItem.signOut:
-            ref.read(authProvider.notifier).logout();
-        }
-      },
-      itemBuilder: (_) => [
-        if (available)
-          CheckedPopupMenuItem(
-            value: _MenuItem.biometricUnlock,
-            checked: enabled,
-            enabled: !biometric.isLoading,
-            child: const Text('Unlock with biometrics'),
-          ),
-        const PopupMenuItem(
-          value: _MenuItem.signOut,
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.logout),
-            title: Text('Sign out'),
-          ),
-        ),
-      ],
     );
   }
 }

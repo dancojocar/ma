@@ -4,7 +4,6 @@ import SwiftUI
 struct SpotListView: View {
     let repository: SpotRepository
     let live: LiveUpdateService
-    let session: SessionStore
     let favourites: FavouritesStore
     @Binding var pendingSpotId: String?
     @State private var viewModel: SpotListViewModel
@@ -15,14 +14,12 @@ struct SpotListView: View {
     init(
         repository: SpotRepository,
         live: LiveUpdateService,
-        session: SessionStore,
         notifier: SpotChangeNotifier,
         favourites: FavouritesStore,
         pendingSpotId: Binding<String?>
     ) {
         self.repository = repository
         self.live = live
-        self.session = session
         self.favourites = favourites
         _pendingSpotId = pendingSpotId
         _viewModel = State(initialValue: SpotListViewModel(repository: repository, notifier: notifier))
@@ -42,9 +39,6 @@ struct SpotListView: View {
                     await viewModel.apply(.disconnected)
                 }
                 .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        accountMenu
-                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
                             .labelStyle(.titleAndIcon)
@@ -71,21 +65,6 @@ struct SpotListView: View {
             guard let spotId else { return }
             path = [spotId]
             pendingSpotId = nil
-        }
-    }
-
-    private var accountMenu: some View {
-        Menu("Account", systemImage: "person.crop.circle") {
-            if session.biometrics.isAvailable {
-                Toggle(
-                    "Unlock with \(session.biometrics.kindName)",
-                    isOn: Binding(
-                        get: { session.biometricUnlockEnabled },
-                        set: { on in Task { await session.setBiometricUnlock(on) } }
-                    )
-                )
-            }
-            Button("Log out", role: .destructive, action: repository.logOut)
         }
     }
 }

@@ -3,6 +3,7 @@ import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { LocalSpot } from "../domain/models";
 import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel } from "./format";
+import { RatingBadge } from "./RatingBadge";
 
 export function SpotDetail({
   spot,
@@ -39,12 +40,7 @@ export function SpotDetail({
           {spot.pendingSync && <Text style={[styles.badge, styles.pending]}>Pending sync</Text>}
         </View>
         <View style={styles.row}>
-          <Text
-            style={styles.rating}
-            accessibilityLabel={`Rated ${spot.rating.toFixed(1)} out of 5`}
-          >
-            ★ {spot.rating.toFixed(1)}
-          </Text>
+          <RatingBadge rating={spot.rating} />
           <Text style={styles.price}>{priceLabel(spot.priceLevel)}</Text>
         </View>
         <Text style={styles.description}>{spot.description}</Text>
@@ -80,7 +76,6 @@ const styles = StyleSheet.create({
   open: { backgroundColor: "#e6f4ea" },
   closed: { backgroundColor: "#fce8e6" },
   pending: { backgroundColor: "#fff4e5", color: "#8a4b00", textTransform: "none" },
-  rating: { fontSize: 14, color: "#f0a500", fontWeight: "600" },
   price: { fontSize: 13, color: "#777" },
   description: { fontSize: 14, color: "#444", lineHeight: 20 },
 });

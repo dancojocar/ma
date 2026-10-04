@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { biometricSupport, type BiometricSupport } from "../../src/auth/biometrics";
+import { routeErrorBoundary } from "../../src/components/ErrorFallback";
+import { SettingsSection } from "../../src/components/SettingsSection";
 import { usePendingChangesCount } from "../../src/db/hooks";
 import { useSessionStore } from "../../src/store/sessionStore";
+
+export const ErrorBoundary = routeErrorBoundary("profile");
 
 export default function ProfileScreen() {
   const user = useSessionStore((s) => s.user);
@@ -10,7 +14,7 @@ export default function ProfileScreen() {
   const pendingChanges = usePendingChangesCount();
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{user?.displayName[0]?.toUpperCase() ?? "?"}</Text>
@@ -29,7 +33,8 @@ export default function ProfileScreen() {
         )}
       </View>
       <BiometricRow />
-    </View>
+      <SettingsSection />
+    </ScrollView>
   );
 }
 
@@ -86,7 +91,8 @@ function BiometricRow() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 16, gap: 12 },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  content: { padding: 16, gap: 12 },
   card: { backgroundColor: "#fff", borderRadius: 12, padding: 20, alignItems: "center", gap: 6 },
   avatar: {
     width: 72,

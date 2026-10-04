@@ -24,15 +24,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
 import com.unieats.app.data.model.Spot
+import com.unieats.app.ui.components.RatingBadge
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
-import com.unieats.app.ui.components.ratingText
 
 @Composable
 fun SpotCard(
     spot: Spot,
     isFavourite: Boolean,
     isPending: Boolean,
+    showNewRatingUi: Boolean,
     onClick: () -> Unit,
     onToggleFavourite: () -> Unit,
     modifier: Modifier = Modifier
@@ -65,18 +66,7 @@ fun SpotCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painterResource(R.drawable.ic_star),
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    val rated = stringResource(R.string.rated, spot.ratingText())
-                    Text(
-                        spot.ratingText(),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.semantics { contentDescription = rated }
-                    )
+                    RatingBadge(spot, newDesign = showNewRatingUi)
                     val priceLevel = stringResource(R.string.price_level, spot.priceLevel)
                     Text(
                         spot.priceText(),

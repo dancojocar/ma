@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct SpotRow: View {
+    @Environment(RemoteConfig.self) private var remoteConfig
     let spot: Spot
     let isFavourite: Bool
     var isPending = false
@@ -37,7 +38,11 @@ struct SpotRow: View {
 
                 HStack(spacing: 6) {
                     CategoryBadge(category: spot.category)
-                    starRating
+                    if remoteConfig.showNewRatingUI {
+                        NewRatingBadge(rating: spot.rating)
+                    } else {
+                        starRating
+                    }
                     priceLevel
                 }
             }
@@ -90,5 +95,25 @@ struct CategoryBadge: View {
             .background(Color.orange.opacity(0.15))
             .foregroundStyle(Color.brandText)
             .clipShape(Capsule())
+    }
+}
+
+struct NewRatingBadge: View {
+    let rating: Double
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "star.circle.fill")
+            Text(rating, format: .number.precision(.fractionLength(1)))
+            Text("NEW").font(.caption2.weight(.heavy))
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(LinearGradient(colors: [.brandFill, .accentFill], startPoint: .leading, endPoint: .trailing))
+        .foregroundStyle(.white)
+        .clipShape(Capsule())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rating \(rating, format: .number.precision(.fractionLength(1))) out of 5, new rating badge")
     }
 }

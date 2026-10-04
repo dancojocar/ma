@@ -4,6 +4,7 @@ import SwiftUI
 enum AppTab: Hashable {
     case spots
     case nearMe
+    case settings
 }
 
 @main
@@ -13,6 +14,8 @@ struct UniEatsApp: App {
     private let live = LiveUpdateService()
     @State private var notifier = SpotChangeNotifier()
     @State private var session: SessionStore
+    @State private var remoteConfig: RemoteConfig
+    @State private var crashConsent = CrashReportingConsent()
     @State private var connectivity = ConnectivityMonitor()
     @State private var favourites = FavouritesStore()
     @State private var pendingSpotId: String?
@@ -28,6 +31,7 @@ struct UniEatsApp: App {
         let api = ApiClient()
         let session = SessionStore(api: api)
         _session = State(initialValue: session)
+        _remoteConfig = State(initialValue: RemoteConfig(api: api))
         _repository = State(initialValue: SpotRepository(context: container.mainContext, api: api, session: session))
     }
 
@@ -41,7 +45,6 @@ struct UniEatsApp: App {
                             SpotListView(
                                 repository: repository,
                                 live: live,
-                                session: session,
                                 notifier: notifier,
                                 favourites: favourites,
                                 pendingSpotId: $pendingSpotId
@@ -50,7 +53,16 @@ struct UniEatsApp: App {
                         Tab("Near Me", systemImage: "location", value: AppTab.nearMe) {
                             NearMeView(repository: repository, favourites: favourites)
                         }
+                        Tab("Settings", systemImage: "gearshape", value: AppTab.settings) {
+                            SettingsView(
+                                session: session,
+                                remoteConfig: remoteConfig,
+                                crashConsent: crashConsent,
+                                onLogOut: repository.logOut
+                            )
+                        }
                     }
+                    .environment(remoteConfig)
                     .task { await notifier.requestPermission() }
                 case .locked:
                     UnlockView(session: session, onUsePassword: repository.logOut)
@@ -64,6 +76,9 @@ struct UniEatsApp: App {
                 guard let spotId = DeepLink.spotId(from: url) else { return }
                 pendingSpotId = spotId
                 tab = .spots
+            }
+            .onChange(of: session.isLoggedIn) { _, loggedIn in
+                if !loggedIn { tab = .spots }
             }
             .task(id: session.isLoggedIn) {
                 connectivity.start { [repository] in

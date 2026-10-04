@@ -25,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -44,8 +43,6 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,10 +59,8 @@ import com.unieats.app.ui.permissions.RequestPermissionsOnce
 fun SpotListScreen(
     onSpotClick: (String) -> Unit,
     onNearbyClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onLogout: () -> Unit,
-    biometricAvailable: Boolean,
-    biometricEnabled: Boolean,
-    onToggleBiometric: (Boolean) -> Unit,
     viewModel: SpotListViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,10 +75,8 @@ fun SpotListScreen(
         onErrorShown = viewModel::errorShown,
         onSpotClick = onSpotClick,
         onNearbyClick = onNearbyClick,
-        onLogout = onLogout,
-        biometricAvailable = biometricAvailable,
-        biometricEnabled = biometricEnabled,
-        onToggleBiometric = onToggleBiometric
+        onSettingsClick = onSettingsClick,
+        onLogout = onLogout
     )
 }
 
@@ -100,10 +93,8 @@ fun SpotListContent(
     onErrorShown: () -> Unit,
     onSpotClick: (String) -> Unit,
     onNearbyClick: () -> Unit,
-    onLogout: () -> Unit,
-    biometricAvailable: Boolean,
-    biometricEnabled: Boolean,
-    onToggleBiometric: (Boolean) -> Unit
+    onSettingsClick: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var sortByRating by rememberSaveable { mutableStateOf(false) }
     val spots = remember(state.spots, sortByRating) {
@@ -137,11 +128,8 @@ fun SpotListContent(
                     OverflowMenu(
                         sortByRating = sortByRating,
                         onToggleSort = { sortByRating = !sortByRating },
-                        onLogout = onLogout,
-                        // Also shown when biometrics were removed meanwhile, so it can be turned off.
-                        showBiometricToggle = biometricAvailable || biometricEnabled,
-                        biometricEnabled = biometricEnabled,
-                        onToggleBiometric = onToggleBiometric
+                        onSettingsClick = onSettingsClick,
+                        onLogout = onLogout
                     )
                 }
             )
@@ -183,6 +171,7 @@ fun SpotListContent(
                                 spot = spot,
                                 isFavourite = spot.id in state.favouriteIds,
                                 isPending = spot.id in state.pendingSpotIds,
+                                showNewRatingUi = state.showNewRatingUi,
                                 onClick = { onSpotClick(spot.id) },
                                 onToggleFavourite = { onToggleFavourite(spot.id) },
                                 modifier = Modifier.animateItem()
@@ -214,10 +203,8 @@ private fun ScrollableState(content: @Composable () -> Unit) {
 private fun OverflowMenu(
     sortByRating: Boolean,
     onToggleSort: () -> Unit,
-    onLogout: () -> Unit,
-    showBiometricToggle: Boolean,
-    biometricEnabled: Boolean,
-    onToggleBiometric: (Boolean) -> Unit
+    onSettingsClick: () -> Unit,
+    onLogout: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
@@ -232,18 +219,13 @@ private fun OverflowMenu(
                     onToggleSort()
                 }
             )
-            if (showBiometricToggle) {
-                val toggleState = stringResource(if (biometricEnabled) R.string.toggle_on else R.string.toggle_off)
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.list_biometric_unlock)) },
-                    trailingIcon = { Switch(checked = biometricEnabled, onCheckedChange = null) },
-                    onClick = {
-                        expanded = false
-                        onToggleBiometric(!biometricEnabled)
-                    },
-                    modifier = Modifier.semantics { stateDescription = toggleState }
-                )
-            }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.list_settings)) },
+                onClick = {
+                    expanded = false
+                    onSettingsClick()
+                }
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.list_log_out)) },
                 onClick = {

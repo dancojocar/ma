@@ -13,6 +13,7 @@
     <string name="status_waiting_to_sync">Waiting to sync</string>
     <string name="rated">Rated %1$s</string>
     <string name="price_level">Price level %1$d</string>
+    <string name="rating_badge_pill">★ %1$s</string>
 
     <string name="login_subtitle">Sign in to continue</string>
     <string name="login_email">Email</string>
@@ -36,9 +37,7 @@
     <string name="list_more_options">More options</string>
     <string name="list_sort_by_rating">Sort by rating</string>
     <string name="list_sort_default">Default order</string>
-    <string name="list_biometric_unlock">Unlock with biometrics</string>
-    <string name="toggle_on">On</string>
-    <string name="toggle_off">Off</string>
+    <string name="list_settings">Settings</string>
     <string name="list_log_out">Log out</string>
     <plurals name="list_changes_pending">
         <item quantity="one">%d change pending</item>
@@ -93,6 +92,17 @@
     <string name="nearby_open_settings">Open settings</string>
     <string name="nearby_allow_location">Allow location</string>
     <string name="nearby_row_details">%1$d m · %2$s · %3$s</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_remote_config">Remote config</string>
+    <string name="settings_flag_value">show_new_rating_ui = %1$s</string>
+    <string name="settings_fetch_and_activate">Fetch &amp; activate</string>
+    <string name="settings_fetching">Fetching…</string>
+    <string name="settings_crash_reporting">Crash reporting</string>
+    <string name="settings_share_crash_reports">Share crash reports</string>
+    <string name="settings_test_crash">Test crash</string>
+    <string name="settings_security">Security</string>
+    <string name="settings_biometric_unlock">Unlock with biometrics</string>
 
     <string name="notification_channel_name">Spot updates</string>
     <string name="notification_channel_description">A spot you can see in UniEats was changed</string>

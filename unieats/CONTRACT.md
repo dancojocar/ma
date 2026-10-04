@@ -45,6 +45,8 @@ User { id: string, email: string, displayName: string }
 | DELETE | `/spots/:id` | yes | (+ `Idempotency-Key`) | 204 |
 | GET | `/spots/:id/reviews` | no | — | `Review[]` |
 | POST | `/spots/:id/reviews` | yes | `{ stars, text }` (+ `Idempotency-Key`) | `Review` (201) |
+| GET | `/config` | no | — | `{ flags: { show_new_rating_ui: boolean } }` |
+| POST | `/config` | yes | `{ flags: { show_new_rating_ui: boolean } }` | `{ flags }` (200) |
 
 - **Auth:** `Authorization: Bearer <jwt>` on every mutation (from L08; before L08 they are
   open). Missing/invalid/expired token → 401 `{ error: { code: "unauthorized", message } }`
@@ -89,6 +91,14 @@ spot write the server broadcasts one JSON text message to all connected clients:
 
 An idempotent replay does not broadcast again. Reviews are not broadcast. Clients use it for
 live updates (L06) but the app must work without it (reconnect with backoff).
+
+## Remote config (from L11)
+
+`GET /api/config` returns every feature flag with its current value (`Cache-Control: no-store`).
+Today there is one flag, `show_new_rating_ui` (default `false`), which toggles the "new rating"
+badge in every client. Clients ship the same default, fetch on "Fetch & activate" and apply the
+value immediately. `POST /api/config` (auth) changes known flags for the classroom demo; unknown
+flags or non-boolean values → 400. Values reset when the server restarts.
 
 ## Offline-first sync semantics (identical in every stack, from L07)
 

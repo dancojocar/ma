@@ -1,10 +1,13 @@
 import { useRouter } from "expo-router";
 import { FlatList, Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { routeErrorBoundary } from "../../src/components/ErrorFallback";
 import { LiveBadge } from "../../src/components/LiveBadge";
 import { EmptyView, LoadingView } from "../../src/components/StatusViews";
 import { NEARBY_RADIUS_KM } from "../../src/domain/geo";
 import { useLiveSpots } from "../../src/hooks/useLiveSpots";
 import { useNearbySpots } from "../../src/hooks/useNearbySpots";
+
+export const ErrorBoundary = routeErrorBoundary("nearby");
 
 export default function NearbyScreen() {
   const router = useRouter();

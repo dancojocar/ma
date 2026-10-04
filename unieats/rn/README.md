@@ -1,6 +1,31 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l10-polish`: list rows enter with Reanimated 4 `FadeInDown` (staggered by index) and can be
+Tag `l11-cloud`: the Profile tab (`app/(tabs)/profile.tsx`, now a `ScrollView`) ends with a settings card
+(`src/components/SettingsSection.tsx`) under the user card and the biometric switch.
+
+**Remote config**: the flag `show_new_rating_ui` (shipped default `false`) comes from `GET /api/config`
+(no auth, validated by `RemoteConfigSchema`) and is applied only when you tap "Fetch & activate"
+(`src/cloud/featureFlags.ts`, a Zustand store; values live in memory, so a restart returns to the shipped
+default). The card shows the active value and when it was activated. When the flag is true, ratings on the list
+cards and the detail screen render as a green pill (`src/components/RatingBadge.tsx`) instead of the
+orange "★ 4.5"; the badge reads the flag itself, so the memoised `SpotCard` rows switch without re-rendering
+the list. Flip it for the class with
+`curl -X POST localhost:3000/api/config -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}'`,
+then "Fetch & activate".
+
+**Crash reporting** goes through a `CrashReporter` interface (`src/cloud/crashReporting.ts`); the default
+backend logs to the console, and a Sentry/Crashlytics backend would plug in there without touching callers.
+Nothing reaches the backend unless "Share crash reports" is on (off by default); the consent is stored in
+a SQLite `settings` table (`src/db/settingsDao.ts`, migration v4 in `src/db/database.ts`) and survives sign-out.
+`app/_layout.tsx` loads the consent and installs a global JS error handler (`ErrorUtils`, which then calls
+React Native's default handler) when the module loads, before the first render. Render errors are caught by
+`ErrorBoundary` exports that report and offer "Try again" (`src/components/ErrorFallback.tsx`): one on the
+root layout (it also hides the splash) and one each on `app/(tabs)/spots/_layout.tsx`,
+`app/(tabs)/nearby.tsx` and `app/(tabs)/profile.tsx`, so an error inside a tab keeps the tab bar. In
+development builds a "Test crash" button calls `crashReporter.recordError()` (it does not crash the app);
+with consent off the card says it was not reported. No Firebase dependency.
+
+Kept from l10: list rows enter with Reanimated 4 `FadeInDown` (staggered by index) and can be
 swiped away (left or right) to hide them for the session: `src/components/SwipeToDismiss.tsx` uses a
 `react-native-gesture-handler` `Gesture.Pan()` driving a `useSharedValue` with `withTiming`, all on the UI
 thread, and hands the dismissal back to React with `scheduleOnRN` (`react-native-worklets`); "Show N hidden"
@@ -9,12 +34,12 @@ brings them back. Screen-reader users cannot swipe, so each card also offers a "
 id-taking callbacks from a `useCallback` `renderItem`, so a change to one row does not re-render the
 others. Profiling steps: `PERFORMANCE.md`.
 
-Sync bookkeeping is simpler since this tag: a queued edit carries only the server `updatedAt` it was based
+Sync bookkeeping is simpler since l10: a queued edit carries only the server `updatedAt` it was based
 on, and a pending row keeps that base version in its own `updatedAt`, so the separate `serverUpdatedAt`
 column is gone (migration v3 in `src/db/database.ts` moves it into ops already queued). The server answers
-409 only when its copy is newer than that base, so a 409 now keeps the server copy from the response and
+409 only when its copy is newer than that base, so a 409 keeps the server copy from the response and
 drops the op, together with the edits of that spot queued behind it (based on the same stale version);
-nothing is resent and the time of the edit no longer matters. The replay loop re-reads the head of the
+nothing is resent and the time of the edit does not matter. The replay loop re-reads the head of the
 outbox (`outboxDao.oldest()`) before every request, because an accepted write moves the queued edits of the
 same spot onto the new server version (`outboxDao.rebase`).
 
@@ -117,7 +142,10 @@ review star picker is a "Rating" radio group whose stars read "1 star" … "5 st
 biometric switch is labelled with its visible text. On Nearby the rationale title is a header, "Allow location" and
 "Open Settings" are buttons, and each nearby spot is a button read as "<name>, <n> metres away". Each list
 card has a "Hide" action instead of the swipe, the red "Hide" text behind a row is hidden from screen
-readers, and "Show N hidden" is a button.
+readers, and "Show N hidden" is a button. The rating, classic or pill, reads "Rated 4.5 out of 5" (the star
+glyph is not read); in the settings card the two titles are headers, "Fetch & activate" and "Test crash" are
+buttons, the status line under the flag is a polite live region and the consent switch is labelled "Share
+crash reports".
 
 ## Run
 

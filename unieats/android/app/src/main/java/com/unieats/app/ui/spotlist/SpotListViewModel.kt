@@ -2,6 +2,7 @@ package com.unieats.app.ui.spotlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.unieats.app.cloud.RemoteConfig
 import com.unieats.app.data.model.Category
 import com.unieats.app.data.model.Spot
 import com.unieats.app.data.remote.toUserMessage
@@ -38,7 +39,15 @@ data class SpotListUiState(
     val errorMessage: String? = null,
     val currentPage: Int = 0,
     val hasNextPage: Boolean = false,
-    val isLive: Boolean = false
+    val isLive: Boolean = false,
+    val showNewRatingUi: Boolean = false
+)
+
+private data class Background(
+    val pendingSpotIds: Set<String>,
+    val pendingChanges: Int,
+    val isLive: Boolean,
+    val showNewRatingUi: Boolean
 )
 
 private const val SEARCH_DEBOUNCE_MS = 300L
@@ -47,7 +56,8 @@ private const val SEARCH_DEBOUNCE_MS = 300L
 @HiltViewModel
 class SpotListViewModel @Inject constructor(
     private val spotRepository: SpotRepository,
-    private val favourites: FavouritesRepository
+    private val favourites: FavouritesRepository,
+    remoteConfig: RemoteConfig
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SpotListUiState())
@@ -57,14 +67,23 @@ class SpotListViewModel @Inject constructor(
         .distinctUntilChanged()
         .flatMapLatest { (query, category) -> spotRepository.observeSpots(query, category) }
 
-    val uiState: StateFlow<SpotListUiState> = combine(
-        _uiState,
-        spotsFromDb,
+    private val background = combine(
         spotRepository.observePendingSpotIds(),
         spotRepository.observePendingChanges(),
-        spotRepository.liveConnection
-    ) { state, spots, pendingIds, pendingChanges, live ->
-        state.copy(spots = spots, pendingSpotIds = pendingIds, pendingChanges = pendingChanges, isLive = live)
+        spotRepository.liveConnection,
+        remoteConfig.flags
+    ) { pendingIds, pendingChanges, live, flags ->
+        Background(pendingIds, pendingChanges, live, flags.showNewRatingUi)
+    }
+
+    val uiState: StateFlow<SpotListUiState> = combine(_uiState, spotsFromDb, background) { state, spots, bg ->
+        state.copy(
+            spots = spots,
+            pendingSpotIds = bg.pendingSpotIds,
+            pendingChanges = bg.pendingChanges,
+            isLive = bg.isLive,
+            showNewRatingUi = bg.showNewRatingUi
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), _uiState.value)
 
     private var loadJob: Job? = null

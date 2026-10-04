@@ -1,4 +1,4 @@
-# UniEats Android — tag `l10-polish`
+# UniEats Android — tag `l11-cloud`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -95,9 +95,12 @@ reviews and live badge, and the light/dark theme.
 
 ## Biometric unlock (new in l08, off by default)
 
-- Turn it on in the ⋮ menu: **Unlock with biometrics**. It is offered only on API 30+ with a
-  strong (class 3) biometric enrolled (`ui/auth/BiometricPrompter.kt`, `canUseBiometricUnlock()`,
-  re-checked on every resume). Off by default, so a password sign-in works as before.
+- Turn it on in ⋮ → **Settings** → Security → **Unlock with biometrics** (from l11; before that
+  the switch was in the ⋮ menu). It is offered only on API 30+ with a strong (class 3) biometric
+  enrolled (`ui/auth/BiometricPrompter.kt`, `canUseBiometricUnlock()`, re-checked on every
+  resume), or while it is still on, so it can be turned off. Off by default, so a password
+  sign-in works as before. Its state lives in `SessionViewModel`; `NavGraph.kt` passes it into
+  `SettingsScreen`.
 - `data/auth/BiometricKeystoreCipher.kt` — a second Keystore AES-256-GCM key, created with
   `setUserAuthenticationRequired(true)`, `setUserAuthenticationParameters(0, AUTH_BIOMETRIC_STRONG)`
   (every single use needs a prompt) and `setInvalidatedByBiometricEnrollment(true)`. The key is
@@ -120,7 +123,7 @@ reviews and live badge, and the light/dark theme.
 - Log out and a 401 delete the biometric key along with the session.
 - `MainActivity` is a `FragmentActivity`, because `BiometricPrompt` needs one to host its
   fragment.
-- Emulator (API 30+): Settings → Security → set a PIN, then add a fingerprint, and run
+- Emulator (API 30+): system Settings → Security → set a PIN, then add a fingerprint, and run
   `adb -e emu finger touch 1` when the sensor asks. At the app's prompt, `adb -e emu finger touch 1`
   again. To see the enrollment-change path, add a second fingerprint and relaunch the app.
 
@@ -181,6 +184,26 @@ reviews and live badge, and the light/dark theme.
   pending", "Reviews (n)" and the star counts). Messages built outside the UI stay in Kotlin:
   server and network errors (`data/remote/ApiResult.kt`), "Wrong email or password." and the
   category names (`Category.label`).
+
+## Remote config + crash reporting (new in l11)
+
+No Firebase dependency: the same ideas against the course server.
+
+- ⋮ → **Settings** (`ui/settings/SettingsScreen.kt` + `SettingsViewModel`) has three sections:
+  Remote config, Crash reporting, and Security with the biometric switch, which moved there from
+  the ⋮ menu. The ⋮ menu now holds **Sort by rating**, **Settings** and **Log out**.
+- `cloud/RemoteConfig.kt` — flags from `GET /api/config` with in-app defaults
+  (`show_new_rating_ui = false`). **Fetch & activate** applies the server value at once; if the
+  fetch fails the current values stay. When the flag is true the list shows the new pill-shaped
+  rating badge (`ui/components/RatingBadge.kt`); TalkBack reads both designs as "Rated 4.5".
+  Flip it for the class (needs a token, see `$TOKEN` below):
+  `curl -X POST localhost:3000/api/config -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}'`
+- `cloud/CrashReporter.kt` — the app talks to a `CrashReporter` interface; `LogcatCrashReporter`
+  logs, `ConsentGatedCrashReporter` drops everything until the user turns on **Share crash
+  reports** (`cloud/CrashConsent.kt`, persisted in SharedPreferences, off by default). Uncaught
+  exceptions go through it too (`UniEatsApplication`). Debug builds have a **Test crash** button
+  that calls `crashReporter.recordError()` — watch Logcat tag `CrashReporter`. Swapping in
+  Crashlytics is a new implementation bound in `di/CloudModule.kt`.
 
 ## Demo: offline edit → reconnect → sync
 

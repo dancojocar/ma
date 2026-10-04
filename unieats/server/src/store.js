@@ -6,6 +6,17 @@ const changes = new EventEmitter();
 const spots = seed.spots.map((s) => ({ ...s }));
 const reviews = seed.reviews.map((r) => ({ ...r }));
 
+const flags = { show_new_rating_ui: false };
+
+function getFlags() {
+  return { ...flags };
+}
+
+function setFlags(changes) {
+  Object.assign(flags, changes);
+  return getFlags();
+}
+
 function getSpots() {
   return spots;
 }
@@ -60,6 +71,8 @@ function addReview(review) {
 
 module.exports = {
   changes,
+  getFlags,
+  setFlags,
   getSpots,
   getSpotById,
   addSpot,
