@@ -23,6 +23,12 @@ export interface Review {
   createdAt: number;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
 export interface LocalSpot extends Spot {
   pendingSync: boolean;
 }

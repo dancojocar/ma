@@ -3,14 +3,17 @@ const request = require('supertest');
 const WebSocket = require('ws');
 const app = require('../src/app');
 const { attachLive } = require('../src/live');
+const { withAuth } = require('./helpers');
 
 let server;
 let wss;
 let baseUrl;
+let api;
 
 beforeAll((done) => {
   server = http.createServer(app);
   wss = attachLive(server);
+  api = withAuth(request(server));
   server.listen(0, () => {
     baseUrl = `ws://localhost:${server.address().port}`;
     done();
@@ -48,27 +51,27 @@ describe('WebSocket /live', () => {
 
   it('broadcasts spot.created with the new spot', async () => {
     const message = nextMessage(socket);
-    const res = await request(server).post('/api/spots').send({ name: 'Live Spot', category: 'cafe' });
+    const res = await api.post('/api/spots').send({ name: 'Live Spot', category: 'cafe' });
     expect(await message).toEqual({ type: 'spot.created', spot: res.body });
   });
 
   it('broadcasts spot.updated with the updated spot', async () => {
     const message = nextMessage(socket);
-    const res = await request(server).patch('/api/spots/spot-2').send({ openNow: false });
+    const res = await api.patch('/api/spots/spot-2').send({ openNow: false });
     expect(await message).toEqual({ type: 'spot.updated', spot: res.body });
   });
 
   it('broadcasts spot.deleted with the id', async () => {
-    const { id } = (await request(server).post('/api/spots').send({ name: 'Doomed', category: 'bar' })).body;
+    const { id } = (await api.post('/api/spots').send({ name: 'Doomed', category: 'bar' })).body;
     const message = nextMessage(socket);
-    await request(server).delete(`/api/spots/${id}`).expect(204);
+    await api.delete(`/api/spots/${id}`).expect(204);
     expect(await message).toEqual({ type: 'spot.deleted', id });
   });
 
   it('reaches every connected client', async () => {
     const other = await connect();
     const messages = Promise.all([nextMessage(socket), nextMessage(other)]);
-    await request(server).patch('/api/spots/spot-3').send({ rating: 4.2 });
+    await api.patch('/api/spots/spot-3').send({ rating: 4.2 });
     const [a, b] = await messages;
     expect(a).toEqual(b);
     expect(a.type).toBe('spot.updated');
@@ -79,7 +82,7 @@ describe('WebSocket /live', () => {
     const received = [];
     socket.on('message', (data) => received.push(JSON.parse(data.toString())));
     const send = () =>
-      request(server).patch('/api/spots/spot-4').set('Idempotency-Key', 'live-replay').send({ openNow: true });
+      api.patch('/api/spots/spot-4').set('Idempotency-Key', 'live-replay').send({ openNow: true });
     await send();
     await send();
     await new Promise((r) => setTimeout(r, 100));
@@ -89,7 +92,7 @@ describe('WebSocket /live', () => {
   it('does not broadcast a rejected (409) write', async () => {
     const received = [];
     socket.on('message', (data) => received.push(JSON.parse(data.toString())));
-    await request(server).patch('/api/spots/spot-6').send({ name: 'Stale', updatedAt: 0 }).expect(409);
+    await api.patch('/api/spots/spot-6').send({ name: 'Stale', updatedAt: 0 }).expect(409);
     await new Promise((r) => setTimeout(r, 100));
     expect(received).toEqual([]);
   });

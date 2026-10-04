@@ -6,6 +6,9 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
+/// Ids of rows created offline that the server has not assigned an id to yet.
+const localIdPrefix = 'local:';
+
 @DriftDatabase(tables: [Spots, Reviews, Outbox])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'unieats'));
@@ -13,7 +16,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.renameColumn(reviews, 'body', reviews.reviewText);
+      }
+    },
+  );
 
   Stream<List<Spot>> watchSpots({String query = '', SpotCategory? category}) {
     final pattern = '%${query.trim()}%';
@@ -87,12 +99,17 @@ class AppDatabase extends _$AppDatabase {
       .watch()
       .map((rows) => rows.map((r) => r.toReview()).toList());
 
-  /// Makes the local reviews of [spotId] match [serverReviews] in one transaction.
+  /// Makes the local reviews of [spotId] match [serverReviews] in one
+  /// transaction, keeping reviews still waiting in the outbox.
   Future<void> replaceReviews(String spotId, List<Review> serverReviews) =>
       transaction(() async {
         final ids = serverReviews.map((r) => r.id).toList();
-        await (delete(reviews)
-          ..where((t) => t.spotId.equals(spotId) & t.id.isNotIn(ids))).go();
+        await (delete(reviews)..where(
+          (t) =>
+              t.spotId.equals(spotId) &
+              t.id.isNotIn(ids) &
+              t.id.like('$localIdPrefix%').not(),
+        )).go();
         await batch((b) {
           for (final review in serverReviews) {
             b.insert(
@@ -103,6 +120,19 @@ class AppDatabase extends _$AppDatabase {
           }
         });
       });
+
+  Future<void> insertReview(Review review) =>
+      into(reviews).insert(review.toCompanion());
+
+  /// Swaps an optimistic `local:` review for the one the server created.
+  Future<void> confirmReview(String localId, Review saved) =>
+      transaction(() async {
+        await (delete(reviews)..where((t) => t.id.equals(localId))).go();
+        await into(reviews).insertOnConflictUpdate(saved.toCompanion());
+      });
+
+  Future<void> deleteReview(String id) =>
+      (delete(reviews)..where((t) => t.id.equals(id))).go();
 
   Future<void> enqueue({
     required String opId,
@@ -181,7 +211,7 @@ extension ReviewRowMapping on ReviewRow {
     spotId: spotId,
     author: author,
     stars: stars,
-    text: body,
+    text: reviewText,
     createdAt: createdAt,
   );
 }
@@ -192,7 +222,7 @@ extension ReviewMapping on Review {
     spotId: spotId,
     author: author,
     stars: stars,
-    body: text,
+    reviewText: text,
     createdAt: createdAt,
   );
 }

@@ -27,7 +27,9 @@ class Reviews extends Table {
   TextColumn get spotId => text()();
   TextColumn get author => text()();
   IntColumn get stars => integer()();
-  TextColumn get body => text()();
+
+  /// Was `body` in schema v1; v2 renamed the SQL column to match the API's `text`.
+  TextColumn get reviewText => text().named('text')();
   IntColumn get createdAt => integer()();
 
   @override
