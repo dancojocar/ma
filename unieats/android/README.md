@@ -1,35 +1,40 @@
-# UniEats Android — tag `l04-nav`
+# UniEats Android — tag `l05-rest`
 
-Real navigation: a Navigation Compose `NavHost` with type-safe routes, the detail screen receives
-only the spot **id**, and two deep links open a spot directly. Search, category filter and
-favourites from l03 are still there.
+The list and the detail screen now come from the UniEats server over HTTP (Ktor + kotlinx
+serialization). Search, category filter and favourites still work; search and filter are sent to
+the server as `q` and `category`.
 
 ## Run
 
 ```bash
-./gradlew -p unieats/android :app:installDebug
+cd unieats/server && npm install && npm start      # http://localhost:3000
+./gradlew -p unieats/android :app:installDebug     # emulator reaches the laptop as 10.0.2.2
 ```
+
+On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
+`./gradlew -p unieats/android :app:installDebug -Punieats.serverHost=localhost:3000`.
 
 ## What to look at
 
-- `ui/navigation/NavGraph.kt` — `@Serializable` routes `SpotList` and `SpotDetail(spotId)`;
-  `navController.navigate(SpotDetail(id))`; the detail destination declares two `navDeepLink`s.
-- `ui/spotdetail/SpotDetailViewModel.kt` — reads its argument with
-  `savedStateHandle.toRoute<SpotDetail>()` and looks the spot up in the repository (it never gets
-  the object itself, so a deep link and a tap take the same path).
-- `AndroidManifest.xml` — two `VIEW` + `BROWSABLE` intent-filters: `unieats://spots/…` and
-  `https://unieats.app/spots/…`.
+- `di/AppModule.kt` — one `HttpClient(OkHttp)` with `HttpTimeout` (connect 10 s, request 15 s),
+  `HttpRequestRetry` (3 tries, exponential back-off), JSON content negotiation and the base URL
+  `http://10.0.2.2:3000/api/` (`BuildConfig.API_BASE_URL`).
+- `data/remote/ApiClient.kt` — `GET /spots?page&limit&q&category`, `GET /spots/{id}`,
+  `GET /spots/{id}/reviews`. The list endpoint returns a wrapper (`SpotsPage`), not a bare array.
+- `data/remote/ApiResult.kt` + `data/repository/SpotRepository.kt` — every call returns a
+  `Result`; failures become a readable message (no swallowed exceptions).
+- `ui/spotlist/SpotListViewModel.kt` — explicit `isLoading` / `errorMessage` / empty states,
+  `refresh()` for pull-to-refresh, `loadNextPage()` with `currentPage` + `hasNextPage`.
+- `ui/spotlist/SpotListScreen.kt` — `PullToRefreshBox`, a full-screen error with **Retry**, a
+  snackbar with Retry when a refresh or next page fails, and infinite scroll that stops when the
+  server says `hasNextPage: false` (25 seeded spots = page 1 with 20, page 2 with 5).
+- Photos come from each spot's `photoUrl` (Coil).
+- The detail screen loads the spot and its reviews (read-only — adding a review needs login,
+  which arrives at `l08-auth`).
 
-## Try the deep links (emulator or phone with USB debugging)
+## Try the failure paths
 
-```bash
-adb shell am start -W -a android.intent.action.VIEW -d "unieats://spots/spot-3" com.unieats.app
-adb shell am start -W -a android.intent.action.VIEW -d "https://unieats.app/spots/spot-3" com.unieats.app
-```
-
-Both open "Pizza Stop"; Back goes to the list (Navigation builds the back stack for you). An unknown
-id shows "Spot not found". The https link is marked `autoVerify`, but without a
-`/.well-known/assetlinks.json` on unieats.app Android will not verify it, so a browser tap opens the
-browser; passing the package name as above (or
-`adb shell pm set-app-links-user-selection --user 0 --package com.unieats.app true unieats.app`)
-routes it to the app.
+- Stop the server and pull to refresh / relaunch: after 3 tries you get the error state + Retry.
+- The server's chaos headers (`X-Chaos-Delay`, `X-Chaos-Status`, `X-Chaos-Malformed`,
+  `X-Chaos-Drop`) all end in a message, never a crash.
+- Use App Inspection → Network Inspector to watch the calls.

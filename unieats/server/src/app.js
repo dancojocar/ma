@@ -1,10 +1,12 @@
 const express = require('express');
 const { chaos } = require('./middleware');
+const { sendError } = require('./errors');
 const spotsRouter = require('./routes/spots');
 
 const app = express();
 
 app.use(chaos);
+app.use(express.json());
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true });
@@ -13,12 +15,16 @@ app.get('/api/health', (req, res) => {
 app.use('/api/spots', spotsRouter);
 
 app.use((req, res) => {
-  res.status(404).json({ error: { code: 'not_found', message: 'Route not found' } });
+  sendError(res, 404, 'not_found', 'Route not found');
 });
 
 app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err.type === 'entity.parse.failed') {
+    return sendError(res, 400, 'validation', 'Request body is not valid JSON');
+  }
   console.error(err);
-  res.status(500).json({ error: { code: 'server_error', message: 'Internal server error' } });
+  return sendError(res, 500, 'server_error', 'Internal server error');
 });
 
 module.exports = app;

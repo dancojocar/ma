@@ -18,6 +18,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // 10.0.2.2 is the emulator's alias for the laptop. On a phone, run
+        // `adb reverse tcp:3000 tcp:3000` and build with -Punieats.serverHost=localhost:3000.
+        val serverHost = providers.gradleProperty("unieats.serverHost").getOrElse("10.0.2.2:3000")
+        buildConfigField("String", "API_BASE_URL", "\"http://$serverHost/api/\"")
     }
 
     buildTypes {
@@ -37,6 +42,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -67,6 +73,9 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.lifecycle.viewmodel.compose)
 
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.coil.compose)

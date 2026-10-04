@@ -1,26 +1,31 @@
-# UniEats iOS — l04-nav
+# UniEats iOS — l05-rest
 
-Navigation + deep links on top of the l03 list (search, category filter and favourites kept).
+The list and detail now come from the UniEats server over HTTP (URLSession + async/await).
 
-- `SpotListView` owns a `NavigationStack(path:)` whose path is `[String]` — the stack pushes the
-  spot **ID**, not the `Spot` object. `NavigationLink(value: spot.id)` +
-  `.navigationDestination(for: String.self) { SpotDetailView(spotId: $0) }`.
-- `SpotDetailView(spotId:)` resolves the spot itself (and shows "Spot not found" for a bad id).
-- Deep links: `.onOpenURL` → `DeepLink.spotId(from:)` → `path = [id]`.
-  - `unieats://spots/<id>` — registered in `UniEats/Info.plist` (`CFBundleURLTypes`).
-  - `https://unieats.app/spots/<id>` — `applinks:unieats.app` in `UniEats/UniEats.entitlements`.
-    A universal link only opens the app once `https://unieats.app/.well-known/apple-app-site-association`
-    lists the app's Team ID + bundle id; without that file use the custom scheme for the demo.
+- `Network/ApiClient.swift` — `URLSession` with 15 s request / 30 s resource timeouts;
+  `GET /api/spots?page&limit&q&category`, `GET /api/spots/:id`, `GET /api/spots/:id/reviews`.
+  Non-2xx responses become `ApiError.http`, transport failures `.noConnectivity` / `.timeout`,
+  bad JSON `.decodingFailed` (try the chaos headers: nothing crashes).
+- `SpotListViewModel` — manual pagination: `currentPage`, `isLoadingMore` (reset in `defer`),
+  stops when `hasNextPage == false`; search (debounced 300 ms) and category are sent to the
+  server as `q` / `category` and restart at page 1; `errorMessage` drives the error UI.
+- `SpotListView` — loading, error (with **Retry**), empty and list states; pull-to-refresh;
+  infinite scroll (the last row's `.task` loads the next page); `AsyncImage` from `photoUrl`.
+- `SpotDetailView` — loads the spot by id and its reviews (read-only "Reviews (N)" section).
+  Adding a review needs login and arrives at l08.
 
 ## Run
 
-`open UniEats.xcodeproj`, pick an iPhone simulator, Cmd+R. Then, with the app installed:
-
 ```bash
-xcrun simctl openurl booted "unieats://spots/spot-3"    # opens Pizza Stop directly
+cd ../server && npm ci && npm start      # http://localhost:3000, 25 seeded spots → 2 pages
+open UniEats.xcodeproj                   # pick an iPhone simulator, Cmd+R
 ```
 
-Command-line build:
+The simulator shares the Mac's network, so `http://localhost:3000/api` reaches the server
+(`NSAllowsLocalNetworking` permits plain http to localhost). To point at another server set
+the scheme environment variable `UNIEATS_API_URL` (e.g. `http://192.168.1.20:3000/api`).
+
+Build from the command line:
 
 ```bash
 xcodebuild -project UniEats.xcodeproj -scheme UniEats \
