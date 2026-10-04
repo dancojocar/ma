@@ -4,3 +4,5 @@ import { Platform } from "react-native";
 const DEV_HOST = Platform.OS === "android" ? "10.0.2.2" : "localhost";
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? `http://${DEV_HOST}:3000/api`;
+
+export const LIVE_URL = `${API_URL.replace(/^http/, "ws").replace(/\/api\/?$/, "")}/live`;

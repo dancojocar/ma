@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/network/api_client.dart';
 import '../data/network/api_config.dart';
+import '../data/network/live_updates.dart';
 import '../domain/models.dart';
 
 final dioProvider = Provider<Dio>((ref) {
@@ -14,6 +16,33 @@ final dioProvider = Provider<Dio>((ref) {
 final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(ref.watch(dioProvider)),
 );
+
+class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
+  @override
+  AppLifecycleState build() {
+    final listener = AppLifecycleListener(onStateChange: (s) => state = s);
+    ref.onDispose(listener.dispose);
+    return WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
+  }
+}
+
+final appLifecycleProvider =
+    NotifierProvider<AppLifecycleNotifier, AppLifecycleState>(
+      AppLifecycleNotifier.new,
+    );
+
+/// Open only while someone watches it (autoDispose) and the app is in the
+/// foreground; going to the background closes the socket, coming back
+/// reconnects.
+final liveEventsProvider = StreamProvider.autoDispose<LiveEvent>((ref) {
+  final foreground = ref.watch(
+    appLifecycleProvider.select(
+      (s) => s == AppLifecycleState.resumed || s == AppLifecycleState.inactive,
+    ),
+  );
+  if (!foreground) return const Stream.empty();
+  return liveSpotEvents(liveUrl);
+});
 
 class SpotListUiState {
   const SpotListUiState({
@@ -81,8 +110,9 @@ class SpotPages {
 }
 
 /// Page-by-page `GET /spots` for the current search query and category.
-/// Changing either filter rebuilds it from page 1.
-class SpotPagesNotifier extends AsyncNotifier<SpotPages> {
+/// Changing either filter rebuilds it from page 1. Live WebSocket events patch
+/// the loaded pages in place.
+class SpotPagesNotifier extends AutoDisposeAsyncNotifier<SpotPages> {
   static const pageSize = 20;
 
   int _generation = 0;
@@ -95,6 +125,9 @@ class SpotPagesNotifier extends AsyncNotifier<SpotPages> {
     );
     final cancelToken = CancelToken();
     ref.onDispose(cancelToken.cancel);
+    ref.listen(liveEventsProvider, (_, next) {
+      if (next.valueOrNull case final event?) _applyLiveEvent(event);
+    });
 
     if (query.isNotEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -152,6 +185,43 @@ class SpotPagesNotifier extends AsyncNotifier<SpotPages> {
     }
   }
 
+  void _applyLiveEvent(LiveEvent event) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final spots = switch (event) {
+      SpotChanged(:final spot) when current.spots.any((s) => s.id == spot.id) =>
+        [for (final s in current.spots) s.id == spot.id ? spot : s],
+      SpotChanged(:final spot)
+          when !current.hasNextPage && _matches(current, spot) =>
+        [...current.spots, spot],
+      SpotDeleted(:final id) => [
+        for (final s in current.spots)
+          if (s.id != id) s,
+      ],
+      _ => null,
+    };
+    if (spots == null) return;
+    state = AsyncData(
+      SpotPages(
+        query: current.query,
+        category: current.category,
+        spots: spots,
+        page: current.page,
+        hasNextPage: current.hasNextPage,
+        isLoadingMore: current.isLoadingMore,
+        loadMoreError: current.loadMoreError,
+      ),
+    );
+  }
+
+  bool _matches(SpotPages pages, Spot spot) {
+    final query = pages.query.toLowerCase();
+    return (pages.category == null || spot.category == pages.category) &&
+        (query.isEmpty ||
+            spot.name.toLowerCase().contains(query) ||
+            spot.description.toLowerCase().contains(query));
+  }
+
   SpotPages _copy(
     SpotPages s, {
     bool isLoadingMore = false,
@@ -167,9 +237,10 @@ class SpotPagesNotifier extends AsyncNotifier<SpotPages> {
   );
 }
 
-final spotPagesProvider = AsyncNotifierProvider<SpotPagesNotifier, SpotPages>(
-  SpotPagesNotifier.new,
-);
+final spotPagesProvider =
+    AsyncNotifierProvider.autoDispose<SpotPagesNotifier, SpotPages>(
+      SpotPagesNotifier.new,
+    );
 
 final spotDetailProvider = FutureProvider.autoDispose.family<Spot, String>(
   (ref, id) => ref.watch(apiClientProvider).fetchSpot(id),
