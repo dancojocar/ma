@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import com.unieats.app.ui.login.LoginScreen
+import com.unieats.app.ui.nearby.NearbyScreen
 import com.unieats.app.ui.spotdetail.SpotDetailScreen
 import com.unieats.app.ui.spotlist.SpotListScreen
 import kotlinx.serialization.Serializable
@@ -26,6 +27,9 @@ object SpotList
 
 @Serializable
 data class SpotDetail(val spotId: String)
+
+@Serializable
+object Nearby
 
 const val DEEP_LINK_APP = "unieats://spots"
 const val DEEP_LINK_WEB = "https://unieats.app/spots"
@@ -59,7 +63,15 @@ fun UniEatsNavGraph(
         composable<SpotList> {
             SpotListScreen(
                 onSpotClick = { spotId -> navController.navigate(SpotDetail(spotId)) },
+                onNearbyClick = { navController.navigate(Nearby) },
                 onLogout = sessionViewModel::logout
+            )
+        }
+
+        composable<Nearby> {
+            NearbyScreen(
+                onBack = { navController.popBackStack() },
+                onSpotClick = { spotId -> navController.navigate(SpotDetail(spotId)) }
             )
         }
 
