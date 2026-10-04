@@ -16,8 +16,12 @@ struct OfflineUpsertTests {
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         let api = ApiClient(baseURL: URL(string: "http://127.0.0.1:9/api")!)
+        // An isolated, empty keychain item: a session left by a manual run or the Maestro flow
+        // would otherwise let editSpot's background sync run against the torn-down container.
+        let keychain = KeychainHelper(account: "tests.session.jwt")
+        keychain.delete()
         repository = SpotRepository(
-            context: container.mainContext, api: api, session: SessionStore(api: api, keychain: KeychainHelper())
+            context: container.mainContext, api: api, session: SessionStore(api: api, keychain: keychain)
         )
     }
 

@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 const DISMISS_FRACTION = 0.35;
 
@@ -20,7 +21,7 @@ export function SwipeToDismiss({ children, onDismiss }: { children: ReactNode; o
       if (Math.abs(e.translationX) > width * DISMISS_FRACTION) {
         const target = Math.sign(e.translationX) * width;
         translateX.value = withTiming(target, { duration: 200 }, (finished) => {
-          if (finished) runOnJS(onDismiss)();
+          if (finished) scheduleOnRN(onDismiss);
         });
       } else {
         translateX.value = withTiming(0, { duration: 200 });
@@ -47,7 +48,7 @@ export function SwipeToDismiss({ children, onDismiss }: { children: ReactNode; o
 
 const styles = StyleSheet.create({
   behind: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

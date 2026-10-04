@@ -18,7 +18,7 @@ class NotificationService {
 
   Future<void> _init() async {
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(),
       ),
@@ -33,10 +33,10 @@ class NotificationService {
   Future<void> showSpotUpdated(String spotId, String spotName) async {
     await init();
     await _plugin.show(
-      spotId.hashCode,
-      'Spot updated',
-      '$spotName was updated',
-      const NotificationDetails(
+      id: spotId.hashCode,
+      title: 'Spot updated',
+      body: '$spotName was updated',
+      notificationDetails: const NotificationDetails(
         android: _channel,
         iOS: DarwinNotificationDetails(),
       ),

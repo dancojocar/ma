@@ -13,7 +13,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.utils.io.readUTF8Line
+import io.ktor.utils.io.LineEnding
+import io.ktor.utils.io.readLine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -56,7 +57,8 @@ class AiDescribeClient @Inject constructor(
             val channel = response.bodyAsChannel()
             val parser = ServerSentEventParser()
             while (true) {
-                val line = channel.readUTF8Line()
+                // SSE allows CR, LF or CRLF line endings; readLine's default accepts only LF/CRLF.
+                val line = channel.readLine(LineEnding.Lenient)
                 val event = if (line == null) parser.finish() else parser.accept(line)
                 if (event != null) {
                     when (event.event) {

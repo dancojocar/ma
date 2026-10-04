@@ -2,6 +2,7 @@ name: Native CI
 
 on:
   push:
+    branches: [master, unieats-2026]
     paths:
       - "unieats/android/**"
       - "unieats/ios/**"

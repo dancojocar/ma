@@ -1870,8 +1870,12 @@ class $$SpotsTableTableManager
                   p0
                       .map(
                         (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
+                          e.readTable<$SpotsTable, SpotRow>(table),
+                          BaseReferences<_$AppDatabase, $SpotsTable, SpotRow>(
+                            db,
+                            table,
+                            e,
+                          ),
                         ),
                       )
                       .toList(),
@@ -2092,8 +2096,12 @@ class $$ReviewsTableTableManager
                   p0
                       .map(
                         (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
+                          e.readTable<$ReviewsTable, ReviewRow>(table),
+                          BaseReferences<
+                            _$AppDatabase,
+                            $ReviewsTable,
+                            ReviewRow
+                          >(db, table, e),
                         ),
                       )
                       .toList(),
@@ -2306,8 +2314,12 @@ class $$OutboxTableTableManager
                   p0
                       .map(
                         (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
+                          e.readTable<$OutboxTable, OutboxOp>(table),
+                          BaseReferences<_$AppDatabase, $OutboxTable, OutboxOp>(
+                            db,
+                            table,
+                            e,
+                          ),
                         ),
                       )
                       .toList(),

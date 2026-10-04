@@ -1,10 +1,10 @@
-# UniEats – React Native (Expo SDK 52)
+# UniEats – React Native (Expo SDK 57)
 
 Tag `l14-tests`: the complete app plus its tests.
 
-- **Unit tests** (Jest, `jest-expo` preset): `src/__tests__/syncConflict.test.ts` (last-write-wins rule incl.
-  the tie), `modelSchemas.test.ts` (Zod schemas from `@unieats/shared`), `sse.test.ts` (the streaming parser).
-  Run `npm test`.
+- **Unit tests** (Jest 29, `jest-expo` preset, which on SDK 57 needs the `@react-native/jest-preset` dev
+  dependency): `src/__tests__/syncConflict.test.ts` (last-write-wins rule incl. the tie), `modelSchemas.test.ts`
+  (Zod schemas from `@unieats/shared`), `sse.test.ts` (the streaming parser). Run `npm test`.
 - **Maestro flow** `maestro/rn.yaml`: sign in → first spot (`testID="spot-list-item"`) → detail shows
   `Reviews (n)` (`spot-detail-reviews`) → "Describe this dish" (`describe-dish-button`) streams text → back.
   Needs the server running and a dev build on an emulator:
@@ -40,9 +40,15 @@ Start the server first: `cd unieats/server && npm ci && npm start` (port 3000). 
 ```bash
 cd unieats/rn
 npm ci
-npx expo run:android      # dev build on the emulator (deep links, notifications)
-# or: npx expo start  and open it in Expo Go for SDK 52 (https://expo.dev/go)
+npx expo run:android      # dev build on the emulator (deep links, notifications, the Maestro flow)
+# Expo Go (SDK 57) cannot load the app on Android: importing expo-notifications throws there
 ```
+
+`npx expo run:android` works with Android Studio's bundled Java 25: the `plugins/withPrefabNativeAccess.js`
+config plugin makes the generated `android/gradlew` pass the JDK 24+ native-access flag that AGP 8.12's Prefab
+step needs. Expo Go is not an option on Android from l09 on: Expo Go for SDK 57 refuses to load expo-notifications
+there (push support was removed in SDK 53), although UniEats only uses local notifications. The dev build also
+carries the `app.json` plugin settings, the `unieats://` / https deep links and the Maestro `appId`.
 
 Checks: `npx tsc --noEmit`, `npm test`, `npx expo-doctor`.
 

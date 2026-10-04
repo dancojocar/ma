@@ -1,13 +1,13 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// The JWT lives in the Keychain (iOS, readable after the first unlock, never
-/// migrated to another device) and in EncryptedSharedPreferences (Android).
+/// migrated to another device) and, on Android, in SharedPreferences encrypted
+/// with AES-GCM under a key wrapped by the Android Keystore.
 class TokenStore {
   TokenStore([FlutterSecureStorage? storage])
     : _storage =
           storage ??
           const FlutterSecureStorage(
-            aOptions: AndroidOptions(encryptedSharedPreferences: true),
             iOptions: IOSOptions(
               accessibility: KeychainAccessibility.first_unlock_this_device,
             ),

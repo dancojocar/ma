@@ -1,27 +1,27 @@
 [versions]
-agp = "8.8.0"
-kotlin = "2.3.20"
-ksp = "2.3.6"
-composeBom = "2025.05.00"
-hilt = "2.58"
-hiltNavigationCompose = "1.2.0"
-navigationCompose = "2.9.0"
-ktor = "3.1.0"
-room = "2.7.1"
-datastore = "1.1.2"
-kotlinxSerialization = "1.8.0"
-kotlinxCoroutines = "1.10.1"
-coil = "3.1.0"
-coreKtx = "1.16.0"
-lifecycleRuntimeKtx = "2.9.0"
-activityCompose = "1.10.1"
-work = "2.10.1"
+agp = "9.4.1"
+kotlin = "2.4.20"
+ksp = "2.3.12"
+composeBom = "2026.09.00"
+hilt = "2.60.1"
+hiltLifecycleViewmodelCompose = "1.4.0"
+navigationCompose = "2.10.2"
+ktor = "3.6.0"
+room = "2.8.5"
+datastore = "1.2.1"
+kotlinxSerialization = "1.11.0"
+kotlinxCoroutines = "1.11.0"
+coil = "3.6.3"
+coreKtx = "1.19.1"
+lifecycleRuntimeKtx = "2.11.0"
+activityCompose = "1.13.0"
+work = "2.12.0"
 securityCrypto = "1.1.0"
-playServicesLocation = "21.3.0"
+playServicesLocation = "21.4.0"
 junit = "4.13.2"
 mockk = "1.14.11"
 turbine = "1.2.1"
-androidxHilt = "1.2.0"
+androidxHilt = "1.4.0"
 
 [libraries]
 # AndroidX Core
@@ -38,6 +38,7 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 # Navigation
@@ -46,7 +47,7 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 # Hilt
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+hilt-lifecycle-viewmodel-compose = { group = "androidx.hilt", name = "hilt-lifecycle-viewmodel-compose", version.ref = "hiltLifecycleViewmodelCompose" }
 
 # WorkManager
 androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
@@ -89,8 +90,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
