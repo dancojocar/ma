@@ -9,10 +9,11 @@ each topic *adds*.
 ```
 unieats/
   server/    Node/Express REST + JWT + WebSocket + SSE + chaos mode  (grows per tag, see below)
-  android/   Kotlin · Compose · Hilt · Ktor · Room · WorkManager · KMP shared module
-  ios/       Swift · SwiftUI · SwiftData · URLSession            (needs a Mac; CI-built otherwise)
-  flutter/   Dart · Riverpod · Drift · dio · go_router           (Android + iOS shells included)
-  rn/        Expo SDK 52 · TypeScript · expo-router · Zustand · TanStack Query · expo-sqlite
+  android/   Kotlin 2.4 · Compose · Hilt · Ktor · Room · WorkManager · KMP shared module
+             Gradle 9.8 · AGP 9.4 · compileSdk 37 — opens in Android Studio 2026.2+ with its bundled JDK
+  ios/       Swift 6 · SwiftUI · SwiftData · URLSession · Xcode 27  (needs a Mac; CI-built otherwise)
+  flutter/   Flutter 3.47 · Riverpod · Drift · dio · go_router   (Android + iOS shells, AGP 9, SwiftPM)
+  rn/        Expo SDK 57 · React Native 0.86 · expo-router · Zustand · TanStack Query · expo-sqlite
   maestro/   runner for the per-stack end-to-end flows
 ```
 
@@ -54,7 +55,8 @@ Run commands per stack (from `unieats/`):
 ```bash
 ./android/gradlew -p android :app:installDebug          # Android emulator or device
 cd flutter && flutter run                               # Android or iOS
-cd rn && npx expo run:android                           # Expo Go cannot open SDK 52 projects
+cd rn && npx expo start                                 # Expo Go works for l01–l08
+cd rn && npx expo run:android                           # dev build; required from l09 (expo-notifications)
 open ios/UniEats.xcodeproj                              # Run on the iOS simulator
 ```
 
@@ -63,24 +65,22 @@ and accept an override (`--dart-define=API_BASE_URL=…`, `EXPO_PUBLIC_API_URL=�
 near 44.427 N, 26.103 E (Bucharest); set the emulator location there for the L09 Nearby screen
 (`adb emu geo fix 26.103 44.427`).
 
-## Verification (2026-10-03, every tag from a clean checkout)
+## Verification (2026-10-04, every tag from a clean checkout)
 
-Test gates run where tests exist: client unit tests arrive at `l14-tests` (the RN `test` script too); before that the gate is build + analyze.
+Toolchain: Android Studio 2026.2 (bundled JDK 25.0.3) and JDK 21, Flutter 3.47.6, Node 26, Xcode 27.
+Test gates run where tests exist: client unit tests arrive at `l14-tests` (the RN `test` script too);
+before that the gate is build + analyze.
 
 | Stack | Gate | Result |
 |---|---|---|
 | server | `npm ci && npm test` | pass at all 14 tags (21 → 219 tests) |
-| android | `:app:assembleDebug`, `:app:testDebugUnitTest`, `:shared:allTests` (l12+) | pass; 0 Kotlin warnings; 25 tests at l14 (22 app + 3 shared, the shared ones on 3 targets) |
-| flutter | `flutter analyze` (0 issues), `flutter test`, `flutter build apk --debug` | pass; 26 tests at l14 |
-| rn | `npm ci && npx tsc --noEmit && npm test && npx expo export` | pass; 21 tests at l14 |
+| android | `:app:assembleDebug` on JDK 25 **and** JDK 21, `:app:testDebugUnitTest`, `:shared:allTests` (l12+), `lintDebug` at l14 | pass; 0 Kotlin warnings; 25 tests at l14 (22 app + 3 shared on 2 targets); lint 0 errors |
+| flutter | `flutter analyze` (0 issues), `flutter test`, `flutter build apk --debug` on JDK 25 and JDK 21, iOS simulator build at l01/l07/l14 | pass; 26 tests at l14 |
+| rn | `npm ci && npx tsc --noEmit && npx expo-doctor && npm test && npx expo export`; `expo prebuild` + `assembleDebug` on JDK 25 at l01/l08/l14 | pass; 21 tests at l14 |
 | ios | `xcodebuild … build` (0 warnings), `UniEatsTests` at l14 | pass; 11 tests at l14 |
-| maestro | `maestro check-syntax` on all four flows; all four flows executed on an emulator/simulator | pass |
+| maestro | `maestro check-syntax` on all four flows; all four flows executed on the `unieats35` emulator / iPhone 17 simulator | pass |
 
 Known limits, stated honestly:
-- 2026-10-04: the Android, Flutter and React Native Maestro flows pass on a Pixel 7 / API 35
-  emulator (`avdmanager create avd -n unieats35 -k "system-images;android-35;google_apis;arm64-v8a" -d pixel_7`),
-  the iOS and Flutter flows pass on the iPhone 17 simulator, and `unieats://spots/spot-3` opens the
-  Android app via `adb shell am start`. The RN flow needs Metro running (`npx expo start --dev-client`).
 - `https://unieats.app/...` links need a hosted assetlinks/AASA file to open the app directly; the
   custom scheme works everywhere. Flutter on iOS declares only the custom scheme (no associated domain).
 - At `l08` the Android/iOS READMEs and at `l08`–`l09` the Flutter README show a conflict-demo `curl -X PATCH`
@@ -91,3 +91,11 @@ Known limits, stated honestly:
   launch; delete the app once. Fixed at `l14`.
 - The Claude path of `/api/ai/describe` was tested with the SDK mocked; the template fallback is
   what runs without a key.
+- Android needs Studio 2026.2 or newer (AGP 9.4); Flutter needs 3.47 or newer (`pubspec` enforces it);
+  the Flutter first build at `l07`+ downloads a prebuilt SQLite, so it needs internet once.
+- RN on SDK 57 still ships AGP 8.12 under the hood; a local config plugin makes the generated `gradlew`
+  pass `--enable-native-access` so `npx expo run:android` works on JDK 25. Building the prebuilt
+  `android/` folder from Studio's own Run button was not tested. Expo Go opens `l01`–`l08`; from `l09`
+  the `expo-notifications` import is rejected by Expo Go on Android, so use a dev build.
+- Reanimated 4.5 keeps `sharedTransitionTag` behind a feature flag, so the RN shared-element idea in
+  L10 is an exercise, not shipped code.
