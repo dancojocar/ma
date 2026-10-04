@@ -1,7 +1,8 @@
 # UniEats — Flutter
 
-Discover campus food spots. This tag (`l01-hello`) is the bare shell: one screen,
-"UniEats / Find your next campus meal."
+Discover campus food spots. This tag (`l02-ui`) shows the 8 canonical campus spots
+(hard-coded in `lib/data/seed_data.dart`) in a `ListView.builder` of `SpotCard`s; tapping a
+card pushes `SpotDetailScreen` with that spot.
 
 ## Run
 
