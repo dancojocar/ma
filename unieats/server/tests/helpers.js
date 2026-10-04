@@ -2,8 +2,10 @@ const { issue } = require('../src/jwt');
 
 const DEMO_USER = { id: 'user-1', email: 'student@unieats.app', displayName: 'Demo Student' };
 
+const authHeader = () => `Bearer ${issue(DEMO_USER)}`;
+
 function withAuth(agent) {
-  const auth = `Bearer ${issue(DEMO_USER)}`;
+  const auth = authHeader();
   return {
     post: (url) => agent.post(url).set('Authorization', auth),
     patch: (url) => agent.patch(url).set('Authorization', auth),
@@ -11,4 +13,4 @@ function withAuth(agent) {
   };
 }
 
-module.exports = { DEMO_USER, withAuth };
+module.exports = { DEMO_USER, authHeader, withAuth };
