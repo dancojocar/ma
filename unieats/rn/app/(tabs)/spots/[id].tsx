@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { describeError } from "../../../src/api/errors";
 import { AddReviewForm } from "../../../src/components/AddReviewForm";
+import { DescribeDishSection } from "../../../src/components/DescribeDishSection";
 import { EditSpotForm } from "../../../src/components/EditSpotForm";
 import { ReviewList } from "../../../src/components/ReviewList";
 import { SpotDetail } from "../../../src/components/SpotDetail";
@@ -44,6 +45,7 @@ export default function SpotDetailScreen() {
         isFavourite={isFavourite}
         onToggleFavourite={() => toggleFavourite(spot.id)}
       >
+        <DescribeDishSection spot={spot} />
         {editing ? (
           <EditSpotForm
             initial={spot}

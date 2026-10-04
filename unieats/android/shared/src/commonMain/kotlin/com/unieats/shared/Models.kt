@@ -81,3 +81,7 @@ data class RemoteFlags(
 
 @Serializable
 data class ConfigResponse(val flags: RemoteFlags = RemoteFlags())
+
+/** Body of POST /api/ai/describe: the full spot, including openNow. */
+@Serializable
+data class DescribeRequest(val spot: Spot)
