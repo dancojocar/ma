@@ -2,7 +2,6 @@ name: Cross-platform CI
 
 on:
   push:
-    branches: [master, unieats-2026]
     paths:
       - "unieats/flutter/**"
       - "unieats/rn/**"
@@ -22,7 +21,7 @@ on:
         default: false
 
 env:
-  FLUTTER_VERSION: "3.47.6"
+  FLUTTER_VERSION: "3.41.4"
   MAESTRO_VERSION: "2.0.10"
 
 jobs:
@@ -55,10 +54,8 @@ jobs:
       - name: Unit tests
         run: flutter test
 
-      # sqlite3's build hook downloads a prebuilt SQLite on first build; a corrupted download
-      # fails the hash check, so retry once from a clean state before giving up.
       - name: Build debug APK
-        run: flutter build apk --debug || (flutter clean && flutter pub get && flutter build apk --debug)
+        run: flutter build apk --debug
 
       - uses: actions/upload-artifact@v4
         with:
