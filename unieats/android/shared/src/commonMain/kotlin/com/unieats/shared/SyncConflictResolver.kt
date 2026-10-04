@@ -1,6 +1,4 @@
-package com.unieats.app.data.sync
-
-import com.unieats.app.data.model.Spot
+package com.unieats.shared
 
 /** Last-write-wins on updatedAt: the server wins only if strictly newer; a tie goes to the client. */
 object SyncConflictResolver {

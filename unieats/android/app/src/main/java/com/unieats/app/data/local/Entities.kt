@@ -3,9 +3,9 @@ package com.unieats.app.data.local
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.unieats.app.data.model.Category
-import com.unieats.app.data.model.Review
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Category
+import com.unieats.shared.Review
+import com.unieats.shared.Spot
 
 @Entity(tableName = "spots")
 data class SpotEntity(

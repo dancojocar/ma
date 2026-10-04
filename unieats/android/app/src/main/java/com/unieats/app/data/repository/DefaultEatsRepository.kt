@@ -6,11 +6,11 @@ import com.unieats.app.data.local.OutboxType
 import com.unieats.app.data.local.UniEatsDatabase
 import com.unieats.app.data.local.toDomain
 import com.unieats.app.data.local.toEntity
-import com.unieats.app.data.model.Category
-import com.unieats.app.data.model.NewReview
-import com.unieats.app.data.model.Review
-import com.unieats.app.data.model.Spot
-import com.unieats.app.data.model.SpotPatch
+import com.unieats.shared.Category
+import com.unieats.shared.NewReview
+import com.unieats.shared.Review
+import com.unieats.shared.Spot
+import com.unieats.shared.SpotPatch
 import com.unieats.app.data.remote.ApiClient
 import com.unieats.app.data.remote.LiveEvent
 import com.unieats.app.data.remote.LiveUpdates
@@ -36,7 +36,7 @@ import javax.inject.Singleton
  * events are written into it, and user edits go to the database first and the outbox second.
  */
 @Singleton
-class SpotRepository @Inject constructor(
+class DefaultEatsRepository @Inject constructor(
     private val db: UniEatsDatabase,
     private val api: ApiClient,
     private val json: Json,
@@ -44,43 +44,39 @@ class SpotRepository @Inject constructor(
     private val notifications: SpotNotificationService,
     liveUpdates: LiveUpdates,
     @ApplicationScope appScope: CoroutineScope
-) {
+) : EatsRepository {
     private val spotDao = db.spotDao()
     private val reviewDao = db.reviewDao()
     private val outboxDao = db.outboxDao()
 
-    /**
-     * true while the WebSocket is connected. Shared by every screen that collects it and closed
-     * as soon as none does (each ViewModel adds its own 5 s grace period via stateIn).
-     */
-    val liveConnection: Flow<Boolean> = liveUpdates.events()
+    // Shared by every screen that collects it and closed as soon as none does (each ViewModel
+    // adds its own 5 s grace period via stateIn).
+    override val liveConnection: Flow<Boolean> = liveUpdates.events()
         .onEach(::applyLiveEvent)
         .map { it != LiveEvent.Disconnected }
         .onStart { emit(false) }
         .distinctUntilChanged()
         .shareIn(appScope, SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
-    fun observeSpots(query: String, category: Category?): Flow<List<Spot>> =
+    override fun observeSpots(query: String, category: Category?): Flow<List<Spot>> =
         spotDao.observeFiltered(query.trim(), category?.apiValue).map { rows -> rows.map { it.toDomain() } }
 
-    fun observeSpot(id: String): Flow<Spot?> = spotDao.observeById(id).map { it?.toDomain() }
+    override fun observeSpot(id: String): Flow<Spot?> = spotDao.observeById(id).map { it?.toDomain() }
 
-    fun observeReviews(spotId: String): Flow<List<Review>> =
+    override fun observeReviews(spotId: String): Flow<List<Review>> =
         reviewDao.observeBySpotId(spotId).map { rows -> rows.map { it.toDomain() } }
 
-    fun observePendingSpotIds(): Flow<Set<String>> = spotDao.observePendingIds().map { it.toSet() }
+    override fun observePendingSpotIds(): Flow<Set<String>> = spotDao.observePendingIds().map { it.toSet() }
 
-    fun observePendingChanges(): Flow<Int> = outboxDao.observeCount()
+    override fun observePendingChanges(): Flow<Int> = outboxDao.observeCount()
 
-    /** Fetches one page into Room and returns the server's hasNextPage. */
-    suspend fun refreshSpots(page: Int, query: String, category: Category?): Result<Boolean> = apiCall {
+    override suspend fun refreshSpots(page: Int, query: String, category: Category?): Result<Boolean> = apiCall {
         val response = api.listSpots(page, query, category)
         saveFromServer(response.spots)
         response.hasNextPage
     }
 
-    /** Every page, for screens that need the whole catalogue (Nearby). */
-    suspend fun refreshAllSpots(): Result<Unit> = apiCall {
+    override suspend fun refreshAllSpots(): Result<Unit> = apiCall {
         var page = 1
         do {
             val response = api.listSpots(page++, query = "", category = null)
@@ -88,18 +84,18 @@ class SpotRepository @Inject constructor(
         } while (response.hasNextPage)
     }
 
-    suspend fun refreshSpot(id: String): Result<Unit> = apiCall { saveFromServer(listOf(api.getSpot(id))) }
+    override suspend fun refreshSpot(id: String): Result<Unit> = apiCall { saveFromServer(listOf(api.getSpot(id))) }
 
-    suspend fun refreshReviews(spotId: String): Result<Unit> = apiCall {
+    override suspend fun refreshReviews(spotId: String): Result<Unit> = apiCall {
         reviewDao.upsertAll(api.getReviews(spotId).map { it.toEntity() })
     }
 
-    suspend fun addReview(spotId: String, stars: Int, text: String): Result<Unit> = apiCall {
+    override suspend fun addReview(spotId: String, stars: Int, text: String): Result<Unit> = apiCall {
         val saved = api.addReview(spotId, NewReview(stars, text.trim()))
         reviewDao.upsertAll(listOf(saved.toEntity()))
     }
 
-    suspend fun editSpot(id: String, name: String, description: String, openNow: Boolean) {
+    override suspend fun editSpot(id: String, name: String, description: String, openNow: Boolean) {
         db.withTransaction {
             val current = spotDao.getById(id) ?: return@withTransaction
             spotDao.upsert(

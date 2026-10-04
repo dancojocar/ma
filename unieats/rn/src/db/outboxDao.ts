@@ -1,4 +1,4 @@
-import type { OutboxOp } from "../domain/models";
+import type { OutboxOp } from "@unieats/shared";
 import { notifyChanged } from "./changes";
 import { getDb } from "./database";
 

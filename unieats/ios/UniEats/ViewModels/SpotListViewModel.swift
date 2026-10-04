@@ -1,4 +1,5 @@
 import Foundation
+import UniEatsDomain
 
 @MainActor
 @Observable

@@ -20,7 +20,7 @@ edits, and "Edit spot" queues an outbox op that `SpotRepository.syncOutbox()` re
 
 Since `l08-auth` every screen sits behind `/login` (demo user `student@unieats.app` / `password`);
 the JWT is kept in `flutter_secure_storage`, sent as `Authorization: Bearer` on every mutation and
-outbox replay, a 401 ends the session, "Sign out" is in the list's app bar and "Add review" posts
+outbox replay, a 401 ends the session, "Sign out" is in Settings and "Add review" posts
 through the outbox. Drift schema v2 renamed the reviews column `body` → `text` with a migration.
 
 Since `l09-push-location`:
@@ -38,7 +38,7 @@ Since `l10-polish`: the spot photo flies from the list card to the detail header
 `lib/ui/spot_list/spot_list_screen.dart`, an `AnimationController` per card, disposed with it, skipped
 under "reduce motion"). Profiling steps: [PERFORMANCE.md](PERFORMANCE.md).
 
-This tag (`l11-cloud`) adds a Settings screen (gear in the list's app bar; "Sign out" moved there):
+Since `l11-cloud` a Settings screen (gear in the list's app bar) holds:
 - **Remote config** — one flag, `show_new_rating_ui` (default `false`). "Fetch & activate" calls
   `GET /api/config` and applies it at once: the rating turns into the gradient "★ 4.5 / 5" badge.
   Flip it on the server with `POST /api/config` (Bearer token) `{"flags":{"show_new_rating_ui":true}}`.
@@ -47,6 +47,13 @@ This tag (`l11-cloud`) adds a Settings screen (gear in the list's app bar; "Sign
   `shared_preferences`). `main` wires `FlutterError.onError`, `PlatformDispatcher.instance.onError`
   and a `runZonedGuarded` zone (with `ensureInitialized` inside it). Debug builds show a "Test crash"
   button that calls `recordError()`; nothing is reported until you opt in. No Firebase dependency.
+
+This tag (`l12-kmp`) splits out a shared domain layer, the Dart counterpart of the Kotlin
+Multiplatform module: `packages/unieats_data` is **pure Dart** (no Flutter, Drift or dio) and holds
+the models, the live-event types, `SyncConflictResolver` and the repository interfaces
+(`SpotRepository`, `ReviewRepository`, `AuthRepository`). The app implements them
+(`DriftSpotRepository`, `DriftReviewRepository`, `TokenAuthRepository`) and the providers expose only
+the interfaces. Check the package on its own: `cd packages/unieats_data && dart pub get && dart analyze`.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

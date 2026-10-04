@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { login as apiLogin } from "../api/client";
 import { clearSession, isExpired, loadSession, saveSession } from "../auth/sessionStorage";
-import type { User } from "../domain/models";
+import type { User } from "@unieats/shared";
 
 type SessionStatus = "restoring" | "signedOut" | "signedIn";
 
