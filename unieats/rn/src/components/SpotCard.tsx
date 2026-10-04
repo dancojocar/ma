@@ -2,6 +2,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import type { LocalSpot } from "../domain/models";
 import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel } from "./format";
+import { RatingBadge } from "./RatingBadge";
 
 export function SpotCard({
   spot,
@@ -38,7 +39,7 @@ export function SpotCard({
         </View>
       </View>
       <View style={styles.meta}>
-        <Text style={styles.rating}>★ {spot.rating.toFixed(1)}</Text>
+        <RatingBadge rating={spot.rating} />
         <Text style={styles.price}>{priceLabel(spot.priceLevel)}</Text>
         <FavouriteButton isFavourite={isFavourite} onToggle={onToggleFavourite} />
       </View>
@@ -80,6 +81,5 @@ const styles = StyleSheet.create({
   closed: { backgroundColor: "#fce8e6" },
   pending: { backgroundColor: "#fff4e5", color: "#8a4b00", textTransform: "none" },
   meta: { alignItems: "flex-end", gap: 4 },
-  rating: { fontSize: 14, color: "#f0a500", fontWeight: "600" },
   price: { fontSize: 13, color: "#777" },
 });

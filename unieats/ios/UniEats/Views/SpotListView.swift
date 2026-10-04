@@ -4,18 +4,16 @@ import SwiftUI
 struct SpotListView: View {
     let repository: SpotRepository
     let live: LiveUpdateService
-    let session: SessionStore
     let favourites: FavouritesStore
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
     @Namespace private var photoTransition
     @Environment(\.scenePhase) private var scenePhase
 
-    init(repository: SpotRepository, live: LiveUpdateService, session: SessionStore, notifier: SpotChangeNotifier, favourites: FavouritesStore) {
+    init(repository: SpotRepository, live: LiveUpdateService, notifier: SpotChangeNotifier, favourites: FavouritesStore) {
         self.repository = repository
         self.favourites = favourites
         self.live = live
-        self.session = session
         _viewModel = State(initialValue: SpotListViewModel(repository: repository, notifier: notifier))
     }
 
@@ -33,9 +31,6 @@ struct SpotListView: View {
                     await viewModel.apply(.disconnected)
                 }
                 .toolbar {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Log out", action: session.logout)
-                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
                             .labelStyle(.titleAndIcon)

@@ -27,6 +27,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.unieats.app.ui.login.LoginScreen
 import com.unieats.app.ui.nearby.NearbyScreen
+import com.unieats.app.ui.settings.SettingsScreen
 import com.unieats.app.ui.spotdetail.SpotDetailScreen
 import com.unieats.app.ui.spotdetail.SpotDetailViewModel
 import com.unieats.app.ui.spotlist.SpotListScreen
@@ -44,6 +45,9 @@ data class SpotDetail(val spotId: String) : NavKey
 
 @Serializable
 data object Nearby : NavKey
+
+@Serializable
+data object Settings : NavKey
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -110,9 +114,14 @@ fun UniEatsNavDisplay(
                 SpotListScreen(
                     onSpotClick = { spotId -> backStack.add(SpotDetail(spotId)) },
                     onNearbyClick = { backStack.add(Nearby) },
+                    onSettingsClick = { backStack.add(Settings) },
                     onLogout = sessionViewModel::logout,
                     viewModel = listViewModel
                 )
+            }
+
+            entry<Settings> {
+                SettingsScreen(onBack = { backStack.removeLastOrNull() })
             }
 
             entry<Nearby> {

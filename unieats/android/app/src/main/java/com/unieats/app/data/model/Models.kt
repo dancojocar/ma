@@ -73,3 +73,11 @@ data class LoginResponse(val token: String, val user: User)
 
 @Serializable
 data class NewReview(val stars: Int, val text: String)
+
+@Serializable
+data class RemoteFlags(
+    @SerialName("show_new_rating_ui") val showNewRatingUi: Boolean = false
+)
+
+@Serializable
+data class ConfigResponse(val flags: RemoteFlags = RemoteFlags())
