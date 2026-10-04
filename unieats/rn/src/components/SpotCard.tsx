@@ -1,8 +1,19 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { Spot } from "../domain/models";
+import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel } from "./format";
 
-export function SpotCard({ spot, onPress }: { spot: Spot; onPress: () => void }) {
+export function SpotCard({
+  spot,
+  isFavourite,
+  onPress,
+  onToggleFavourite,
+}: {
+  spot: Spot;
+  isFavourite: boolean;
+  onPress: () => void;
+  onToggleFavourite: () => void;
+}) {
   return (
     <Pressable
       testID="spot-list-item"
@@ -23,6 +34,7 @@ export function SpotCard({ spot, onPress }: { spot: Spot; onPress: () => void })
       <View style={styles.meta}>
         <Text style={styles.rating}>★ {spot.rating.toFixed(1)}</Text>
         <Text style={styles.price}>{priceLabel(spot.priceLevel)}</Text>
+        <FavouriteButton isFavourite={isFavourite} onToggle={onToggleFavourite} />
       </View>
     </Pressable>
   );

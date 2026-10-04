@@ -1,12 +1,26 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Review, Spot } from "../domain/models";
+import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel, starsLabel } from "./format";
 
-export function SpotDetail({ spot, reviews }: { spot: Spot; reviews: Review[] }) {
+export function SpotDetail({
+  spot,
+  reviews,
+  isFavourite,
+  onToggleFavourite,
+}: {
+  spot: Spot;
+  reviews: Review[];
+  isFavourite: boolean;
+  onToggleFavourite: () => void;
+}) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.section}>
-        <Text style={styles.name}>{spot.name}</Text>
+        <View style={styles.header}>
+          <Text style={styles.name}>{spot.name}</Text>
+          <FavouriteButton isFavourite={isFavourite} onToggle={onToggleFavourite} size={28} />
+        </View>
         <View style={styles.row}>
           <Text style={styles.badge}>{spot.category}</Text>
           <Text style={[styles.badge, spot.openNow ? styles.open : styles.closed]}>
@@ -42,7 +56,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f5f5" },
   content: { padding: 12, gap: 10, paddingBottom: 40 },
   section: { backgroundColor: "#fff", borderRadius: 12, padding: 16, gap: 8 },
-  name: { fontSize: 22, fontWeight: "700", color: "#222" },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  name: { flex: 1, fontSize: 22, fontWeight: "700", color: "#222" },
   row: { flexDirection: "row", gap: 12, alignItems: "center" },
   badge: {
     backgroundColor: "#f0e8df",
