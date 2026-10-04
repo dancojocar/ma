@@ -1,23 +1,52 @@
 import SwiftUI
 
 struct SpotDetailView: View {
-    let spotId: String
-    let isFavourite: Bool
-    let onToggleFavourite: () -> Void
+    @State private var viewModel: SpotDetailViewModel
+    private let isFavourite: Bool
+    private let onToggleFavourite: () -> Void
+
+    init(spotId: String, isFavourite: Bool, onToggleFavourite: @escaping () -> Void, api: ApiClient) {
+        _viewModel = State(initialValue: SpotDetailViewModel(spotId: spotId, api: api))
+        self.isFavourite = isFavourite
+        self.onToggleFavourite = onToggleFavourite
+    }
 
     var body: some View {
-        if let spot = sampleSpots.first(where: { $0.id == spotId }) {
-            SpotDetailContent(spot: spot, isFavourite: isFavourite, onToggleFavourite: onToggleFavourite)
-        } else {
-            ContentUnavailableView("Spot not found", systemImage: "fork.knife", description: Text(spotId))
+        Group {
+            if let spot = viewModel.spot {
+                SpotDetailContent(spot: spot, reviews: viewModel.reviews)
+            } else if let message = viewModel.errorMessage {
+                ContentUnavailableView {
+                    Label("Couldn't load this spot", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry") { Task { await viewModel.load() } }
+                        .buttonStyle(.borderedProminent)
+                }
+            } else {
+                ProgressView()
+            }
         }
+        .navigationTitle(viewModel.spot?.name ?? "")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onToggleFavourite) {
+                    Image(systemName: isFavourite ? "heart.fill" : "heart")
+                        .foregroundStyle(isFavourite ? .red : .secondary)
+                }
+                .accessibilityLabel(isFavourite ? "Remove from favourites" : "Add to favourites")
+            }
+        }
+        .task { await viewModel.load() }
+        .refreshable { await viewModel.load() }
     }
 }
 
 private struct SpotDetailContent: View {
     let spot: Spot
-    let isFavourite: Bool
-    let onToggleFavourite: () -> Void
+    let reviews: [Review]
 
     var body: some View {
         ScrollView {
@@ -48,19 +77,10 @@ private struct SpotDetailContent: View {
                     Text(spot.spotDescription)
                         .font(.body)
                         .foregroundStyle(.secondary)
+
+                    ReviewsSection(reviews: reviews)
                 }
                 .padding()
-            }
-        }
-        .navigationTitle(spot.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: onToggleFavourite) {
-                    Image(systemName: isFavourite ? "heart.fill" : "heart")
-                        .foregroundStyle(isFavourite ? .red : .secondary)
-                }
-                .accessibilityLabel(isFavourite ? "Remove from favourites" : "Add to favourites")
             }
         }
     }

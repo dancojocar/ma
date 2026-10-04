@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Spot, SpotCategory } from "../domain/models";
+import type { SpotCategory } from "../domain/models";
 
 export type CategoryFilter = SpotCategory | "all";
 
@@ -27,12 +27,3 @@ export const useSpotsStore = create<SpotsState>()((set) => ({
       return { favouriteIds: next };
     }),
 }));
-
-export function filterSpots(spots: Spot[], query: string, category: CategoryFilter): Spot[] {
-  const q = query.trim().toLowerCase();
-  return spots.filter(
-    (s) =>
-      (category === "all" || s.category === category) &&
-      (q === "" || s.name.toLowerCase().includes(q)),
-  );
-}
