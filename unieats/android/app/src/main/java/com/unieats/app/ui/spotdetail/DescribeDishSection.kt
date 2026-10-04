@@ -14,7 +14,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.unieats.app.ui.TestTags
 
 /** "Describe this dish": the AI text grows as the server streams it. */
 @Composable
@@ -33,10 +35,16 @@ fun DescribeDishSection(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = onDescribe, enabled = !isStreaming) { Text("Describe this dish") }
+            Button(
+                onClick = onDescribe,
+                enabled = !isStreaming,
+                modifier = Modifier.testTag(TestTags.DESCRIBE_DISH_BUTTON)
+            ) { Text("Describe this dish") }
             if (isStreaming) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
         }
-        if (text.isNotEmpty()) Text(text, style = MaterialTheme.typography.bodyMedium)
+        if (text.isNotEmpty()) {
+            Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.testTag(TestTags.DISH_DESCRIPTION))
+        }
         if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
     }
 }

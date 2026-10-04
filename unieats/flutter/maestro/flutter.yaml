@@ -1,0 +1,44 @@
+# UniEats Flutter smoke flow: sign in → list → first spot → reviews → describe → back.
+# Needs the UniEats server on the host (the app uses 10.0.2.2 on the Android emulator).
+# Run: maestro test maestro/flutter.yaml
+appId: com.unieats.flutter
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+# clearState does not wipe the iOS Keychain, so a previous session may still be signed in.
+- runFlow:
+    when:
+      visible: "Sign In"
+    commands:
+      - tapOn: "Email"
+      - inputText: "student@unieats.app"
+      - tapOn: "Password"
+      - inputText: "password"
+      - hideKeyboard
+      - tapOn: "Sign In"
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 20000
+- tapOn:
+    id: "spot-list-item"
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: "spot-detail-reviews"
+    timeout: 10000
+# Maestro matches text as a full regular expression: "Reviews (3)", "Reviews (0)", …
+- assertVisible: 'Reviews \(\d+\)'
+- tapOn:
+    id: "describe-dish-button"
+- extendedWaitUntil:
+    visible:
+      id: "describe-dish-result"
+    timeout: 15000
+- assertNotVisible: "Server unreachable.*"
+# The app-bar back button (Maestro's `back` only exists on Android).
+- tapOn: "Back"
+- assertVisible:
+    id: "spot-list-item"

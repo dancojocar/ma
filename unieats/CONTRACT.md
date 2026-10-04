@@ -2,6 +2,28 @@
 
 Every implementation (server, android, ios, flutter, rn) MUST match this exactly so the
 same app behaves identically and the cross-stack tests pass against any of them.
+`server/tests/contract.test.js` checks the server against this file.
+
+## When each part appears
+
+| Tag | Server surface |
+|---|---|
+| l01-hello … l04-nav | `GET /health`, `GET /spots`, `GET /spots/:id`, chaos headers (clients still use hard-coded data) |
+| l05-rest | 25-spot seed, spot mutations + reviews **without auth**, `Idempotency-Key` |
+| l06-async | `ws://<host>:3000/live` |
+| l07-offline | PATCH conflict rule (409) |
+| l08-auth | `POST /auth/login`, JWT required on every mutation |
+| l11-cloud | `GET/POST /config` |
+| l13-ai | `POST /ai/describe` streaming SSE |
+
+## Connecting
+
+| Client | REST base URL | WebSocket |
+|---|---|---|
+| Android emulator (native, Flutter, RN) | `http://10.0.2.2:3000/api` | `ws://10.0.2.2:3000/live` |
+| iOS simulator (native, Flutter, RN) | `http://localhost:3000/api` | `ws://localhost:3000/live` |
+
+Flutter and RN choose by platform automatically and accept an override (dart-define / env).
 
 ## Domain model
 
@@ -137,9 +159,9 @@ unreachable" message.
 3. **Writes:** apply optimistically to the local DB, set `pendingSync = true`, and enqueue
    `{ opId (uuid), type: create|update|delete, entityId, payload }` in an `outbox` table that
    survives restarts. An update's payload includes the `updatedAt` the user edited.
-4. **Replay** (on reconnect): send the outbox in order, each with `Idempotency-Key: <opId>` (and,
-   from L08, the `Authorization` header); on
-   2xx store the server's Spot and clear `pendingSync`.
+4. **Replay** (on reconnect): send the outbox in order, each with `Idempotency-Key: <opId>`
+   and, from L08, the `Authorization` header; on 2xx store the server's Spot and clear
+   `pendingSync`.
 5. **Conflict — last-write-wins on `updatedAt`:** if server `updatedAt` > local `updatedAt`, the
    server wins; otherwise (including a tie) the client wins. The server enforces this with the
    409 rule above, so on a 409 the client replaces its row with `spot` from the response, clears
@@ -162,17 +184,18 @@ Deterministic (fixed ids) so tests and screenshots are stable. Restarting the se
   ratings, `photoUrl` = `https://picsum.photos/seed/<id>/400/300`. Page size 20 gives two pages.
 - The **first 8 are canonical**: the clients hard-code exactly these in l02–l04.
 
-| id | name | category | rating | priceLevel | openNow |
-|---|---|---|---|---|---|
-| spot-1 | Central Canteen | canteen | 3.8 | 1 | true |
-| spot-2 | Espresso Lab | cafe | 4.5 | 2 | true |
-| spot-3 | Pizza Stop | fastfood | 4.1 | 2 | true |
-| spot-4 | Bread & Butter | bakery | 4.7 | 1 | false |
-| spot-5 | The Pub Garden | bar | 4.2 | 3 | false |
-| spot-6 | Sushi Box | fastfood | 3.9 | 2 | true |
-| spot-7 | Campus Bistro | cafe | 4.3 | 2 | true |
-| spot-8 | Grandma's Kitchen | canteen | 4.6 | 1 | true |
+| id | name | category | rating | priceLevel | lat | lng | openNow | description | updatedAt |
+|---|---|---|---|---|---|---|---|---|---|
+| spot-1 | Central Canteen | canteen | 3.8 | 1 | 44.4268 | 26.1025 | true | The main campus canteen with daily hot meals. | 1700000000000 |
+| spot-2 | Espresso Lab | cafe | 4.5 | 2 | 44.4275 | 26.103 | true | Specialty coffee and pastries near the library. | 1700000001000 |
+| spot-3 | Pizza Stop | fastfood | 4.1 | 2 | 44.426 | 26.1015 | true | Pizza by the slice for students on the go. | 1700000002000 |
+| spot-4 | Bread & Butter | bakery | 4.7 | 1 | 44.428 | 26.104 | false | Fresh bread and pastries baked every morning. | 1700000003000 |
+| spot-5 | The Pub Garden | bar | 4.2 | 3 | 44.4255 | 26.101 | false | Outdoor bar with craft beers and snacks. | 1700000004000 |
+| spot-6 | Sushi Box | fastfood | 3.9 | 2 | 44.427 | 26.105 | true | Grab-and-go sushi rolls and bento boxes. | 1700000005000 |
+| spot-7 | Campus Bistro | cafe | 4.3 | 2 | 44.4265 | 26.1035 | true | Relaxed cafe with sandwiches, salads and wifi. | 1700000006000 |
+| spot-8 | Grandma's Kitchen | canteen | 4.6 | 1 | 44.4272 | 26.102 | true | Traditional home-cooked Romanian meals. | 1700000007000 |
 
-  Coordinates, descriptions and `updatedAt` are in `server/src/seed.js`.
+`photoUrl` follows the picsum rule above. `spot-9` … `spot-25` are in `server/src/seed.js`.
+
 - 4 reviews (two on `spot-1`, one each on `spot-2` and `spot-3`).
 - 1 demo user `student@unieats.app` / `password` (id `user-1`, displayName `Demo Student`).

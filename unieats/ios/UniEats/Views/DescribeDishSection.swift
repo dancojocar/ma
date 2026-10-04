@@ -19,11 +19,13 @@ struct DescribeDishSection: View {
             .buttonStyle(.bordered)
             .tint(.purple)
             .disabled(state.isStreaming)
+            .accessibilityIdentifier("describe-dish-button")
 
             if !state.text.isEmpty || state.isStreaming {
                 HStack(alignment: .top) {
                     Text(state.text.isEmpty ? " " : state.text)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("describe-dish-text")
                     if state.isStreaming {
                         ProgressView()
                     }

@@ -64,16 +64,20 @@ class _DescribeDishCardState extends ConsumerState<DescribeDishCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        OutlinedButton.icon(
-          onPressed: _streaming ? null : _describe,
-          icon:
-              _streaming
-                  ? const SizedBox.square(
-                    dimension: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                  : const Icon(Icons.auto_awesome_outlined, size: 18),
-          label: const Text('Describe this dish'),
+        Semantics(
+          identifier: 'describe-dish-button',
+          container: true,
+          child: OutlinedButton.icon(
+            onPressed: _streaming ? null : _describe,
+            icon:
+                _streaming
+                    ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                    : const Icon(Icons.auto_awesome_outlined, size: 18),
+            label: const Text('Describe this dish'),
+          ),
         ),
         if (_text.isNotEmpty || _error != null) ...[
           const SizedBox(height: 8),
@@ -87,7 +91,11 @@ class _DescribeDishCardState extends ConsumerState<DescribeDishCard> {
                       : theme.colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(_error ?? _text),
+            child: Semantics(
+              identifier: 'describe-dish-result',
+              container: true,
+              child: Text(_error ?? _text),
+            ),
           ),
         ],
       ],

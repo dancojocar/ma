@@ -1,0 +1,56 @@
+appId: com.unieats.rn
+name: UniEats RN — list → detail → describe this dish → back
+---
+# Needs the server on the host (10.0.2.2:3000 from the emulator). Granting permissions up front keeps the
+# Android 13+ notification prompt and the location prompt out of the flow.
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+- extendedWaitUntil:
+    visible:
+      id: "login-email"
+    timeout: 20000
+- tapOn:
+    id: "login-email"
+- inputText: "student@unieats.app"
+- tapOn:
+    id: "login-password"
+- inputText: "password"
+- hideKeyboard
+- tapOn:
+    id: "login-submit"
+
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 20000
+- assertVisible: "Spots"
+- tapOn:
+    id: "spot-list-item"
+    index: 0
+
+- scrollUntilVisible:
+    element:
+      id: "spot-detail-reviews"
+    direction: DOWN
+- assertVisible:
+    id: "spot-detail-reviews"
+- assertVisible: 'Reviews \(\d+\)'
+
+- scrollUntilVisible:
+    element:
+      id: "describe-dish-button"
+    direction: UP
+- assertVisible: "Describe this dish"
+- tapOn:
+    id: "describe-dish-button"
+- extendedWaitUntil:
+    visible:
+      id: "dish-description"
+    timeout: 15000
+
+- back
+- assertVisible:
+    id: "search-input"

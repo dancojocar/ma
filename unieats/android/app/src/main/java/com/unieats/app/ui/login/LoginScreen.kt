@@ -19,12 +19,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.unieats.app.ui.TestTags
 
 @Composable
 fun LoginScreen(viewModel: LoginViewModel = hiltViewModel()) {
@@ -66,7 +68,9 @@ fun LoginContent(
                 label = { Text("Email") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.LOGIN_EMAIL)
             )
             OutlinedTextField(
                 value = state.password,
@@ -76,12 +80,20 @@ fun LoginContent(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.LOGIN_PASSWORD)
             )
             if (state.errorMessage != null) {
                 Text(state.errorMessage, color = MaterialTheme.colorScheme.error)
             }
-            Button(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = onSubmit,
+                enabled = state.canSubmit,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag(TestTags.LOGIN_SUBMIT)
+            ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                 } else {

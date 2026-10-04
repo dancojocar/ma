@@ -1,5 +1,6 @@
 package com.unieats.app.ui.spotlist
 
+import app.cash.turbine.test
 import com.unieats.app.testing.FakeEatsRepository
 import com.unieats.app.testing.FakeFeatureFlags
 import com.unieats.app.testing.MainDispatcherRule
@@ -85,6 +86,17 @@ class SpotListViewModelTest {
 
         assertNull(viewModel.uiState.value.errorMessage)
         assertEquals(2, repository.refreshCalls.size)
+    }
+
+    @Test
+    fun `a live edit in the repository flows straight into the list`() = runTest {
+        val viewModel = SpotListViewModel(repository, flags)
+
+        viewModel.uiState.test {
+            assertEquals("Pizza Stop", awaitItem().spots.last().name)
+            repository.editSpot("spot-3", "Pizza Stop (new oven)", "", openNow = false)
+            assertEquals("Pizza Stop (new oven)", awaitItem().spots.last().name)
+        }
     }
 
     @Test

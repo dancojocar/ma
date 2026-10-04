@@ -101,6 +101,7 @@ private struct SpotListContent: View {
                         onToggleFavourite: { favourites.toggle(entity.id) }
                     )
                 }
+                .accessibilityIdentifier("spot-list-item")
                 .transition(.move(edge: .leading).combined(with: .opacity))
                 .task {
                     if entity.id == spots.last?.id { await viewModel.loadMore() }

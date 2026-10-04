@@ -6,8 +6,13 @@ enum KeychainError: Error {
 }
 
 struct KeychainHelper: Sendable {
-    private let service = "com.unieats.app"
-    private let account = "session.jwt"
+    private let service: String
+    private let account: String
+
+    init(service: String = "com.unieats.app", account: String = "session.jwt") {
+        self.service = service
+        self.account = account
+    }
 
     private var baseQuery: [String: Any] {
         [

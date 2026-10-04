@@ -1,0 +1,58 @@
+# UniEats iOS smoke flow: login → list → first spot → reviews → Describe this dish → back.
+# Needs the server on localhost:3000 (cd ../server && npm start) and the app installed on a
+# booted simulator. Run: maestro test maestro/ios.yaml
+appId: com.unieats.app
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+
+- tapOn:
+    id: "login-email"
+- eraseText: 40
+- inputText: "student@unieats.app"
+- tapOn:
+    id: "login-password"
+- inputText: "password"
+- tapOn: "Log in"
+
+# System prompts after the first login (password manager, notifications).
+- tapOn:
+    text: "Not Now"
+    optional: true
+- tapOn:
+    text: "Allow"
+    optional: true
+
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 15000
+- tapOn:
+    id: "spot-list-item"
+    index: 0
+
+- extendedWaitUntil:
+    visible:
+      id: "spot-detail-reviews"
+    timeout: 10000
+- assertVisible: "Reviews \\(\\d+\\)"
+
+- tapOn:
+    id: "describe-dish-button"
+- extendedWaitUntil:
+    visible:
+      id: "describe-dish-text"
+    timeout: 10000
+- extendedWaitUntil:
+    visible: "Describe this dish"
+    timeout: 20000
+
+# iOS has no system back button: swipe from the left edge like a user.
+- swipe:
+    start: 1%, 50%
+    end: 80%, 50%
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 10000
