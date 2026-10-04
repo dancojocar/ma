@@ -20,11 +20,15 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.unieats.app.ui.login.LoginScreen
 import com.unieats.app.ui.spotdetail.SpotDetailScreen
 import com.unieats.app.ui.spotdetail.SpotDetailViewModel
 import com.unieats.app.ui.spotlist.SpotListScreen
 import com.unieats.app.ui.spotlist.SpotListViewModel
 import kotlinx.serialization.Serializable
+
+@Serializable
+data object Login : NavKey
 
 @Serializable
 data object SpotList : NavKey
@@ -39,16 +43,32 @@ fun UniEatsNavDisplay(
     modifier: Modifier = Modifier,
     pendingDeepLink: List<NavKey>? = null,
     onDeepLinkConsumed: () -> Unit = {},
-    listViewModel: SpotListViewModel = hiltViewModel()
+    listViewModel: SpotListViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
 ) {
-    val backStack = rememberNavBackStack(*startKeys.toTypedArray())
-    LaunchedEffect(pendingDeepLink) {
-        if (pendingDeepLink != null) {
+    val isSignedIn by sessionViewModel.isSignedIn.collectAsStateWithLifecycle()
+    val backStack = rememberNavBackStack(*(if (isSignedIn) startKeys else listOf(Login)).toTypedArray())
+
+    // Signing in leaves the login screen; signing out or a 401 (token cleared) returns to it.
+    LaunchedEffect(isSignedIn) {
+        val onLogin = backStack.lastOrNull() == Login
+        if (isSignedIn && onLogin) {
+            backStack.clear()
+            backStack.addAll(startKeys)
+        } else if (!isSignedIn && !onLogin) {
+            backStack.clear()
+            backStack.add(Login)
+        }
+    }
+
+    LaunchedEffect(pendingDeepLink, isSignedIn) {
+        if (pendingDeepLink != null && isSignedIn) {
             backStack.clear()
             backStack.addAll(pendingDeepLink)
             onDeepLinkConsumed()
         }
     }
+
     val listState by listViewModel.uiState.collectAsStateWithLifecycle()
 
     NavDisplay(
@@ -61,11 +81,14 @@ fun UniEatsNavDisplay(
         ),
         sceneStrategies = listOf(rememberListDetailSceneStrategy()),
         entryProvider = entryProvider {
+            entry<Login> { LoginScreen() }
+
             entry<SpotList>(
                 metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { SelectASpotPlaceholder() })
             ) {
                 SpotListScreen(
                     onSpotClick = { spotId -> backStack.add(SpotDetail(spotId)) },
+                    onLogout = sessionViewModel::logout,
                     viewModel = listViewModel
                 )
             }

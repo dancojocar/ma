@@ -2,6 +2,7 @@ const { Router } = require('express');
 const crypto = require('crypto');
 const store = require('../store');
 const { idempotency } = require('../idempotency');
+const { requireAuth } = require('../auth');
 const { pickSpotFields } = require('../validation');
 const { sendError, notFound, validation } = require('../errors');
 
@@ -36,7 +37,7 @@ router.get('/:id', (req, res) => {
   return spot ? res.json(spot) : notFound(res);
 });
 
-router.post('/', idempotency, (req, res) => {
+router.post('/', requireAuth, idempotency, (req, res) => {
   const { fields, error } = pickSpotFields(req.body || {});
   if (error) return validation(res, error);
   if (!fields.name || !fields.category) return validation(res, 'name and category are required');
@@ -56,7 +57,7 @@ router.post('/', idempotency, (req, res) => {
   return res.status(201).json(spot);
 });
 
-router.patch('/:id', idempotency, (req, res) => {
+router.patch('/:id', requireAuth, idempotency, (req, res) => {
   const current = store.getSpotById(req.params.id);
   if (!current) return notFound(res);
 
@@ -74,7 +75,7 @@ router.patch('/:id', idempotency, (req, res) => {
   return res.json(store.updateSpot(req.params.id, fields));
 });
 
-router.delete('/:id', idempotency, (req, res) => {
+router.delete('/:id', requireAuth, idempotency, (req, res) => {
   if (!store.deleteSpot(req.params.id)) return notFound(res);
   return res.status(204).end();
 });
@@ -84,21 +85,19 @@ router.get('/:id/reviews', (req, res) => {
   return res.json(store.getReviewsForSpot(req.params.id));
 });
 
-router.post('/:id/reviews', idempotency, (req, res) => {
+router.post('/:id/reviews', requireAuth, idempotency, (req, res) => {
   if (!store.getSpotById(req.params.id)) return notFound(res);
 
-  const { stars, text = '', author = 'Anonymous' } = req.body || {};
+  const { stars, text = '' } = req.body || {};
   if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
     return validation(res, 'stars must be an integer 1-5');
   }
-  if (typeof text !== 'string' || typeof author !== 'string') {
-    return validation(res, 'text and author must be strings');
-  }
+  if (typeof text !== 'string') return validation(res, 'text must be a string');
 
   const review = store.addReview({
     id: crypto.randomUUID(),
     spotId: req.params.id,
-    author,
+    author: req.user.displayName,
     stars,
     text,
     createdAt: Date.now(),

@@ -5,6 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/auth/auth_interceptor.dart';
+import '../data/auth/auth_repository.dart';
+import '../data/auth/token_store.dart';
 import '../data/database/database.dart';
 import '../data/network/api_client.dart';
 import '../data/network/api_config.dart';
@@ -19,14 +22,73 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
+final tokenStoreProvider = Provider<TokenStore>((_) => TokenStore());
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = createDio(apiBaseUrl);
+  dio.interceptors.insert(
+    0,
+    AuthInterceptor(
+      ref.watch(tokenStoreProvider),
+      onUnauthorized: () => ref.read(authProvider.notifier).sessionExpired(),
+    ),
+  );
   ref.onDispose(dio.close);
   return dio;
 });
 
 final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(ref.watch(dioProvider)),
+);
+
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(
+    ref.watch(apiClientProvider),
+    ref.watch(tokenStoreProvider),
+  ),
+);
+
+class SessionExpired implements Exception {
+  const SessionExpired();
+
+  @override
+  String toString() => 'Your session expired. Please sign in again.';
+}
+
+/// The signed-in user, or null. The router sends everyone without a session
+/// to `/login`.
+class AuthNotifier extends AsyncNotifier<User?> {
+  @override
+  Future<User?> build() => ref.read(authRepositoryProvider).restoreSession();
+
+  Future<void> login(String email, String password) async {
+    state = const AsyncLoading<User?>().copyWithPrevious(state);
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).login(email, password),
+    );
+    if (state.valueOrNull != null) {
+      unawaited(ref.read(spotRepositoryProvider).syncOutbox());
+    }
+  }
+
+  Future<void> logout() async {
+    await ref.read(authRepositoryProvider).logout();
+    state = const AsyncData(null);
+  }
+
+  /// A mutation came back 401: the token expired or was revoked.
+  Future<void> sessionExpired() async {
+    if (state.valueOrNull == null) return;
+    await ref.read(authRepositoryProvider).logout();
+    // Riverpod keeps the previous value next to an error; clear it first so
+    // the expired user is gone, not just hidden behind the error.
+    state = const AsyncData(null);
+    state = AsyncError(const SessionExpired(), StackTrace.current);
+  }
+}
+
+final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
+  AuthNotifier.new,
 );
 
 final spotRepositoryProvider = Provider<SpotRepository>(

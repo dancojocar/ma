@@ -17,6 +17,8 @@ class SyncWorker @AssistedInject constructor(
     override suspend fun doWork(): Result = when (outboxSync.replay()) {
         ReplayResult.Done -> Result.success()
         ReplayResult.RetryLater -> Result.retry()
+        // Signing in calls SyncScheduler.requestSync() again.
+        ReplayResult.NeedsLogin -> Result.failure()
     }
 
     companion object {

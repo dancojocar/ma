@@ -115,3 +115,27 @@ class Review {
   final String text;
   final int createdAt;
 }
+
+class User {
+  const User({
+    required this.id,
+    required this.email,
+    required this.displayName,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    id: json['id'] as String,
+    email: json['email'] as String,
+    displayName: json['displayName'] as String,
+  );
+
+  final String id;
+  final String email;
+  final String displayName;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'email': email,
+    'displayName': displayName,
+  };
+}

@@ -9,12 +9,14 @@ final class SpotRepository {
 
     private let context: ModelContext
     private let api: ApiClient
+    private let session: SessionStore
     private var retryTask: Task<Void, Never>?
     private var retryAttempt = 0
 
-    init(context: ModelContext, api: ApiClient) {
+    init(context: ModelContext, api: ApiClient, session: SessionStore) {
         self.context = context
         self.api = api
+        self.session = session
     }
 
     // MARK: Reads: the server only feeds the local store; views observe it with @Query.
@@ -77,6 +79,20 @@ final class SpotRepository {
         Task { await sync() }
     }
 
+    func addReview(spotId: String, stars: Int, text: String) async throws {
+        guard let token = session.token else { throw ApiError.unauthorized }
+        do {
+            let review = try await api.createReview(
+                spotId: spotId, stars: stars, text: text, idempotencyKey: UUID().uuidString, token: token
+            )
+            context.insert(ReviewEntity(review: review))
+            try context.save()
+        } catch ApiError.unauthorized {
+            session.sessionExpired()
+            throw ApiError.unauthorized
+        }
+    }
+
     func markSynced(_ entity: SpotEntity, server dto: SpotDTO) {
         entity.update(from: dto)
         entity.pendingSync = false
@@ -85,7 +101,7 @@ final class SpotRepository {
     // MARK: Replay
 
     func sync() async {
-        guard !isSyncing else { return }
+        guard !isSyncing, let token = session.token else { return }
         isSyncing = true
         defer { isSyncing = false }
         lastSyncError = nil
@@ -96,9 +112,14 @@ final class SpotRepository {
                 continue
             }
             do {
-                let dto = try await api.patchSpot(id: entry.entityId, patch: patch, idempotencyKey: entry.opId)
+                let dto = try await api.patchSpot(
+                    id: entry.entityId, patch: patch, idempotencyKey: entry.opId, token: token
+                )
                 if let entity = spot(id: entry.entityId) { markSynced(entity, server: dto) }
                 context.delete(entry)
+            } catch ApiError.unauthorized {
+                session.sessionExpired()
+                return
             } catch ApiError.conflict(let server) {
                 if let entity = spot(id: entry.entityId) { markSynced(entity, server: server) }
                 context.delete(entry)
