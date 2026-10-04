@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/models.dart';
+import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
 import '../common/spot_photo.dart';
 
-class SpotDetailScreen extends StatelessWidget {
+class SpotDetailScreen extends ConsumerWidget {
   const SpotDetailScreen({super.key, required this.spot});
 
   final Spot spot;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isFavourite = ref.watch(
+      spotListProvider.select((s) => s.favouriteIds.contains(spot.id)),
+    );
+
     return Scaffold(
-      appBar: AppBar(title: Text(spot.name)),
+      appBar: AppBar(
+        title: Text(spot.name),
+        actions: [
+          FavouriteButton(
+            isFavourite: isFavourite,
+            onToggle:
+                () => ref
+                    .read(spotListProvider.notifier)
+                    .toggleFavourite(spot.id),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

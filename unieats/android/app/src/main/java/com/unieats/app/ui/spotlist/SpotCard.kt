@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +30,9 @@ import com.unieats.app.ui.components.ratingText
 @Composable
 fun SpotCard(
     spot: Spot,
+    isFavourite: Boolean,
     onClick: () -> Unit,
+    onToggleFavourite: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
@@ -76,6 +81,13 @@ fun SpotCard(
                         color = if (spot.openNow) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
                     )
                 }
+            }
+            IconButton(onClick = onToggleFavourite) {
+                Icon(
+                    imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

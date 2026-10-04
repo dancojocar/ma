@@ -1,13 +1,16 @@
-# UniEats iOS — l02-ui
+# UniEats iOS — l03-state
 
-Static list + detail from hard-coded data (no network yet).
+Observable state: the list screen's state lives in one `@Observable` ViewModel.
 
-- `UniEats/Models/Spot.swift` — `Spot` and `sampleSpots`, the 8 canonical campus spots
-  (`spot-1` … `spot-8`, same data as the server seed and the other three stacks).
-- `UniEats/Views/SpotListView.swift` — `List(sampleSpots) { … }` (the SwiftUI counterpart of
-  `LazyColumn` / `ListView.builder` / `FlatList`; `Spot: Identifiable` is the key) and a
-  `@State selectedSpot` that presents `SpotDetailView` as a sheet.
-- `SpotRow` / `SpotDetailView` load the photo with `AsyncImage` from `photoUrl`.
+- `UniEats/ViewModels/SpotListViewModel.swift` — `@MainActor @Observable` class owning
+  `spots`, `searchQuery`, `categoryFilter` and `favouriteIds`, all `private(set)` (read-only
+  from the outside, like a Kotlin `val`); views change them only through `onQueryChange`,
+  `onCategoryChange` and `toggleFavourite`. `filteredSpots` filters case-insensitively.
+- `SpotListView` holds the ViewModel in `@State` and wires `.searchable` to
+  `searchQuery` / `onQueryChange`; `CategoryFilterView` is stateless
+  (`selectedCategory` + `onCategoryChange`); `SpotRow` shows the favourite heart.
+
+Demo: search "pizza" → only Pizza Stop remains; pick a category; tap a heart.
 
 ## Run
 
@@ -17,5 +20,3 @@ Static list + detail from hard-coded data (no network yet).
 xcodebuild -project UniEats.xcodeproj -scheme UniEats \
   -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
 ```
-
-The `UniEats/` folder is a synchronized group: new Swift files are compiled automatically.
