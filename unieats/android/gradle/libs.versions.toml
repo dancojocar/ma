@@ -17,6 +17,7 @@ lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 work = "2.12.0"
 securityCrypto = "1.1.0"
+playServicesLocation = "21.4.0"
 androidxHilt = "1.4.0"
 
 [libraries]
@@ -73,6 +74,9 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 # Coil
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+# Location
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

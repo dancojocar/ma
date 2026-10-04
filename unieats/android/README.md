@@ -1,4 +1,4 @@
-# UniEats Android — tag `l08-auth`
+# UniEats Android — tag `l09-push-location`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -42,6 +42,25 @@ cd unieats/server && npm install && npm start      # http://localhost:3000
 - **Log out** is in the ⋮ menu of the list; **Add review** is on the detail screen (online only:
   POST needs the server).
 
+## Nearby + notifications (new in l09)
+
+- The 📍 icon on the list opens **Spots near me**: spots within 2 km, nearest first, with the
+  distance. `location/LocationService.kt` wraps the Fused Location Provider
+  (`requestLocationUpdates` every 5 s) in a `callbackFlow` whose `awaitClose` calls
+  `removeLocationUpdates`; `NearbyViewModel` collects it with `WhileSubscribed()`, so location stops
+  the moment you leave the screen or background the app.
+- Permission UX (`ui/nearby/NearbyScreen.kt`): an explanation and **Allow location** before the
+  system dialog, a stronger rationale when `shouldShowRequestPermissionRationale` is true, and
+  **Open settings** after a permanent denial.
+- Emulator: set the location to the campus, `adb emu geo fix 26.103 44.427` (longitude first) or
+  Extended controls → Location → 44.427, 26.103. The default emulator location (California) shows
+  "No spots within 2 km".
+- Notifications: on Android 13+ the list asks for `POST_NOTIFICATIONS` once. Every
+  `spot.updated` message from the l06 WebSocket posts a local notification "<spot> was updated"
+  (`notification/SpotNotificationService.kt`); tapping it opens the spot via the
+  `unieats://spots/<id>` deep link. Try it with the curl PATCH below while the list is open.
+  (Local notifications driven by the WebSocket only; FCM/APNs push is not used.)
+
 ## Demo: offline edit → reconnect → sync
 
 1. Open a spot, tap **Edit spot**, change the name, Save — the list shows it immediately.
@@ -49,7 +68,8 @@ cd unieats/server && npm install && npm start      # http://localhost:3000
 3. Turn the network back on (or restart the server): the banner disappears, and the server log shows
    one `PATCH` with the `Idempotency-Key` header.
 4. Conflict: edit a spot offline, change the same spot with curl
-   (`curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"name":"Server name"}'`),
+   (from l08 the server needs a token: `TOKEN=$(curl -s localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | jq -r .token)`,
+   then `curl -X PATCH localhost:3000/api/spots/spot-3 -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"name":"Server name"}'`),
    then go online — the server's newer version wins (409 → the row is replaced, the op dropped).
 
 Kill and relaunch the app at any point: cached spots show instantly and the outbox survives.

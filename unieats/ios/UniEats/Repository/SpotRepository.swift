@@ -27,6 +27,13 @@ final class SpotRepository {
         return result
     }
 
+    func fetchAllPages() async {
+        var page = 1
+        while let result = try? await fetchPage(page, query: "", category: nil), result.hasNextPage {
+            page += 1
+        }
+    }
+
     func refreshSpot(id: String) async throws {
         upsert([try await api.getSpot(id: id)])
     }

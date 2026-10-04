@@ -39,6 +39,8 @@
 	</array>
 	<key>FlutterDeepLinkingEnabled</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>UniEats uses your location while the Nearby screen is open to list spots within 2 km.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

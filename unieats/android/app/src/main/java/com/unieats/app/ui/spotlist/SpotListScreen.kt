@@ -1,5 +1,10 @@
 package com.unieats.app.ui.spotlist
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -27,7 +33,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -40,7 +45,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.unieats.app.data.model.Category
@@ -51,6 +58,7 @@ import com.unieats.app.ui.components.MessageView
 @Composable
 fun SpotListScreen(
     onSpotClick: (String) -> Unit,
+    onNearbyClick: () -> Unit,
     onLogout: () -> Unit,
     viewModel: SpotListViewModel = hiltViewModel()
 ) {
@@ -64,6 +72,7 @@ fun SpotListScreen(
         onLoadMore = viewModel::loadNextPage,
         onRetry = viewModel::retry,
         onSpotClick = onSpotClick,
+        onNearbyClick = onNearbyClick,
         onLogout = onLogout
     )
 }
@@ -79,6 +88,7 @@ fun SpotListContent(
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
     onSpotClick: (String) -> Unit,
+    onNearbyClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     var sortByRating by rememberSaveable { mutableStateOf(false) }
@@ -93,6 +103,7 @@ fun SpotListContent(
         }
     }
     InfiniteScrollEffect(listState, state, onLoadMore)
+    NotificationPermissionEffect()
 
     Scaffold(
         topBar = {
@@ -100,10 +111,14 @@ fun SpotListContent(
                 title = { Text("UniEats") },
                 actions = {
                     LiveBadge(isLive = state.isLive)
-                    TextButton(onClick = { sortByRating = !sortByRating }) {
-                        Text(if (sortByRating) "Sort: rating" else "Sort: default")
+                    IconButton(onClick = onNearbyClick) {
+                        Icon(Icons.Default.LocationOn, contentDescription = "Spots near me")
                     }
-                    OverflowMenu(onLogout = onLogout)
+                    OverflowMenu(
+                        sortByRating = sortByRating,
+                        onToggleSort = { sortByRating = !sortByRating },
+                        onLogout = onLogout
+                    )
                 }
             )
         },
@@ -163,14 +178,35 @@ fun SpotListContent(
     }
 }
 
+/** Android 13+ needs a runtime grant before the live "spot was updated" notifications can show. */
 @Composable
-private fun OverflowMenu(onLogout: () -> Unit) {
+private fun NotificationPermissionEffect() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    val context = LocalContext.current
+    var asked by rememberSaveable { mutableStateOf(false) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { asked = true }
+    LaunchedEffect(Unit) {
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted && !asked) launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+}
+
+@Composable
+private fun OverflowMenu(sortByRating: Boolean, onToggleSort: () -> Unit, onLogout: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }) {
             Icon(Icons.Default.MoreVert, contentDescription = "More options")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(if (sortByRating) "Default order" else "Sort by rating") },
+                onClick = {
+                    expanded = false
+                    onToggleSort()
+                }
+            )
             DropdownMenuItem(
                 text = { Text("Log out") },
                 onClick = {
