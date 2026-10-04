@@ -10,7 +10,18 @@
 		AB000001000012 /* UniEatsDomain in Frameworks */ = {isa = PBXBuildFile; productRef = AB000002000012 /* UniEatsDomain */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B4000001000014 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A9000001000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A6000001000001;
+			remoteInfo = UniEats;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		B3000002000014 /* UniEatsTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UniEatsTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A3000001000001 /* UniEats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniEats.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -20,6 +31,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				AB000001000012 /* UniEatsDomain in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B4000002000014 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,6 +63,11 @@
 			path = UniEats;
 			sourceTree = "<group>";
 		};
+		B5000001000014 /* UniEatsTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = UniEatsTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXGroup section */
@@ -52,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				A5000002000001 /* UniEats */,
+				B5000001000014 /* UniEatsTests */,
 				A5000009000001 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				A3000001000001 /* UniEats.app */,
+				B3000002000014 /* UniEatsTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -90,6 +115,27 @@
 			productReference = A3000001000001 /* UniEats.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B6000001000014 /* UniEatsTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B8000001000014 /* Build configuration list for PBXNativeTarget "UniEatsTests" */;
+			buildPhases = (
+				B7000001000014 /* Sources */,
+				B4000002000014 /* Frameworks */,
+				B7000002000014 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B4000003000014 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B5000001000014 /* UniEatsTests */,
+			);
+			name = UniEatsTests;
+			productName = UniEatsTests;
+			productReference = B3000002000014 /* UniEatsTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -102,6 +148,10 @@
 				TargetAttributes = {
 					A6000001000001 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					B6000001000014 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = A6000001000001;
 					};
 				};
 			};
@@ -122,12 +172,20 @@
 			projectRoot = "";
 			targets = (
 				A6000001000001 /* UniEats */,
+				B6000001000014 /* UniEatsTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		A7000002000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B7000002000014 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -144,7 +202,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7000001000014 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B4000003000014 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A6000001000001 /* UniEats */;
+			targetProxy = B4000001000014 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A8000003000001 /* Debug */ = {
@@ -326,6 +399,44 @@
 			};
 			name = Release;
 		};
+		B8000003000014 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.unieats.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/UniEats.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/UniEats";
+			};
+			name = Debug;
+		};
+		B8000004000014 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.unieats.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/UniEats.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/UniEats";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -343,6 +454,15 @@
 			buildConfigurations = (
 				A8000003000001 /* Debug */,
 				A8000004000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B8000001000014 /* Build configuration list for PBXNativeTarget "UniEatsTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B8000003000014 /* Debug */,
+				B8000004000014 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

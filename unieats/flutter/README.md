@@ -55,14 +55,32 @@ the models, the live-event types, `SyncConflictResolver` and the repository inte
 (`DriftSpotRepository`, `DriftReviewRepository`, `TokenAuthRepository`) and the providers expose only
 the interfaces. Check the package on its own: `cd packages/unieats_data && dart pub get && dart analyze`.
 
-This tag (`l13-ai`) adds **Describe this dish** on the detail screen: it POSTs the full spot
+Since `l13-ai` **Describe this dish** on the detail screen POSTs the full spot
 (including `openNow`) to `/api/ai/describe` and renders the Server-Sent Events stream as it arrives
 (dio `ResponseType.stream` + `lib/data/network/sse.dart`). Without `ANTHROPIC_API_KEY` the server
 streams a template in four chunks, so the demo works offline; with the key it streams Claude's text.
 If the server is down the card says "Server unreachable".
 
+This tag (`l14-tests`) adds tests:
+
+```bash
+flutter test                         # 26 tests
+maestro test maestro/flutter.yaml    # needs the server + a running emulator/simulator
+```
+
+- `test/models_test.dart` — JSON ↔ models (contract shape, round trip, bad data), live-event and SSE parsing.
+- `test/database_test.dart` — in-memory Drift: upsert by id, pending rows never clobbered,
+  `getPendingSync`/`markSynced`, filtering, outbox order, reviews, schema v1 → v2 migration.
+- `test/sync_conflict_test.dart` — `SyncConflictResolver` (server wins only when strictly newer; a tie keeps
+  the client edit) and outbox replay against a scripted API: 2xx, 409 server-wins, 409 tie → resend,
+  offline and 401 keep the op.
+- `maestro/flutter.yaml` — sign in → first spot (`id: spot-list-item`) → `Reviews (N)`
+  (`id: spot-detail-reviews`) → "Describe this dish" (`id: describe-dish-button`) → back. The ids are
+  `Semantics(identifier: …)` in the widgets. Validate with `maestro check-syntax maestro/flutter.yaml`.
+
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
-Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
+Get a token first: `TOKEN=$(curl -s -X POST localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).token')`.
+Conflict: edit offline, then `curl -X PATCH -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
 http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
 
 Edits now need a signed-in session. Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
@@ -71,7 +89,7 @@ Edits now need a signed-in session. Drift generates `lib/data/database/database.
 ## Run
 
 Requires Flutter 3.47.6 or newer. The Android shell uses the Gradle wrapper (9.8.0) and AGP 9.4.1 with
-built-in Kotlin, and builds with Android Studio 2026.1's bundled JDK 25 as is (JDK 21 works too), so there is
+built-in Kotlin, and builds with Android Studio 2026.2's bundled JDK 25 as is (JDK 21 works too), so there is
 no `flutter config --jdk-dir` step. iOS (tested with Xcode 27, deployment target 15.0) links plugins as Swift
 packages: no CocoaPods, no `pod install`.
 
@@ -97,5 +115,7 @@ Android application id and iOS bundle id: `com.unieats.flutter`.
 
 ```bash
 flutter analyze
+flutter test
 flutter build apk --debug
+(cd packages/unieats_data && dart pub get && dart analyze)
 ```

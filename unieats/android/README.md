@@ -1,4 +1,4 @@
-# UniEats Android — tag `l13-ai`
+# UniEats Android — tag `l14-tests`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -113,6 +113,35 @@ No Firebase dependency: the same ideas against the course server.
   timeout is longer for this one request.
 - `SpotDetailViewModel.describeDish()` appends every delta to `aiText`, so the text grows on screen
   as it arrives (`animateContentSize`). A stopped server shows "Server unreachable".
+
+## Tests (new in l14)
+
+```bash
+./gradlew -p unieats/android :app:testDebugUnitTest   # JUnit 4 + MockK + Turbine, no device
+./gradlew -p unieats/android :shared:allTests          # commonTest on the JVM and the iOS simulator
+```
+
+- `SpotListViewModelTest` — ViewModel against `FakeEatsRepository` (first load, debounced search,
+  category filter, favourites, error + retry, a repository change observed with Turbine, remote flag).
+- `SettingsViewModelTest` — MockK mocks for `RemoteConfig`, `CrashConsent` and `CrashReporter`,
+  Turbine on `uiState`, `verify { crashReporter.recordError(...) }`.
+- `EntityMappingTest` (Spot/Review ↔ Room entities), `ServerSentEventParserTest`, `GeoTest`.
+- `shared/src/commonTest/.../SyncConflictResolverTest` — newer server wins, newer client wins,
+  tie → client.
+
+### Maestro (UI flow on an emulator)
+
+Start the server, install the debug app, then:
+
+```bash
+maestro test unieats/android/maestro/android.yaml
+```
+
+The flow signs in, opens the first spot, checks "Reviews (n)", taps **Describe this dish**, waits
+for the streamed text and goes back. It finds composables by `testTag`
+(`spot-list-item`, `spot-detail-reviews`, `describe-dish-button`, …, see `ui/TestTags.kt`), which
+`MainActivity` exposes as resource ids with `testTagsAsResourceId`.
+`maestro check-syntax maestro/android.yaml` validates the file without a device.
 
 ## Demo: offline edit → reconnect → sync
 
