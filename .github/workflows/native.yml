@@ -41,7 +41,9 @@ jobs:
         with:
           packages: platform-tools platforms;android-37.1
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          validate-wrappers: false # the legacy lectures/* demos carry wrapper jars this check does not know
 
       - name: Write local.properties
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
@@ -88,6 +90,10 @@ jobs:
           xcodebuild -project UniEats.xcodeproj -scheme UniEatsTests \
             -destination "platform=iOS Simulator,id=$UDID" \
             test CODE_SIGNING_ALLOWED=NO
+
+      # Xcode does not run a local package's tests from the app scheme.
+      - name: UniEatsDomain package tests
+        run: swift test --package-path UniEatsDomain
 
   maestro-android:
     name: Maestro — Android
@@ -165,13 +171,14 @@ jobs:
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
+      # Ad-hoc signed: a CODE_SIGNING_ALLOWED=NO build has no Keychain access, so login would fail.
       - name: Build, boot a simulator, install, run the flow
         working-directory: unieats/ios
         run: |
           UDID=$(xcrun simctl list devices available | grep -m1 -E '^ +iPhone' | grep -oE '[0-9A-F-]{36}')
           xcodebuild -project UniEats.xcodeproj -scheme UniEats \
             -destination "platform=iOS Simulator,id=$UDID" -derivedDataPath build \
-            build CODE_SIGNING_ALLOWED=NO
+            build CODE_SIGN_IDENTITY=-
           xcrun simctl boot "$UDID"
           xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/UniEats.app
           maestro test maestro/ios.yaml

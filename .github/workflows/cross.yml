@@ -40,9 +40,14 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          architecture: x64 # explicit so local act runs on Apple Silicon resolve the x64 Linux SDK
           channel: stable
           cache: true
 
@@ -54,6 +59,13 @@ jobs:
 
       - name: Unit tests
         run: flutter test
+
+      - name: Shared package (unieats_data) — analyze + tests
+        working-directory: unieats/flutter/packages/unieats_data
+        run: |
+          dart pub get
+          dart analyze
+          dart test
 
       # sqlite3's build hook downloads a prebuilt SQLite on first build; a corrupted download
       # fails the hash check, so retry once from a clean state before giving up.
@@ -74,17 +86,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The jest SQLite stand-in uses node:sqlite.
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: unieats/rn/package-lock.json
 
       - name: Install
         run: npm ci
 
+      - name: Generate typed routes
+        run: CI=1 npx expo customize tsconfig.json
+
       - name: Type-check
         run: npx tsc --noEmit
+
+      - name: Check Expo SDK versions
+        run: npx expo install --check
 
       - name: Unit tests
         run: npm test
@@ -166,7 +185,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: |
             unieats/server/package-lock.json
