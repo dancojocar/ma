@@ -54,7 +54,8 @@ fun SpotDetailScreen(
         onSaveEdit = viewModel::saveEdit,
         onAddReview = viewModel::openReviewForm,
         onDismissReview = viewModel::dismissReviewForm,
-        onSubmitReview = viewModel::submitReview
+        onSubmitReview = viewModel::submitReview,
+        onDescribe = viewModel::describeDish
     )
 }
 
@@ -67,7 +68,8 @@ fun SpotDetailContent(
     onSaveEdit: (name: String, description: String, openNow: Boolean) -> Unit,
     onAddReview: () -> Unit,
     onDismissReview: () -> Unit,
-    onSubmitReview: (stars: Int, text: String) -> Unit
+    onSubmitReview: (stars: Int, text: String) -> Unit,
+    onDescribe: () -> Unit
 ) {
     val spot = state.spot
     var editing by rememberSaveable { mutableStateOf(false) }
@@ -114,6 +116,14 @@ fun SpotDetailContent(
                     item { StaleDataNotice(state.errorMessage, onRetry) }
                 }
                 item { SpotHeader(spot, state.isPendingSync, onEdit = { editing = true }) }
+                item {
+                    DescribeDishSection(
+                        text = state.aiText,
+                        isStreaming = state.isDescribing,
+                        error = state.aiError,
+                        onDescribe = onDescribe
+                    )
+                }
                 item { ReviewsHeader(state.reviews.size, onAddReview) }
                 items(state.reviews, key = { it.id }) { review -> ReviewRow(review) }
             }

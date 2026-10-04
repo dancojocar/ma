@@ -11,6 +11,7 @@ final class SpotRepository {
     private let context: ModelContext
     private let api: ApiClient
     private let session: SessionStore
+    private let ai = AiDescribeClient()
     private var retryTask: Task<Void, Never>?
     private var retryAttempt = 0
 
@@ -99,6 +100,17 @@ final class SpotRepository {
             session.sessionExpired()
             throw ApiError.unauthorized
         }
+    }
+
+    func describe(_ spot: Spot) -> AsyncThrowingStream<String, Error> {
+        guard let token = session.token else {
+            return AsyncThrowingStream { $0.finish(throwing: ApiError.unauthorized) }
+        }
+        return ai.describe(spot, token: token)
+    }
+
+    func handleUnauthorized() {
+        session.sessionExpired()
     }
 
     func markSynced(_ entity: SpotEntity, server dto: SpotDTO) {

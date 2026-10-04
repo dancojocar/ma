@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import 'package:unieats_data/unieats_data.dart';
 import 'app_error.dart';
 import 'retry_interceptor.dart';
+import 'sse.dart';
 
 Dio createDio(String baseUrl) {
   final dio = Dio(
@@ -79,6 +82,42 @@ class ApiClient {
     ),
     Review.fromJson,
   );
+
+  /// `POST /ai/describe` answers with Server-Sent Events; each `data`
+  /// frame carries `{"delta": "..."}`, emitted here as soon as it arrives.
+  Stream<String> describeSpot(Spot spot) async* {
+    final Response<ResponseBody> response;
+    try {
+      response = await _dio.post<ResponseBody>(
+        '/ai/describe',
+        data: {'spot': spot.toJson()},
+        options: Options(
+          responseType: ResponseType.stream,
+          receiveTimeout: const Duration(seconds: 60),
+          headers: {'Accept': 'text/event-stream'},
+        ),
+      );
+    } on DioException catch (e) {
+      throw mapDioError(e);
+    }
+    try {
+      await for (final frame in parseSse(response.data!.stream)) {
+        final json = jsonDecode(frame.data);
+        switch ((frame.event, json)) {
+          case ('message', {'delta': final String delta}):
+            yield delta;
+          case ('done', _):
+            return;
+          case ('error', {'error': {'message': final String message}}):
+            throw AiUnavailable(message);
+        }
+      }
+    } on FormatException {
+      throw const BadResponse();
+    } on DioException catch (e) {
+      throw mapDioError(e);
+    }
+  }
 
   Future<Map<String, bool>> fetchConfig() => _send(
     () => _dio.get<Map<String, dynamic>>('/config'),

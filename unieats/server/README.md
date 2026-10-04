@@ -16,7 +16,8 @@ npm test         # Jest + supertest, no running server needed
 ```
 
 Environment: `PORT` (default 3000), `JWT_SECRET` (default `dev-secret-change-me`; set your own
-outside the classroom).
+outside the classroom), `ANTHROPIC_API_KEY` (optional, see below), `AI_FALLBACK_CHUNK_MS`
+(pause between template chunks, default 150).
 
 ## Endpoints
 
@@ -33,6 +34,7 @@ outside the classroom).
 | POST | `/api/spots/:id/reviews` | Bearer | `{ stars, text }`, 201 |
 | GET | `/api/config` | – | `{ flags: { show_new_rating_ui } }` (remote config, default `false`) |
 | POST | `/api/config` | Bearer | `{ flags: { show_new_rating_ui: true } }` flips it for the demo |
+| POST | `/api/ai/describe` | Bearer | `{ spot: Spot }` → `text/event-stream`, 10 requests/min per user |
 
 Errors are always `{ error: { code, message } }`. Mutations honour `Idempotency-Key`.
 
@@ -66,6 +68,33 @@ curl -s -X POST http://localhost:3000/api/config -H "Authorization: Bearer $TOKE
 ```
 
 Then tap "Fetch & activate" in any client: the new rating badge appears without a rebuild.
+
+## "Describe this dish" (L13)
+
+The app never holds an LLM key: it calls this endpoint and the server talks to Claude.
+With `ANTHROPIC_API_KEY` set, the server streams `claude-sonnet-5-5` output through the
+Anthropic Messages API; without it, a deterministic template is streamed in 4 chunks so the demo
+works offline. Same framing either way:
+
+```
+data: {"delta":"Casa Cafea is a cosy place "}
+
+data: {"delta":"to linger over coffee, rated 4.5/5 "}
+
+…
+event: done
+data: {"source":"template"}
+```
+
+```bash
+curl -N -X POST http://localhost:3000/api/ai/describe -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"spot":{"name":"Casa Cafea","category":"cafe","priceLevel":2,"rating":4.5,"openNow":true}}'
+
+ANTHROPIC_API_KEY=sk-ant-... npm start      # live model instead of the template
+```
+
+The model call lives in `src/routes/ai.js` (`streamFromClaude`).
 
 ## Live updates (WebSocket)
 
