@@ -4,6 +4,7 @@ struct SpotRow: View {
     let spot: Spot
     let isFavourite: Bool
     var isPending = false
+    let photoTransition: Namespace.ID
     let onToggleFavourite: () -> Void
 
     var body: some View {
@@ -11,6 +12,7 @@ struct SpotRow: View {
             SpotPhoto(url: spot.photoUrl)
                 .frame(width: 64, height: 64)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .matchedTransitionSource(id: spot.id, in: photoTransition)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
@@ -87,3 +89,4 @@ struct CategoryBadge: View {
             .clipShape(Capsule())
     }
 }
+

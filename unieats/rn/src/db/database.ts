@@ -33,6 +33,8 @@ const MIGRATIONS = [
      payload TEXT NOT NULL,
      createdAt INTEGER NOT NULL
    );`,
+  // v2: a pending row keeps the server version it edited in `updatedAt` itself (CONTRACT §3).
+  `ALTER TABLE spots DROP COLUMN serverUpdatedAt;`,
 ];
 
 let db: SQLite.SQLiteDatabase | null = null;
