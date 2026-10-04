@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'ui/spot_list/spot_list_screen.dart';
+import 'app_router.dart';
 
 void main() {
   runApp(const ProviderScope(child: UniEatsApp()));
 }
 
-class UniEatsApp extends StatelessWidget {
+class UniEatsApp extends ConsumerWidget {
   const UniEatsApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
       title: 'UniEats',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -21,6 +23,10 @@ class UniEatsApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
         useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(),
+          filled: true,
+        ),
         cardTheme: CardThemeData(
           elevation: 2,
           shape: RoundedRectangleBorder(
@@ -28,7 +34,7 @@ class UniEatsApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const SpotListScreen(),
+      routerConfig: router,
     );
   }
 }

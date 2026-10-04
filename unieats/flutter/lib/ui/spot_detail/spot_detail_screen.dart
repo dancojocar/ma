@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/models.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
 
 class SpotDetailScreen extends ConsumerWidget {
-  const SpotDetailScreen({super.key, required this.spot});
+  const SpotDetailScreen({super.key, required this.spotId});
 
-  final Spot spot;
+  final String spotId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final spot = ref.watch(spotByIdProvider(spotId));
+    if (spot == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text('Spot "$spotId" not found')),
+      );
+    }
     final isFavourite = ref.watch(
-      spotListProvider.select((s) => s.favouriteIds.contains(spot.id)),
+      spotListProvider.select((s) => s.favouriteIds.contains(spotId)),
     );
 
     return Scaffold(
@@ -24,9 +30,8 @@ class SpotDetailScreen extends ConsumerWidget {
           FavouriteButton(
             isFavourite: isFavourite,
             onToggle:
-                () => ref
-                    .read(spotListProvider.notifier)
-                    .toggleFavourite(spot.id),
+                () =>
+                    ref.read(spotListProvider.notifier).toggleFavourite(spotId),
           ),
         ],
       ),
