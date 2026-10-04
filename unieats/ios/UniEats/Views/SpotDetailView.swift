@@ -29,6 +29,12 @@ struct SpotDetailView: View {
                     spot: entity.spot,
                     isPending: entity.pendingSync,
                     reviews: reviewEntities.map(Review.init(entity:)),
+                    describe: DescribeDishState(
+                        text: viewModel.dishDescription,
+                        isStreaming: viewModel.isDescribing,
+                        error: viewModel.describeError,
+                        start: { viewModel.describe(entity.spot) }
+                    ),
                     onAddReview: { isAddingReview = true }
                 )
                 .sheet(isPresented: $isAddingReview) {
@@ -63,6 +69,7 @@ struct SpotDetailView: View {
             }
         }
         .task { await viewModel.refresh() }
+        .onDisappear { viewModel.cancelDescribe() }
         .refreshable { await viewModel.refresh() }
     }
 }
@@ -71,6 +78,7 @@ private struct SpotDetailContent: View {
     let spot: Spot
     let isPending: Bool
     let reviews: [Review]
+    let describe: DescribeDishState
     let onAddReview: () -> Void
 
     var body: some View {
@@ -108,6 +116,8 @@ private struct SpotDetailContent: View {
                     Text(spot.description)
                         .font(.body)
                         .foregroundStyle(.secondary)
+
+                    DescribeDishSection(state: describe)
 
                     ReviewsSection(reviews: reviews, onAddReview: onAddReview)
                 }

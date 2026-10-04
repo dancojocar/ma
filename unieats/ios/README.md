@@ -1,27 +1,20 @@
-# UniEats iOS — l12-kmp
+# UniEats iOS — l13-ai
 
-A shared domain module consumed by the app.
+"Describe this dish": an LLM description streamed from the backend proxy.
 
 ## What this tag adds
 
-- `UniEatsDomain/` — a local Swift package (`Package.swift`, swift-tools 6.0) **linked into the
-  UniEats target** (Xcode › project › Package Dependencies shows it; `project.pbxproj` has an
-  `XCLocalSwiftPackageReference` + product dependency). It holds the domain model `Spot` and
-  `SpotConflictResolver` (last-write-wins: server wins only if its `updatedAt` is strictly
-  newer; a tie goes to the client — CONTRACT §5).
-- The app imports it everywhere it uses `Spot` (`import UniEatsDomain`); JSON/SwiftData mapping
-  stays in the app (`Models/Spot.swift` `SpotDTO`, `Models/SpotEntity.swift`).
-- `SpotRepository.sync()` asks `SpotConflictResolver.winner(local:server:)` on a 409: server →
-  take the server row; client → rebase the queued PATCH on the server's `updatedAt` and resend.
-- The original hand-written duplicate `UniEats/Domain/DomainBridge.swift` is gone.
-
-Why a Swift package and not the Kotlin Multiplatform `UniEatsShared.xcframework`: the iOS build
-must not depend on a JDK + Gradle build of `../android/shared`. To try the KMP route, build the
-framework with `cd ../android && ./gradlew :shared:assembleUniEatsSharedXCFramework` and drag
-`shared/build/XCFrameworks/debug/UniEatsShared.xcframework` into the target's
-*Frameworks, Libraries, and Embedded Content*; the models then come from Kotlin instead.
-
-Build the package on its own: `swift build --package-path UniEatsDomain`.
+- `AI/AiDescribeClient.swift` — `POST /api/ai/describe` with the Bearer token and the **full
+  spot** (`{"spot": {…, "openNow": …}}`), read with `URLSession.bytes(for:)` and exposed as an
+  `AsyncThrowingStream<String, Error>`: every `data: {"delta": "…"}` line yields a chunk,
+  `event: done` finishes, `event: error` throws. 401 → back to login, 429 → "wait a minute",
+  no connection → "Server unreachable".
+- **Describe this dish** button on the spot detail (`Views/DescribeDishSection.swift`); the text
+  grows as chunks arrive (`SpotDetailViewModel.describe(_:)`), the request is cancelled when you
+  leave the screen.
+- The API key never ships in the app: the server calls the Anthropic Messages API when it has
+  `ANTHROPIC_API_KEY`, otherwise it streams a deterministic template in 4 chunks, so the demo
+  works offline. To see the streaming clearly: `AI_FALLBACK_CHUNK_MS=1500 npm start`.
 
 ## Already in the app (earlier tags)
 
@@ -36,6 +29,7 @@ Build the package on its own: `swift build --package-path UniEatsDomain`.
 | l09 | Near Me tab (CoreLocation, 2 km), local notification from live `spot.updated` | `Views/NearMeView.swift`, `Notifications/SpotChangeNotifier.swift` |
 | l10 | Animated filtered list, row photo → detail zoom transition, `PERFORMANCE.md` | `Views/SpotListView.swift`, `Views/SpotRow.swift` |
 | l11 | Settings: `show_new_rating_ui` Fetch & activate, consent-gated `CrashReporter`, debug Test crash | `Cloud/`, `Views/SettingsView.swift` |
+| l12 | Local Swift package `UniEatsDomain` (domain `Spot`, `SpotConflictResolver`) linked into the app | `UniEatsDomain/` |
 
 ## Run
 

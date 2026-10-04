@@ -1,6 +1,13 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l12-kmp`: the domain layer is a local npm workspace package, `shared/` (`@unieats/shared`): the
+Tag `l13-ai`: the detail screen has **Describe this dish**. It POSTs the full spot (incl. `openNow`) to
+`/api/ai/describe` with the Bearer token and streams the Server-Sent Events answer into the screen chunk by
+chunk (`src/api/aiClient.ts`: `expo/fetch` + `ReadableStream` reader + `TextDecoder`, parsed by
+`src/api/sse.ts`). The server proxies Claude when it has `ANTHROPIC_API_KEY`, otherwise streams a template in
+4 chunks, so the demo works offline; "Source: template" shows which. If the server is down the screen says
+"Server unreachable".
+
+The domain layer (since l12) is a local npm workspace package, `shared/` (`@unieats/shared`): the
 `Spot`/`Review`/`User` models, the Zod schemas, the last-write-wins rule `resolveConflict` (server wins only
 when strictly newer; a tie keeps the client edit) and the 2 km `distanceKm` helper. The app imports it
 everywhere (`import { resolveConflict } from "@unieats/shared"`); there is no `src/domain` copy any more.
