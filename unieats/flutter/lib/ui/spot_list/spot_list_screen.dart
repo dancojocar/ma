@@ -34,20 +34,27 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
   void _onScroll() {
     final position = _scrollController.position;
     if (position.pixels >= position.maxScrollExtent - 300) {
-      ref.read(spotPagesProvider.notifier).loadNextPage();
+      ref.read(spotPagingProvider.notifier).loadNextPage();
     }
   }
 
   Future<void> _refresh() => ref
-      .refresh(spotPagesProvider.future)
+      .refresh(spotPagingProvider.future)
       // A failed refresh is rendered from the provider's error state.
       .then<void>((_) {}, onError: (_) {});
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(liveSyncProvider);
     final ui = ref.watch(spotListProvider);
     final notifier = ref.read(spotListProvider.notifier);
-    final pages = ref.watch(spotPagesProvider);
+    final spots = ref.watch(visibleSpotsProvider);
+    final paging = ref.watch(spotPagingProvider);
+    final pendingIds =
+        ref.watch(pendingSpotIdsProvider).valueOrNull ?? const <String>{};
+    final pendingCount = ref.watch(pendingChangesCountProvider).valueOrNull;
+    final pagingError = paging.isLoading ? null : paging.error;
+    void retry() => ref.invalidate(spotPagingProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -71,30 +78,40 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
             selected: ui.categoryFilter,
             onSelected: notifier.setCategoryFilter,
           ),
+          if (pendingCount != null && pendingCount > 0)
+            PendingSyncBanner(
+              count: pendingCount,
+              onSyncNow: () => ref.read(spotRepositoryProvider).syncOutbox(),
+            ),
+          if (pagingError != null && (spots.valueOrNull?.isNotEmpty ?? false))
+            OfflineBanner(error: pagingError, onRetry: retry),
           SizedBox(
             height: 4,
-            child:
-                pages.isLoading && pages.hasValue
-                    ? const LinearProgressIndicator()
-                    : null,
+            child: paging.isLoading ? const LinearProgressIndicator() : null,
           ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
-              child: switch (pages) {
-                AsyncValue(:final error?) when !pages.isLoading => _Scrollable(
+              child: switch (spots) {
+                AsyncValue(valueOrNull: final list?) when list.isNotEmpty =>
+                  _SpotList(
+                    controller: _scrollController,
+                    spots: list,
+                    paging: paging.valueOrNull,
+                    favouriteIds: ui.favouriteIds,
+                    pendingIds: pendingIds,
+                  ),
+                AsyncValue(valueOrNull: _?) when pagingError != null =>
+                  _Scrollable(
+                    child: ErrorView(error: pagingError, onRetry: retry),
+                  ),
+                AsyncValue(valueOrNull: _?) when !paging.isLoading =>
+                  const _Scrollable(child: EmptySpotsMessage()),
+                AsyncValue(:final error?) => _Scrollable(
                   child: ErrorView(
                     error: error,
-                    onRetry: () => ref.invalidate(spotPagesProvider),
+                    onRetry: () => ref.invalidate(visibleSpotsProvider),
                   ),
-                ),
-                AsyncValue(valueOrNull: final value?)
-                    when value.spots.isEmpty =>
-                  const _Scrollable(child: EmptySpotsMessage()),
-                AsyncValue(valueOrNull: final value?) => _SpotList(
-                  controller: _scrollController,
-                  pages: value,
-                  favouriteIds: ui.favouriteIds,
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -124,19 +141,21 @@ class _Scrollable extends StatelessWidget {
 class _SpotList extends ConsumerWidget {
   const _SpotList({
     required this.controller,
-    required this.pages,
+    required this.spots,
+    required this.paging,
     required this.favouriteIds,
+    required this.pendingIds,
   });
 
   final ScrollController controller;
-  final SpotPages pages;
+  final List<Spot> spots;
+  final SpotPaging? paging;
   final Set<String> favouriteIds;
+  final Set<String> pendingIds;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final spots = pages.spots;
-    final showFooter =
-        pages.hasNextPage || pages.isLoadingMore || pages.loadMoreError != null;
+    final showFooter = paging?.hasNextPage ?? false;
     return ListView.builder(
       controller: controller,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -145,8 +164,8 @@ class _SpotList extends ConsumerWidget {
       itemBuilder: (context, index) {
         if (index == spots.length) {
           return _PageFooter(
-            error: pages.loadMoreError,
-            onRetry: () => ref.read(spotPagesProvider.notifier).loadNextPage(),
+            error: paging?.loadMoreError,
+            onRetry: () => ref.read(spotPagingProvider.notifier).loadNextPage(),
           );
         }
         final spot = spots[index];
@@ -154,6 +173,7 @@ class _SpotList extends ConsumerWidget {
           key: ValueKey(spot.id),
           spot: spot,
           isFavourite: favouriteIds.contains(spot.id),
+          isPending: pendingIds.contains(spot.id),
           onFavouriteToggle:
               () =>
                   ref.read(spotListProvider.notifier).toggleFavourite(spot.id),
@@ -195,10 +215,12 @@ class SpotCard extends StatelessWidget {
     required this.isFavourite,
     required this.onFavouriteToggle,
     required this.onTap,
+    this.isPending = false,
   });
 
   final Spot spot;
   final bool isFavourite;
+  final bool isPending;
   final VoidCallback onFavouriteToggle;
   final VoidCallback onTap;
 
@@ -231,6 +253,14 @@ class SpotCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      if (isPending)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 6),
+                          child: Tooltip(
+                            message: 'Waiting to sync',
+                            child: Icon(Icons.cloud_upload_outlined, size: 18),
+                          ),
+                        ),
                       OpenBadge(openNow: spot.openNow),
                       FavouriteButton(
                         isFavourite: isFavourite,

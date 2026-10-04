@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const store = require('../store');
 const { idempotency } = require('../idempotency');
 const { pickSpotFields } = require('../validation');
-const { notFound, validation } = require('../errors');
+const { sendError, notFound, validation } = require('../errors');
 
 const router = Router();
 
@@ -57,10 +57,19 @@ router.post('/', idempotency, (req, res) => {
 });
 
 router.patch('/:id', idempotency, (req, res) => {
-  if (!store.getSpotById(req.params.id)) return notFound(res);
+  const current = store.getSpotById(req.params.id);
+  if (!current) return notFound(res);
 
-  const { fields, error } = pickSpotFields(req.body || {});
+  const body = req.body || {};
+  const { fields, error } = pickSpotFields(body);
   if (error) return validation(res, error);
+
+  if (body.updatedAt !== undefined) {
+    if (typeof body.updatedAt !== 'number') return validation(res, 'invalid updatedAt');
+    if (body.updatedAt < current.updatedAt) {
+      return sendError(res, 409, 'conflict', 'Spot was changed by someone else', { spot: current });
+    }
+  }
 
   return res.json(store.updateSpot(req.params.id, fields));
 });

@@ -45,3 +45,15 @@ data class SpotsPage(
     val page: Int,
     val hasNextPage: Boolean
 )
+
+/** Body of PATCH /spots/{id}; [updatedAt] is the server version the user edited. */
+@Serializable
+data class SpotPatch(
+    val name: String,
+    val description: String,
+    val openNow: Boolean,
+    val updatedAt: Long
+)
+
+@Serializable
+data class ConflictResponse(val spot: Spot)

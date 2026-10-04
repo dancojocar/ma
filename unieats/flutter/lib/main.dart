@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_router.dart';
+import 'providers/providers.dart';
 
 void main() {
   runApp(const ProviderScope(child: UniEatsApp()));
@@ -13,6 +14,7 @@ class UniEatsApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    ref.watch(outboxSyncProvider);
 
     return MaterialApp.router(
       title: 'UniEats',

@@ -22,3 +22,18 @@ export interface Review {
   text: string;
   createdAt: number;
 }
+
+export interface LocalSpot extends Spot {
+  pendingSync: boolean;
+}
+
+export type SpotEdit = Pick<Spot, "name" | "description" | "openNow">;
+
+export interface OutboxOp {
+  seq: number;
+  opId: string;
+  type: "update";
+  entityId: string;
+  payload: SpotEdit & { editedAt: number };
+  createdAt: number;
+}
