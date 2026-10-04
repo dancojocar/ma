@@ -17,6 +17,7 @@ import {
   deleteIfNotPending,
   deleteSpot,
   getPendingSync,
+  getSpotById,
   getServerVersion,
   markSynced,
   recordServerVersion,
@@ -69,9 +70,22 @@ export async function addReview(spotId: string, review: { stars: number; text: s
   }
 }
 
-export function applyLiveEvent(event: LiveEvent) {
-  if (event.type === "spot.deleted") deleteIfNotPending(event.id);
-  else upsertFromServer([event.spot]);
+/** Writes a live event into SQLite; returns true when it is news to this device (not an echo of our own write). */
+export function applyLiveEvent(event: LiveEvent): boolean {
+  if (event.type === "spot.deleted") {
+    deleteIfNotPending(event.id);
+    return false;
+  }
+  const local = getSpotById(event.spot.id);
+  const isEcho =
+    local !== null &&
+    (local.updatedAt === event.spot.updatedAt ||
+      (local.pendingSync &&
+        local.name === event.spot.name &&
+        local.description === event.spot.description &&
+        local.openNow === event.spot.openNow));
+  upsertFromServer([event.spot]);
+  return !isEcho;
 }
 
 /** Optimistic: the UI shows the edit immediately; the outbox replays it when the server is reachable. */

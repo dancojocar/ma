@@ -5,20 +5,22 @@ struct SpotListView: View {
     let repository: SpotRepository
     let live: LiveUpdateService
     let session: SessionStore
+    let favourites: FavouritesStore
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
     @Environment(\.scenePhase) private var scenePhase
 
-    init(repository: SpotRepository, live: LiveUpdateService, session: SessionStore) {
+    init(repository: SpotRepository, live: LiveUpdateService, session: SessionStore, notifier: SpotChangeNotifier, favourites: FavouritesStore) {
         self.repository = repository
+        self.favourites = favourites
         self.live = live
         self.session = session
-        _viewModel = State(initialValue: SpotListViewModel(repository: repository))
+        _viewModel = State(initialValue: SpotListViewModel(repository: repository, notifier: notifier))
     }
 
     var body: some View {
         NavigationStack(path: $path) {
-            SpotListContent(viewModel: viewModel)
+            SpotListContent(viewModel: viewModel, favourites: favourites)
                 .safeAreaInset(edge: .top) { SyncStatusBanner(repository: repository) }
                 .refreshable { await viewModel.refresh() }
                 .task { await viewModel.refresh() }
@@ -48,8 +50,8 @@ struct SpotListView: View {
                 .navigationDestination(for: String.self) { spotId in
                     SpotDetailView(
                         spotId: spotId,
-                        isFavourite: viewModel.favouriteIds.contains(spotId),
-                        onToggleFavourite: { viewModel.toggleFavourite(spotId) },
+                        isFavourite: favourites.contains(spotId),
+                        onToggleFavourite: { favourites.toggle(spotId) },
                         repository: repository
                     )
                 }
@@ -64,10 +66,12 @@ struct SpotListView: View {
 
 private struct SpotListContent: View {
     let viewModel: SpotListViewModel
+    let favourites: FavouritesStore
     @Query private var spots: [SpotEntity]
 
-    init(viewModel: SpotListViewModel) {
+    init(viewModel: SpotListViewModel, favourites: FavouritesStore) {
         self.viewModel = viewModel
+        self.favourites = favourites
         let query = viewModel.searchQuery
         let category = viewModel.categoryFilter ?? ""
         _spots = Query(
@@ -92,9 +96,9 @@ private struct SpotListContent: View {
                 NavigationLink(value: entity.id) {
                     SpotRow(
                         spot: entity.spot,
-                        isFavourite: viewModel.favouriteIds.contains(entity.id),
+                        isFavourite: favourites.contains(entity.id),
                         isPending: entity.pendingSync,
-                        onToggleFavourite: { viewModel.toggleFavourite(entity.id) }
+                        onToggleFavourite: { favourites.toggle(entity.id) }
                     )
                 }
                 .task {

@@ -13,10 +13,10 @@ sealed class LiveEvent {
     try {
       return switch (jsonDecode(message)) {
         {
-          'type': 'spot.created' || 'spot.updated',
+          'type': final String type && ('spot.created' || 'spot.updated'),
           'spot': final Map<String, dynamic> spot,
         } =>
-          SpotChanged(Spot.fromJson(spot)),
+          SpotChanged(Spot.fromJson(spot), created: type == 'spot.created'),
         {'type': 'spot.deleted', 'id': final String id} => SpotDeleted(id),
         _ => null,
       };
@@ -37,9 +37,10 @@ class LiveDisconnected extends LiveEvent {
 }
 
 class SpotChanged extends LiveEvent {
-  const SpotChanged(this.spot);
+  const SpotChanged(this.spot, {this.created = false});
 
   final Spot spot;
+  final bool created;
 }
 
 class SpotDeleted extends LiveEvent {

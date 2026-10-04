@@ -6,8 +6,10 @@ struct UniEatsApp: App {
     private let container: ModelContainer
     private let repository: SpotRepository
     private let live = LiveUpdateService()
+    private let notifier = SpotChangeNotifier()
     @State private var session: SessionStore
     @State private var connectivity = ConnectivityMonitor()
+    @State private var favourites = FavouritesStore()
 
     init() {
         do {
@@ -25,7 +27,15 @@ struct UniEatsApp: App {
         WindowGroup {
             Group {
                 if session.isLoggedIn {
-                    SpotListView(repository: repository, live: live, session: session)
+                    TabView {
+                        Tab("Spots", systemImage: "fork.knife") {
+                            SpotListView(repository: repository, live: live, session: session, notifier: notifier, favourites: favourites)
+                        }
+                        Tab("Near Me", systemImage: "location") {
+                            NearMeView(repository: repository, favourites: favourites)
+                        }
+                    }
+                    .task { await notifier.requestPermission() }
                 } else {
                     LoginView(session: session)
                 }
