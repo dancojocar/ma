@@ -1,7 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { describeError } from "../../../src/api/errors";
+import { AddReviewForm } from "../../../src/components/AddReviewForm";
 import { EditSpotForm } from "../../../src/components/EditSpotForm";
 import { ReviewList } from "../../../src/components/ReviewList";
 import { SpotDetail } from "../../../src/components/SpotDetail";
@@ -9,7 +11,7 @@ import { EmptyView, ErrorView, LoadingView } from "../../../src/components/Statu
 import { SyncBanner } from "../../../src/components/SyncBanner";
 import { useLocalReviews, useLocalSpot } from "../../../src/db/hooks";
 import { useReviewsSync, useSpotSync } from "../../../src/hooks/useSpots";
-import { editSpot } from "../../../src/repository/spotRepository";
+import { addReview, editSpot } from "../../../src/repository/spotRepository";
 import { useSpotsStore } from "../../../src/store/spotsStore";
 
 export default function SpotDetailScreen() {
@@ -21,6 +23,9 @@ export default function SpotDetailScreen() {
   const spotSync = useSpotSync(id);
   const reviewsSync = useReviewsSync(id);
   const [editing, setEditing] = useState(false);
+  const postReview = useMutation({
+    mutationFn: (review: { stars: number; text: string }) => addReview(id, review),
+  });
 
   if (!spot) {
     if (spotSync.isPending) return <LoadingView />;
@@ -58,6 +63,11 @@ export default function SpotDetailScreen() {
           isLoading={reviewsSync.isPending && reviews.length === 0}
           error={reviewsSync.isError && reviews.length === 0 ? describeError(reviewsSync.error) : null}
           onRetry={() => reviewsSync.refetch()}
+        />
+        <AddReviewForm
+          submitting={postReview.isPending}
+          error={postReview.isError ? describeError(postReview.error) : null}
+          onSubmit={(review, reset) => postReview.mutate(review, { onSuccess: reset })}
         />
       </SpotDetail>
     </>

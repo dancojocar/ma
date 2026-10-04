@@ -18,6 +18,7 @@ dependencies:
   drift_flutter: ^0.3.1
   connectivity_plus: ^7.0.0
   uuid: ^4.5.1
+  flutter_secure_storage: ^11.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

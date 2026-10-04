@@ -2,6 +2,7 @@ import Foundation
 
 enum ApiError: Error, LocalizedError {
     case http(statusCode: Int, message: String)
+    case unauthorized
     case noConnectivity
     case timeout
     case decodingFailed(Error)
@@ -11,6 +12,8 @@ enum ApiError: Error, LocalizedError {
         switch self {
         case .http(let statusCode, let message):
             "Server error \(statusCode): \(message)"
+        case .unauthorized:
+            "Please log in again."
         case .noConnectivity:
             "Can't reach the server. Is it running (npm start in unieats/server)?"
         case .timeout:

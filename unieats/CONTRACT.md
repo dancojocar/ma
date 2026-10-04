@@ -28,21 +28,28 @@ Review {
   text: string
   createdAt: number            // epoch ms
 }
+
+User { id: string, email: string, displayName: string }
 ```
 
 ## REST API — base path `/api`, JSON only
 
-| Method | Path | Body / Query | Response |
-|---|---|---|---|
-| GET | `/health` | — | `{ ok: true }` |
-| GET | `/spots` | `?page=1&limit=20&q=&category=` | `{ spots: Spot[], page, hasNextPage }` |
-| GET | `/spots/:id` | — | `Spot` (200) / 404 |
-| POST | `/spots` | `Spot` without `id`/`updatedAt` (+ `Idempotency-Key`) | `Spot` (201) |
-| PATCH | `/spots/:id` | partial `Spot` (+ `Idempotency-Key`) | `Spot` (200) |
-| DELETE | `/spots/:id` | (+ `Idempotency-Key`) | 204 |
-| GET | `/spots/:id/reviews` | — | `Review[]` |
-| POST | `/spots/:id/reviews` | `{ stars, text }` (+ `Idempotency-Key`) | `Review` (201) |
+| Method | Path | Auth | Body / Query | Response |
+|---|---|---|---|---|
+| GET | `/health` | no | — | `{ ok: true }` |
+| POST | `/auth/login` | no | `{ email, password }` | `{ token, user: User }` (200) |
+| GET | `/spots` | no | `?page=1&limit=20&q=&category=` | `{ spots: Spot[], page, hasNextPage }` |
+| GET | `/spots/:id` | no | — | `Spot` (200) / 404 |
+| POST | `/spots` | yes | `Spot` without `id`/`updatedAt` (+ `Idempotency-Key`) | `Spot` (201) |
+| PATCH | `/spots/:id` | yes | partial `Spot`, optional `updatedAt` (+ `Idempotency-Key`) | `Spot` (200) / 409 |
+| DELETE | `/spots/:id` | yes | (+ `Idempotency-Key`) | 204 |
+| GET | `/spots/:id/reviews` | no | — | `Review[]` |
+| POST | `/spots/:id/reviews` | yes | `{ stars, text }` (+ `Idempotency-Key`) | `Review` (201) |
 
+- **Auth:** `Authorization: Bearer <jwt>` on every mutation (from L08; before L08 they are
+  open). Missing/invalid/expired token → 401 `{ error: { code: "unauthorized", message } }`
+  with `WWW-Authenticate: Bearer`. Clients treat a 401 as "session over" and go back to login.
+  A review's `author` is the signed-in user's `displayName`.
 - **Pagination:** `page` is 1-based, default `limit` is 20. `hasNextPage` is `false` on the last
   page; a page past the end returns `spots: []`.
 - **Search:** `q` matches name or description, case-insensitive; `category` is an exact match;
@@ -59,8 +66,15 @@ Review {
   Equal or newer (or absent) → the patch is applied and the server sets a new, strictly larger
   `updatedAt`. A 409 is cached under its `Idempotency-Key` like any other response.
 - **Errors:** always `{ error: { code, message } }` with the matching status:
-  400 `validation` (also for a body that is not valid JSON), 404 `not_found`, 409 `conflict`,
-  500 `server_error`.
+  400 `validation` (also for a body that is not valid JSON), 401 `unauthorized`, 404 `not_found`,
+  409 `conflict`, 500 `server_error`.
+
+## JWT
+
+HS256, secret from env `JWT_SECRET` (default `dev-secret-change-me`). Payload:
+`{ sub: userId, email, iss: "unieats", aud: "unieats-app", iat, exp }`, `exp` = 1h.
+Validation = signature (constant-time compare, algorithm fixed to HS256 so `alg: none` is
+rejected) AND `iss`, `aud`, `exp` — never just decode. Passwords are stored as bcrypt hashes.
 
 ## Realtime
 
@@ -86,7 +100,8 @@ live updates (L06) but the app must work without it (reconnect with backoff).
 3. **Writes:** apply optimistically to the local DB, set `pendingSync = true`, and enqueue
    `{ opId (uuid), type: create|update|delete, entityId, payload }` in an `outbox` table that
    survives restarts. An update's payload includes the `updatedAt` the user edited.
-4. **Replay** (on reconnect): send the outbox in order, each with `Idempotency-Key: <opId>`; on
+4. **Replay** (on reconnect): send the outbox in order, each with `Idempotency-Key: <opId>` (and,
+   from L08, the `Authorization` header); on
    2xx store the server's Spot and clear `pendingSync`.
 5. **Conflict — last-write-wins on `updatedAt`:** if server `updatedAt` > local `updatedAt`, the
    server wins; otherwise (including a tie) the client wins. The server enforces this with the
@@ -123,3 +138,4 @@ Deterministic (fixed ids) so tests and screenshots are stable. Restarting the se
 
   Coordinates, descriptions and `updatedAt` are in `server/src/seed.js`.
 - 4 reviews (two on `spot-1`, one each on `spot-2` and `spot-3`).
+- 1 demo user `student@unieats.app` / `password` (id `user-1`, displayName `Demo Student`).

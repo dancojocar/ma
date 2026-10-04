@@ -57,7 +57,10 @@ fun SpotDetailScreen(
         onToggleFavourite = onToggleFavourite,
         onBack = onBack,
         onRetry = viewModel::refresh,
-        onSaveEdit = viewModel::saveEdit
+        onSaveEdit = viewModel::saveEdit,
+        onAddReview = viewModel::openReviewForm,
+        onDismissReview = viewModel::dismissReviewForm,
+        onSubmitReview = viewModel::submitReview
     )
 }
 
@@ -69,7 +72,10 @@ fun SpotDetailContent(
     onToggleFavourite: () -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
-    onSaveEdit: (name: String, description: String, openNow: Boolean) -> Unit
+    onSaveEdit: (name: String, description: String, openNow: Boolean) -> Unit,
+    onAddReview: () -> Unit,
+    onDismissReview: () -> Unit,
+    onSubmitReview: (stars: Int, text: String) -> Unit
 ) {
     val spot = state.spot
     var editing by rememberSaveable { mutableStateOf(false) }
@@ -82,6 +88,15 @@ fun SpotDetailContent(
                 onSaveEdit(name, description, openNow)
                 editing = false
             }
+        )
+    }
+
+    if (state.isReviewFormOpen) {
+        AddReviewDialog(
+            isSubmitting = state.isSubmittingReview,
+            errorMessage = state.reviewError,
+            onDismiss = onDismissReview,
+            onSubmit = onSubmitReview
         )
     }
 
@@ -116,7 +131,7 @@ fun SpotDetailContent(
                     item { StaleDataNotice(state.errorMessage, onRetry) }
                 }
                 item { SpotHeader(spot, state.isPendingSync, onEdit = { editing = true }) }
-                item { ReviewsHeader(state.reviews.size) }
+                item { ReviewsHeader(state.reviews.size, onAddReview) }
                 items(state.reviews, key = { it.id }) { review -> ReviewRow(review) }
             }
         }
@@ -174,14 +189,22 @@ private fun SpotHeader(spot: Spot, isPendingSync: Boolean, onEdit: () -> Unit) {
 }
 
 @Composable
-private fun ReviewsHeader(count: Int) {
+private fun ReviewsHeader(count: Int, onAddReview: () -> Unit) {
     Column {
         HorizontalDivider()
-        Text(
-            text = "Reviews ($count)",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Reviews ($count)",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onAddReview) { Text("Add review") }
+        }
         if (count == 0) {
             Text(
                 "No reviews yet.",

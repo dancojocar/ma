@@ -44,13 +44,31 @@ struct ApiClient: Sendable {
         try await get("spots/\(spotId)/reviews")
     }
 
-    func patchSpot(id: String, patch: SpotPatch, idempotencyKey: String) async throws -> SpotDTO {
-        var request = URLRequest(url: baseURL.appending(path: "spots/\(id)"))
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    func login(email: String, password: String) async throws -> LoginResponse {
+        try await send(jsonRequest("POST", "auth/login", body: LoginBody(email: email, password: password)))
+    }
+
+    func patchSpot(id: String, patch: SpotPatch, idempotencyKey: String, token: String) async throws -> SpotDTO {
+        var request = try jsonRequest("PATCH", "spots/\(id)", body: patch, token: token)
         request.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
-        request.httpBody = try JSONEncoder().encode(patch)
         return try await send(request)
+    }
+
+    func createReview(spotId: String, stars: Int, text: String, idempotencyKey: String, token: String) async throws -> Review {
+        var request = try jsonRequest("POST", "spots/\(spotId)/reviews", body: ReviewBody(stars: stars, text: text), token: token)
+        request.setValue(idempotencyKey, forHTTPHeaderField: "Idempotency-Key")
+        return try await send(request)
+    }
+
+    private func jsonRequest(_ method: String, _ path: String, body: some Encodable, token: String? = nil) throws -> URLRequest {
+        var request = URLRequest(url: baseURL.appending(path: path))
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.httpBody = try JSONEncoder().encode(body)
+        return request
     }
 
     private func get<T: Decodable>(_ path: String, query: [URLQueryItem] = []) async throws -> T {
@@ -83,6 +101,7 @@ struct ApiClient: Sendable {
             throw ApiError.noConnectivity
         }
         guard let http = response as? HTTPURLResponse else { throw ApiError.noConnectivity }
+        if http.statusCode == 401 { throw ApiError.unauthorized }
         if http.statusCode == 409, let conflict = try? JSONDecoder().decode(ConflictEnvelope.self, from: data) {
             throw ApiError.conflict(server: conflict.spot)
         }
@@ -92,6 +111,16 @@ struct ApiClient: Sendable {
         }
         return data
     }
+}
+
+private struct LoginBody: Encodable {
+    let email: String
+    let password: String
+}
+
+private struct ReviewBody: Encodable {
+    let stars: Int
+    let text: String
 }
 
 private struct ConflictEnvelope: Decodable {

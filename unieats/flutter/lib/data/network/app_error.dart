@@ -32,10 +32,7 @@ class HttpError extends AppError {
   final String? serverMessage;
 
   @override
-  String get message =>
-      serverMessage == null
-          ? 'Server error ($statusCode).'
-          : 'Server error ($statusCode): $serverMessage';
+  String get message => serverMessage ?? 'Server error ($statusCode).';
 }
 
 /// 409 from `PATCH /spots/:id`: the server holds a newer version.

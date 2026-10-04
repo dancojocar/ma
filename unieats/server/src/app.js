@@ -1,6 +1,7 @@
 const express = require('express');
 const { chaos, requestLogger } = require('./middleware');
 const { sendError } = require('./errors');
+const authRouter = require('./routes/auth');
 const spotsRouter = require('./routes/spots');
 
 const app = express();
@@ -13,6 +14,7 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
+app.use('/api/auth', authRouter);
 app.use('/api/spots', spotsRouter);
 
 app.use((req, res) => {

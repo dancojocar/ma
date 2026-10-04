@@ -1,20 +1,27 @@
 package com.unieats.app.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.unieats.app.ui.login.LoginScreen
 import com.unieats.app.ui.spotdetail.SpotDetailScreen
 import com.unieats.app.ui.spotlist.SpotListScreen
 import com.unieats.app.ui.spotlist.SpotListViewModel
 import kotlinx.serialization.Serializable
+
+@Serializable
+object Login
 
 @Serializable
 object SpotList
@@ -29,16 +36,36 @@ const val DEEP_LINK_WEB = "https://unieats.app/spots"
 fun UniEatsNavGraph(
     modifier: Modifier = Modifier,
     listViewModel: SpotListViewModel = hiltViewModel(),
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    sessionViewModel: SessionViewModel = hiltViewModel()
 ) {
+    val isSignedIn by sessionViewModel.isSignedIn.collectAsStateWithLifecycle()
+    val startDestination: Any = remember { if (isSignedIn) SpotList else Login }
+
+    // Signing in leaves the login screen; signing out or a 401 (token cleared) returns to it.
+    LaunchedEffect(isSignedIn) {
+        val onLogin = navController.currentDestination?.hasRoute<Login>() == true
+        if (isSignedIn && onLogin) {
+            navController.navigate(SpotList) { popUpTo<Login> { inclusive = true } }
+        } else if (!isSignedIn && !onLogin) {
+            navController.navigate(Login) { popUpTo(navController.graph.id) { inclusive = true } }
+        }
+    }
+
     val listState by listViewModel.uiState.collectAsStateWithLifecycle()
     NavHost(
         navController = navController,
-        startDestination = SpotList,
+        startDestination = startDestination,
         modifier = modifier
     ) {
+        composable<Login> { LoginScreen() }
+
         composable<SpotList> {
-            SpotListScreen(onSpotClick = { spotId -> navController.navigate(SpotDetail(spotId)) }, viewModel = listViewModel)
+            SpotListScreen(
+                onSpotClick = { spotId -> navController.navigate(SpotDetail(spotId)) },
+                onLogout = sessionViewModel::logout,
+                viewModel = listViewModel
+            )
         }
 
         // Both patterns resolve to <basePath>/{spotId}, e.g. unieats://spots/spot-3.

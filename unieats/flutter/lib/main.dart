@@ -15,6 +15,12 @@ class UniEatsApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     ref.watch(outboxSyncProvider);
+    final auth = ref.watch(authProvider);
+    if (auth.isLoading && !auth.hasValue && !auth.hasError) {
+      return const MaterialApp(
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
 
     return MaterialApp.router(
       title: 'UniEats',

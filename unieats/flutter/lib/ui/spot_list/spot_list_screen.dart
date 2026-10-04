@@ -60,6 +60,11 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
       appBar: AppBar(
         title: const Text('UniEats'),
         actions: [
+          IconButton(
+            tooltip: 'Sign out',
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(authProvider.notifier).logout(),
+          ),
           LiveIndicator(
             connected: switch (ref.watch(liveEventsProvider).valueOrNull) {
               null || LiveDisconnected() => false,

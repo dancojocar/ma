@@ -11,6 +11,13 @@ import '../network/app_error.dart';
 import '../network/live_updates.dart';
 import '../sync/sync_conflict_resolver.dart';
 
+abstract final class OutboxType {
+  static const updateSpot = 'update';
+
+  /// Not `create`: that type is reserved for creating spots (CONTRACT §3).
+  static const createReview = 'createReview';
+}
+
 /// The UI only reads the local database; this class keeps it in step with the
 /// server and owns the outbox of local edits.
 class SpotRepository {
@@ -89,7 +96,7 @@ class SpotRepository {
     );
     await _db.enqueue(
       opId: _uuid.v4(),
-      type: 'update',
+      type: OutboxType.updateSpot,
       entityId: id,
       payload: jsonEncode({
         'name': name,
@@ -113,10 +120,43 @@ class SpotRepository {
   }
 
   Future<bool> _replay(OutboxOp op) async {
-    if (op.type != 'update') {
-      await _db.removeOp(op.opId);
-      return true;
+    switch (op.type) {
+      case OutboxType.updateSpot:
+        return _replayUpdate(op);
+      case OutboxType.createReview:
+        return _replayReview(op);
+      default:
+        await _db.removeOp(op.opId);
+        return true;
     }
+  }
+
+  Future<bool> _replayReview(OutboxOp op) async {
+    final payload = jsonDecode(op.payload) as Map<String, dynamic>;
+    try {
+      final saved = await _api.createReview(
+        payload['spotId'] as String,
+        stars: payload['stars'] as int,
+        text: payload['text'] as String,
+        idempotencyKey: op.opId,
+      );
+      await _db.transaction(() async {
+        await _db.removeOp(op.opId);
+        await _db.confirmReview(op.entityId, saved);
+      });
+    } on HttpError catch (e) {
+      if (!_isPermanent(e.statusCode)) return false;
+      await _db.transaction(() async {
+        await _db.removeOp(op.opId);
+        await _db.deleteReview(op.entityId);
+      });
+    } on AppError {
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> _replayUpdate(OutboxOp op) async {
     final id = op.entityId;
     final row = await _db.getSpot(id);
     if (row == null) {
@@ -167,8 +207,13 @@ class SpotRepository {
     return true;
   }
 
+  /// 401 is not permanent: the op waits until the user signs in again.
   bool _isPermanent(int status) =>
-      status >= 400 && status < 500 && status != 408 && status != 429;
+      status >= 400 &&
+      status < 500 &&
+      status != 401 &&
+      status != 408 &&
+      status != 429;
 
   Future<void> _resolveConflict(OutboxOp op, Spot local, Spot server) =>
       _db.transaction(() async {

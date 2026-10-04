@@ -7,6 +7,7 @@ import com.unieats.app.data.local.UniEatsDatabase
 import com.unieats.app.data.local.toDomain
 import com.unieats.app.data.local.toEntity
 import com.unieats.app.data.model.Category
+import com.unieats.app.data.model.NewReview
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
 import com.unieats.app.data.model.SpotPatch
@@ -80,6 +81,11 @@ class SpotRepository @Inject constructor(
 
     suspend fun refreshReviews(spotId: String): Result<Unit> = apiCall {
         reviewDao.upsertAll(api.getReviews(spotId).map { it.toEntity() })
+    }
+
+    suspend fun addReview(spotId: String, stars: Int, text: String): Result<Unit> = apiCall {
+        val saved = api.addReview(spotId, NewReview(stars, text.trim()))
+        reviewDao.upsertAll(listOf(saved.toEntity()))
     }
 
     suspend fun editSpot(id: String, name: String, description: String, openNow: Boolean) {
