@@ -40,6 +40,7 @@ export interface OutboxOp {
   opId: string;
   type: "update";
   entityId: string;
-  payload: SpotEdit & { editedAt: number };
+  /** `updatedAt` is the server version the edit was based on (CONTRACT §3). */
+  payload: SpotEdit & { updatedAt: number };
   createdAt: number;
 }

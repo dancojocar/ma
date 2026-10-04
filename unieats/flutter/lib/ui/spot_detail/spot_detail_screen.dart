@@ -94,7 +94,10 @@ class _SpotDetailBody extends ConsumerWidget {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        SpotPhoto(url: spot.photoUrl, height: 220),
+        Hero(
+          tag: 'spot-photo-${spot.id}',
+          child: SpotPhoto(url: spot.photoUrl, height: 220),
+        ),
         Padding(
           padding: const EdgeInsets.all(16),
           child: Column(

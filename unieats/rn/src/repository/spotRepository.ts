@@ -18,7 +18,6 @@ import {
   deleteSpot,
   getPendingSync,
   getSpotById,
-  getServerVersion,
   markSynced,
   recordServerVersion,
   upsertFromServer,
@@ -90,15 +89,16 @@ export function applyLiveEvent(event: LiveEvent): boolean {
 
 /** Optimistic: the UI shows the edit immediately; the outbox replays it when the server is reachable. */
 export function editSpot(id: string, edit: SpotEdit) {
-  const now = Date.now();
+  const base = getSpotById(id);
+  if (!base) return;
   getDb().withTransactionSync(() => {
-    applyLocalEdit(id, edit, now);
+    applyLocalEdit(id, edit);
     outboxDao.enqueue({
       opId: randomUUID(),
       type: "update",
       entityId: id,
-      payload: { ...edit, editedAt: now },
-      createdAt: now,
+      payload: { ...edit, updatedAt: base.updatedAt },
+      createdAt: Date.now(),
     });
   });
   notifyChanged("spots", "outbox");
@@ -132,7 +132,8 @@ async function replayOutbox() {
   if (!token) return;
   const serverCopies = new Map<string, Spot>();
 
-  for (const op of outboxDao.allInOrder()) {
+  // Re-read the head each time: a successful write rebases the queued ops behind it.
+  for (let op = outboxDao.oldest(); op; op = outboxDao.oldest()) {
     const result = await replay(op, token);
     if (result.kind === "retryLater") break;
     if (result.kind === "synced") serverCopies.set(op.entityId, result.spot);
@@ -155,20 +156,21 @@ async function replayOutbox() {
 }
 
 async function replay(op: OutboxOp, token: string): Promise<ReplayResult> {
-  const { editedAt, ...edit } = op.payload;
-  const base = getServerVersion(op.entityId) ?? 0;
   try {
-    return synced(
-      op.entityId,
-      await patchSpot(op.entityId, { ...edit, updatedAt: base }, { token, idempotencyKey: op.opId }),
-    );
+    return synced(op.entityId, await patchSpot(op.entityId, op.payload, { token, idempotencyKey: op.opId }));
   } catch (e) {
     if (isUnauthorized(e)) {
       await useSessionStore.getState().expire();
       return { kind: "retryLater" };
     }
     const serverCopy = conflictServerCopy(e);
-    if (serverCopy) return resolve409(op, token, editedAt, serverCopy);
+    if (serverCopy) {
+      // The server answers 409 only when its copy is strictly newer, i.e. last-write-wins picks the server.
+      if (resolveConflict(op.payload.updatedAt, serverCopy.updatedAt) === "server") {
+        return { kind: "synced", spot: serverCopy };
+      }
+      return { kind: "dropped" };
+    }
     if (e instanceof ApiError && e.kind === "http" && e.status !== undefined && e.status < 500) {
       console.warn(`Dropping outbox op ${op.opId}: ${e.message}`);
       return { kind: "dropped" };
@@ -177,32 +179,9 @@ async function replay(op: OutboxOp, token: string): Promise<ReplayResult> {
   }
 }
 
-async function resolve409(
-  op: OutboxOp,
-  token: string,
-  editedAt: number,
-  serverCopy: Spot,
-): Promise<ReplayResult> {
-  if (resolveConflict(editedAt, serverCopy.updatedAt) === "server") {
-    return synced(op.entityId, serverCopy);
-  }
-  const { editedAt: _, ...edit } = op.payload;
-  try {
-    // The 409 for op.opId is cached by the server, so the re-based write needs a fresh key.
-    return synced(
-      op.entityId,
-      await patchSpot(
-        op.entityId,
-        { ...edit, updatedAt: serverCopy.updatedAt },
-        { token, idempotencyKey: randomUUID() },
-      ),
-    );
-  } catch {
-    return { kind: "retryLater" };
-  }
-}
-
+/** Our own write was accepted, so queued edits of the same spot are now based on its new version. */
 function synced(id: string, spot: Spot): ReplayResult {
   recordServerVersion(id, spot.updatedAt);
+  outboxDao.rebase(id, spot.updatedAt);
   return { kind: "synced", spot };
 }
