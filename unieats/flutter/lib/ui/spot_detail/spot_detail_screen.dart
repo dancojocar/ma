@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 import '../../data/database/database.dart' show localIdPrefix;
-import '../../domain/models.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
 import '../common/status_views.dart';

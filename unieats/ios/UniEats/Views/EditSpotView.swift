@@ -1,4 +1,5 @@
 import SwiftUI
+import UniEatsDomain
 
 struct EditSpotView: View {
     let onSave: (_ name: String, _ description: String, _ openNow: Bool) -> Void
@@ -10,7 +11,7 @@ struct EditSpotView: View {
     init(spot: Spot, onSave: @escaping (_ name: String, _ description: String, _ openNow: Bool) -> Void) {
         self.onSave = onSave
         _name = State(initialValue: spot.name)
-        _description = State(initialValue: spot.spotDescription)
+        _description = State(initialValue: spot.description)
         _openNow = State(initialValue: spot.openNow)
     }
 

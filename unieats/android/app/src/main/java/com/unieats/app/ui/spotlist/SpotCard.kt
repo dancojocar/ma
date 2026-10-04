@@ -23,7 +23,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 import com.unieats.app.ui.components.RatingBadge
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText

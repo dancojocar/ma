@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:unieats_data/unieats_data.dart';
 
-import '../../domain/models.dart';
 import 'app_error.dart';
 import 'retry_interceptor.dart';
 
@@ -30,7 +30,6 @@ class ApiClient {
     int limit = 20,
     String? query,
     String? category,
-    CancelToken? cancelToken,
   }) => _send(
     () => _dio.get<Map<String, dynamic>>(
       '/spots',
@@ -40,7 +39,6 @@ class ApiClient {
         if (query != null && query.isNotEmpty) 'q': query,
         'category': ?category,
       },
-      cancelToken: cancelToken,
     ),
     SpotsPage.fromJson,
   );

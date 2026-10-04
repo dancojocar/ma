@@ -1,4 +1,5 @@
 import Foundation
+import UniEatsDomain
 
 @Observable
 final class SpotListViewModel {

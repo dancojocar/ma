@@ -1,9 +1,8 @@
+import { distanceKm, NEARBY_RADIUS_KM, type LocalSpot } from "@unieats/shared";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocalSpots } from "../db/hooks";
-import { distanceKm, NEARBY_RADIUS_KM } from "../domain/geo";
-import type { LocalSpot } from "../domain/models";
 
 export type PermissionState = "unknown" | "granted" | "denied" | "blocked";
 

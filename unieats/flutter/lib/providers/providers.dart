@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart' show Position;
 import 'package:local_auth/local_auth.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 import '../data/auth/auth_interceptor.dart';
 import '../data/auth/auth_repository.dart';
@@ -17,7 +18,6 @@ import '../data/network/api_config.dart';
 import '../data/network/live_updates.dart';
 import '../data/repository/review_repository.dart';
 import '../data/repository/spot_repository.dart';
-import '../domain/models.dart';
 import '../services/crash_reporter.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -52,7 +52,7 @@ final localAuthProvider = Provider<LocalAuthentication>(
 );
 
 final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AuthRepository(
+  (ref) => TokenAuthRepository(
     ref.watch(apiClientProvider),
     ref.watch(tokenStoreProvider),
     ref.watch(spotRepositoryProvider),
@@ -156,12 +156,14 @@ final biometricSettingProvider =
     );
 
 final spotRepositoryProvider = Provider<SpotRepository>(
-  (ref) =>
-      SpotRepository(ref.watch(databaseProvider), ref.watch(apiClientProvider)),
+  (ref) => DriftSpotRepository(
+    ref.watch(databaseProvider),
+    ref.watch(apiClientProvider),
+  ),
 );
 
 final reviewRepositoryProvider = Provider<ReviewRepository>(
-  (ref) => ReviewRepository(
+  (ref) => DriftReviewRepository(
     ref.watch(databaseProvider),
     ref.watch(apiClientProvider),
   ),
@@ -295,15 +297,16 @@ class SpotPagingNotifier extends AsyncNotifier<SpotPaging> {
 
   @override
   Future<SpotPaging> build() async {
-    _generation++;
+    final generation = ++_generation;
     final (query, category) = ref.watch(
       spotListProvider.select((s) => (s.searchQuery.trim(), s.categoryFilter)),
     );
-    final cancelToken = CancelToken();
-    ref.onDispose(cancelToken.cancel);
 
     if (query.isNotEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
+      // A newer keystroke rebuilt the provider and Riverpod ignores this
+      // build's result, so don't send its request at all.
+      if (generation != _generation) throw StateError('Search superseded');
     }
     final first = await ref
         .read(spotRepositoryProvider)
@@ -312,7 +315,6 @@ class SpotPagingNotifier extends AsyncNotifier<SpotPaging> {
           limit: pageSize,
           query: query,
           category: category,
-          cancelToken: cancelToken,
         );
     return SpotPaging(page: first.page, hasNextPage: first.hasNextPage);
   }

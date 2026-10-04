@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import type { User } from "../domain/models";
+import type { User } from "@unieats/shared";
 
 const KEY = "unieats.session";
 const OPTIONS: SecureStore.SecureStoreOptions = {

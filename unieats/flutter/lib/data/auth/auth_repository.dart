@@ -2,14 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:unieats_data/unieats_data.dart';
 
-import '../../domain/models.dart';
 import '../network/api_client.dart';
-import '../repository/spot_repository.dart';
 import 'token_store.dart';
 
-class AuthRepository {
-  AuthRepository(this._api, this._tokens, this._spots, this._localAuth);
+class TokenAuthRepository implements AuthRepository {
+  TokenAuthRepository(this._api, this._tokens, this._spots, this._localAuth);
 
   final ApiClient _api;
   final TokenStore _tokens;
@@ -18,6 +17,7 @@ class AuthRepository {
 
   /// Edits another account left queued when its session expired are dropped
   /// before the new token is stored, so they never replay under this account.
+  @override
   Future<User> login(String email, String password) async {
     final result = await _api.login(email, password);
     await _spots.discardChangesNotBy(result.user.id);
@@ -28,19 +28,18 @@ class AuthRepository {
     return result.user;
   }
 
-  /// Explicit sign-out: the session and every unsynced local change go.
+  @override
   Future<void> logout() async {
     await _tokens.clear();
     await _spots.discardLocalChanges();
   }
 
-  /// The session ended without the user asking (401, biometrics changed):
-  /// queued edits stay and replay once the same user signs in again.
+  @override
   Future<void> endSession() => _tokens.clear();
 
-  /// Restores the session stored on this device without prompting. With
-  /// biometric unlock on the token is locked, so its expiry is checked in
-  /// [unlock].
+  /// With biometric unlock on the token is locked, so its expiry is checked
+  /// in [unlock].
+  @override
   Future<Session> restoreSession() async {
     final user = await _storedUser();
     if (user == null) {
@@ -56,8 +55,7 @@ class AuthRepository {
     return SignedIn(user);
   }
 
-  /// Prompts for biometrics. Throws [BiometricCancelled] (still locked), or
-  /// [BiometricInvalidated] / [SessionExpired] after clearing the session.
+  @override
   Future<User> unlock() async {
     final user = await _storedUser();
     try {
@@ -73,7 +71,7 @@ class AuthRepository {
     }
   }
 
-  /// True when the device can do strong biometrics and has one enrolled.
+  @override
   Future<bool> biometricsAvailable() async {
     try {
       if (!await _localAuth.canCheckBiometrics) return false;
@@ -88,10 +86,13 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<bool> biometricEnabled() => _tokens.biometricEnabled();
 
+  @override
   Future<void> enableBiometric() => _tokens.enableBiometric();
 
+  @override
   Future<void> disableBiometric() => _tokens.disableBiometric();
 
   Future<User?> _storedUser() async {

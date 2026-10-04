@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Image, Pressable, StyleSheet, Text, View, type AccessibilityActionEvent } from "react-native";
-import type { LocalSpot } from "../domain/models";
+import type { LocalSpot } from "@unieats/shared";
 import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel } from "./format";
 import { RatingBadge } from "./RatingBadge";

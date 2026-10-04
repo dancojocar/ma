@@ -1,4 +1,4 @@
-# UniEats Android — tag `l11-cloud`
+# UniEats Android — tag `l12-kmp`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -23,10 +23,10 @@ For profiling, install the minified build instead: `./gradlew -p unieats/android
   `UniEatsDatabase` exports its schema (Room Gradle plugin, `room { schemaDirectory(...) }`) to
   `app/schemas/…/<version>.json` (`1.json` from l07, `2.json` from l08), which are committed. Each
   schema change bumps `version` and adds an `autoMigrations` entry checked against these files.
-- `data/repository/SpotRepository.kt` — `observe…()` flows from Room; `refreshSpots()` upserts by
-  id and never overwrites a row with `pendingSync = true`; `editSpot()` updates the row
-  optimistically and queues an `update` op, or merges into the spot's queued op if that one has
-  not been sent yet. Live WebSocket events are written to Room; the socket is shared by the list
+- `data/repository/DefaultEatsRepository.kt` (`SpotRepository.kt` before l12) — `observe…()`
+  flows from Room; `refreshSpots()` upserts by id and never overwrites a row with
+  `pendingSync = true`; `editSpot()` updates the row optimistically and queues an `update` op, or
+  merges into the spot's queued op if that one has not been sent yet. Live WebSocket events are written to Room; the socket is shared by the list
   and the detail screen and closes 5 s after neither is visible.
 - `data/sync/` — `ConnectivityObserver` (`registerDefaultNetworkCallback` as a Flow; online means
   `INTERNET` **and** `VALIDATED`, the same test WorkManager's `CONNECTED` constraint uses), and
@@ -135,7 +135,7 @@ reviews and live badge, and the light/dark theme.
   network location, so a balanced request never gets a fix there) in a `callbackFlow` whose
   `awaitClose` calls `removeLocationUpdates`; `NearbyViewModel` collects it with
   `WhileSubscribed()`, so location stops the moment you leave the screen or background the app. It loads every page once
-  (`SpotRepository.refreshAllSpots()`) and filters the Room copy with `location/Geo.kt`.
+  (`refreshAllSpots()`) and filters the Room copy with `location/Geo.kt`.
 - Location permission UX (`ui/nearby/NearbyScreen.kt`): an explanation and **Allow location**
   before the system dialog, a stronger rationale when `shouldShowRequestPermissionRationale` is
   true, and **Open settings** after a permanent denial. The screen re-checks the grant on every
@@ -204,6 +204,32 @@ No Firebase dependency: the same ideas against the course server.
   exceptions go through it too (`UniEatsApplication`). Debug builds have a **Test crash** button
   that calls `crashReporter.recordError()` — watch Logcat tag `CrashReporter`. Swapping in
   Crashlytics is a new implementation bound in `di/CloudModule.kt`.
+
+## Shared KMP module + testable architecture (new in l12)
+
+- `shared/` is a Kotlin Multiplatform module (`kotlin-multiplatform` plus the Android KMP library
+  plugin `com.android.kotlin.multiplatform.library`) with three targets: `android { }` (namespace
+  `com.unieats.shared`), `iosArm64()` and `iosSimulatorArm64()`. `commonMain` (package
+  `com.unieats.shared`) holds the models that were in the app's `data/model/` (`Spot`, `Review`,
+  `Category`, `SpotPatch`, `ConflictResponse`, `User`, the login, review and config
+  request/response types, `RemoteFlags`), serialised with `kotlinx-serialization-core`, and
+  `SyncConflictResolver` (server wins only when its `updatedAt` is strictly newer; a tie goes to
+  the client). The app depends on `:shared`; Room, the outbox, `OutboxSync`, auth and the
+  session stay in `:app`.
+- `./gradlew -p unieats/android :shared:allTests` runs `shared/src/commonTest` on the JVM
+  (`testAndroidHostTest`) **and** on the iOS simulator (`iosSimulatorArm64Test`, needs Xcode; on
+  Linux only the JVM tests run).
+- iOS framework: `./gradlew -p unieats/android :shared:assembleUniEatsSharedXCFramework` →
+  `shared/build/XCFrameworks/{debug,release}/UniEatsShared.xcframework` (needs Xcode on macOS).
+- `data/repository/EatsRepository.kt` — the interface the list, detail and Nearby ViewModels use;
+  `DefaultEatsRepository` (the former `SpotRepository`: Room + Ktor + WebSocket + outbox) is
+  bound to it in `di/AppModule.kt`. Favourites stay in `FavouritesRepository`.
+- `cloud/FeatureFlags.kt` — the read side of remote config (`flags`). `RemoteConfig` implements it
+  and `di/CloudModule.kt` binds it, so the list takes
+  `SpotListViewModel(EatsRepository, FavouritesRepository, FeatureFlags)`; Settings still uses
+  `RemoteConfig` for **Fetch & activate**.
+- Unit tests without Android: `./gradlew -p unieats/android :app:testDebugUnitTest` runs
+  `SpotListViewModelTest` against `FakeEatsRepository` and `FakeFeatureFlags` (`app/src/test`).
 
 ## Demo: offline edit → reconnect → sync
 

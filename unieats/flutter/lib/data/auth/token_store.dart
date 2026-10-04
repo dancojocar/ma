@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 /// The JWT lives in the Keychain (iOS, readable after the first unlock, never
 /// migrated to another device) and, on Android, in SharedPreferences encrypted

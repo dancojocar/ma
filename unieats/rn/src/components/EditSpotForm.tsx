@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from "react-native";
-import type { SpotEdit } from "../domain/models";
+import type { SpotEdit } from "@unieats/shared";
 import { detailStyles } from "./SpotDetail";
 
 export function EditSpotForm({

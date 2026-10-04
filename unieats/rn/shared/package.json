@@ -1,0 +1,11 @@
+{
+  "name": "@unieats/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Domain models, Zod schemas and the sync conflict rule shared by the UniEats RN app and its tests.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "peerDependencies": {
+    "zod": "^3.23.0"
+  }
+}

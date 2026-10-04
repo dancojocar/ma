@@ -19,7 +19,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 
 /** The rating as shown in the list; [newDesign] is the remote-config flag show_new_rating_ui. */
 @Composable

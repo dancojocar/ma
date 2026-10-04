@@ -1,38 +1,31 @@
-# UniEats iOS — l11-cloud
+# UniEats iOS — l12-kmp
 
-A remote-config feature flag and a crash-reporting hook, without any Firebase dependency
-(the deck's legacy demos show the real Remote Config / Crashlytics SDKs).
+A shared domain module consumed by the app.
 
 ## What this tag adds
 
-- **Settings tab** (`Views/SettingsView.swift`, `AppTab.settings` in `UniEatsApp.swift`).
-- **Remote config** (`Cloud/RemoteConfig.swift`): flag `show_new_rating_ui`, default `false`;
-  **Fetch & activate** calls `GET /api/config` and applies the value at once. The app passes
-  `RemoteConfig` down through the SwiftUI environment; when the flag is `true`, spot rows show the
-  new gradient rating badge (`NewRatingBadge` in `Views/SpotRow.swift`, white on the
-  contrast-checked `brandFill` → `accentFill` from `Views/Palette.swift`, read by VoiceOver as
-  "Rating 4.7 out of 5, new rating badge") instead of the plain star.
-- **Crash reporting** (`Cloud/CrashReporter.swift`): `CrashReporter` protocol with a default
-  `LoggingCrashReporter` (os `Logger`), wrapped by `CrashReportingConsent` — an opt-in
-  "Share crash reports" toggle persisted in `UserDefaults`; nothing is recorded while it is off.
-  Debug builds show **Test crash**, which calls `recordError(TestCrash(), …)`.
-- **Settings › Account** now holds what the l08 Account menu on the list did: the
-  "Unlock with Face ID" switch (shown only when biometrics are enrolled) and **Log out**
-  (`SpotRepository.logOut()`, which also discards unsent edits). Logging out returns to the
-  Spots tab for the next login.
-- The new texts are in the String Catalog; the non-SwiftUI ones (`TestCrash`, the Test crash
-  result) use `String(localized:)`.
+- `UniEatsDomain/` — a local Swift package (`Package.swift`, swift-tools 6.0) **linked into the
+  UniEats target** (Xcode › project › Package Dependencies shows it; `project.pbxproj` has an
+  `XCLocalSwiftPackageReference` + product dependency). It holds the domain model `Spot` and
+  `SpotConflictResolver` (last-write-wins on `updatedAt`: the server wins only if its version is
+  strictly newer; a tie goes to the client — CONTRACT §5). The package keeps Swift's default
+  (nonisolated) actor isolation, so its types are plain `Sendable` values usable from any actor.
+- The app imports it everywhere it uses `Spot` (`import UniEatsDomain`); JSON/SwiftData mapping
+  stays in the app (`Models/Spot.swift` `SpotDTO`, `Models/SpotEntity.swift`). The domain
+  property is `description`, as in the JSON; the SwiftData column keeps `spotDescription`.
+- On a 409 `SpotRepository` asks `SpotConflictResolver.winner(local:server:)`, with the local
+  copy at the version the queued edit was based on. The server only sends a 409 when its copy is
+  newer, so the server always wins: the row takes the server's `spot`, and that edit plus any
+  later queued edits of the spot (based on the same stale version) are dropped.
 
-Demo:
+Why a Swift package and not the Kotlin Multiplatform `UniEatsShared.xcframework`: the iOS build
+must not depend on a JDK + Gradle build of `../android/shared`. To try the KMP route, build the
+framework with `cd ../android && ./gradlew :shared:assembleUniEatsSharedXCFramework` and drag
+`shared/build/XCFrameworks/debug/UniEatsShared.xcframework` into the target's
+*Frameworks, Libraries, and Embedded Content*; `import UniEatsShared` then exposes the Kotlin
+`Spot` and `SyncConflictResolver` (the app keeps using the Swift package).
 
-```bash
-# flip the flag on the server (token: see Run below)
-curl -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"flags":{"show_new_rating_ui":true}}' localhost:3000/api/config
-```
-
-Settings → **Fetch & activate** → `true` → Spots shows the "4.7 NEW" badges. Test crash with
-the toggle off says "Not sent"; switch it on and the error appears in the Xcode console.
+Build the package on its own: `swift build --package-path UniEatsDomain`.
 
 ## Already in the app (earlier tags)
 
@@ -50,6 +43,7 @@ the toggle off says "Not sent"; switch it on and the error appears in the Xcode 
 | l09 | Background replay of pending edits (`BGAppRefreshTask` `com.unieats.app.outbox-sync`, scheduled when the app goes to the background with edits queued) | `Repository/SpotRepository.swift`, `UniEatsApp.swift`, `Info.plist` |
 | l10 | Animated filtered list, row photo → detail zoom transition, `PERFORMANCE.md` | `Views/SpotListView.swift`, `Views/SpotRow.swift` |
 | l10 | String Catalog with plural variants, `String(localized:)` outside views; VoiceOver labels for ratings and prices, `.isSelected` chips, 4.5:1 contrast colours | `Localizable.xcstrings`, `Views/Palette.swift` |
+| l11 | Settings tab: `show_new_rating_ui` Fetch & activate (`NewRatingBadge`), consent-gated `CrashReporter` with a debug Test crash; Settings › Account holds the Face ID switch and Log out | `Cloud/`, `Views/SettingsView.swift`, `Views/SpotRow.swift` |
 
 The simulator cannot run the l09 background replay: `submit` fails with "not available on this
 platform" (logged under `com.unieats.app` / `sync` and ignored). On a device, pause in the

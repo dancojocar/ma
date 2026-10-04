@@ -1,4 +1,4 @@
-import type { Review } from "../domain/models";
+import type { Review } from "@unieats/shared";
 import { notifyChanged } from "./changes";
 import { getDb } from "./database";
 

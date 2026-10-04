@@ -23,18 +23,18 @@ screens only watch Drift; refreshes and live events upsert into it without touch
 edits. "Edit spot" queues an outbox op that `SpotRepository.syncOutbox()` replays in order with
 `Idempotency-Key` on reconnect (`connectivity_plus`, behind `connectivityProvider`), when the WebSocket
 reconnects, at app start, or from "Sync now". A 409 resolves last-write-wins on `updatedAt`
-(`lib/data/sync/sync_conflict_resolver.dart`): a winning local edit is resent from its place in the queue
-with a new `Idempotency-Key`; if the server wins, every queued edit of that spot is dropped. An edit made
-while its spot is syncing stays queued and is sent next. `liveSyncProvider` writes live events into Drift;
-every screen that shows spots watches it (list and detail; Nearby since l09), because Riverpod 3 pauses
-the list's listeners while another screen covers it.
+(`SyncConflictResolver`, in `packages/unieats_data` since l12): a winning local edit is resent from its
+place in the queue with a new `Idempotency-Key`; if the server wins, every queued edit of that spot is
+dropped. An edit made while its spot is syncing stays queued and is sent next. `liveSyncProvider` writes
+live events into Drift; every screen that shows spots watches it (list and detail; Nearby since l09),
+because Riverpod 3 pauses the list's listeners while another screen covers it.
 
 Since `l08-auth` the app requires sign-in. `lib/app_router.dart` has one `MaterialApp.router` whose
 `authRedirect` sends every location to a gate screen until the session allows it: `/splash` while the
 stored session loads, `/unlock` while it is locked (below), `/login` without one (demo user
 `student@unieats.app` / `password`). Each gate keeps the original destination in `?from=`, so a deep link
 opened while signed out or locked lands on its spot afterwards. `AuthNotifier` in `providers.dart` holds
-a sealed `Session` (`SignedOut`, `Locked`, `SignedIn`, in `lib/domain/models.dart`);
+a sealed `Session` (`SignedOut`, `Locked`, `SignedIn`, a shared model since l12);
 `signedInUserProvider` exposes the user.
 
 - `lib/data/auth/token_store.dart` — JWT and user in `flutter_secure_storage` (Android: AES-GCM with a
@@ -99,7 +99,7 @@ under "reduce motion"). The Live dot watches `liveEventsProvider.select(...)`, s
 not rebuild the list screen; the list changes when the event reaches Drift. Profiling steps:
 [PERFORMANCE.md](PERFORMANCE.md).
 
-This tag (`l11-cloud`) adds a Settings screen (`lib/ui/settings/settings_screen.dart`, `/settings`, the gear
+Since `l11-cloud` there is a Settings screen (`lib/ui/settings/settings_screen.dart`, `/settings`, the gear
 in the list's app bar). The list's ⋮ menu is gone: "Unlock with biometrics" and "Sign out" moved to the
 Settings Account section. Settings is pushed over the list, so after signing out there the login screen
 keeps `?from=/spots` and the next sign-in lands on the list.
@@ -116,6 +116,26 @@ keeps `?from=/spots` and the next sign-in lands on the list.
   and hands the same reporter to Riverpod with `crashReporterProvider.overrideWithValue` (next to
   `retry: (_, _) => null`). Debug builds show a "Test crash" button that calls `recordError()`; nothing
   is reported until you opt in. No Firebase dependency.
+
+This tag (`l12-kmp`) splits out a shared domain layer, the Dart counterpart of the Kotlin
+Multiplatform module: `packages/unieats_data` is **pure Dart** (no Flutter, Drift or dio) and holds
+the models (`Spot`, `Review`, `User`, the sealed `Session` and the auth exceptions), the live-event
+types, `SyncConflictResolver` and the repository interfaces:
+- `SpotRepository` — watch/refresh spots, `applyLiveEvent`, `editSpot` (with the `userId` that queues
+  it), `syncOutbox`, and the two outbox rules of sign-out: `discardLocalChanges` and
+  `discardChangesNotBy`.
+- `ReviewRepository` — watch/refresh reviews and the queued `addReview`.
+- `AuthRepository` — `login`, `logout` (discards unsynced changes), `endSession` (keeps them),
+  `restoreSession`, `unlock` and the biometric switch.
+
+The app implements them (`DriftSpotRepository`, `DriftReviewRepository`, `TokenAuthRepository`), the
+providers expose only the interfaces, and the app depends on the package by path
+(`unieats_data: path: packages/unieats_data`). `refreshPage` no longer takes dio's `CancelToken`, so the
+interface stays free of dio: a search replaced within the 300 ms debounce still sends no request, and a
+request already in flight finishes but Riverpod ignores its result. Everything that needs Flutter, a
+plugin or Riverpod stays in the app: Drift, dio, `TokenStore`, `LocationService`,
+`NotificationService`, `RemoteFlags` and `CrashReporter`. The package keeps no lock file
+(`packages/unieats_data/.gitignore`); the app's `pubspec.lock` records it as a path dependency.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
@@ -154,4 +174,5 @@ Android application id and iOS bundle id: `com.unieats.flutter`.
 ```bash
 flutter analyze
 flutter build apk --debug
+cd packages/unieats_data && dart pub get && dart analyze   # the shared package on its own
 ```

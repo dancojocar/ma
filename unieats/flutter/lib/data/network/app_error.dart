@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
-
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 sealed class AppError implements Exception {
   const AppError();

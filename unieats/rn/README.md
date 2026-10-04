@@ -1,6 +1,18 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l11-cloud`: the Profile tab (`app/(tabs)/profile.tsx`, now a `ScrollView`) ends with a settings card
+Tag `l12-kmp`: the domain layer is a local npm workspace package, `shared/` (`@unieats/shared`, sources in
+`shared/src/`): the `Spot`/`Review`/`User` models, the outbox op type `OutboxOp` (with the `userId` of whoever
+queued it, from l08), the Zod schemas (including `RemoteConfigSchema` from l11), the conflict rule
+`resolveConflict` and the 2 km `distanceKm` helper. The app imports it everywhere
+(`import { resolveConflict } from "@unieats/shared"`); there is no `src/domain` copy any more. The root
+`package.json` lists `shared` under `workspaces`, so `npm ci` links it as `node_modules/@unieats/shared`,
+where both `tsc` and Metro find it; `tsconfig.json` needs no path mapping (the unused `@domain/*`-style
+aliases are gone). This is RN's answer to a KMP `shared` module: one TypeScript source of truth, linked by
+npm workspaces and bundled by Metro. `resolveConflict(base, server)` picks the server copy when it is
+strictly newer than the version an edit was based on; the server answers 409 only in that case, so on a 409
+the server copy always wins (see "Sync bookkeeping" below).
+
+Kept from l11: the Profile tab (`app/(tabs)/profile.tsx`, a `ScrollView`) ends with a settings card
 (`src/components/SettingsSection.tsx`) under the user card and the biometric switch.
 
 **Remote config**: the flag `show_new_rating_ui` (shipped default `false`) comes from `GET /api/config`
@@ -34,7 +46,7 @@ brings them back. Screen-reader users cannot swipe, so each card also offers a "
 id-taking callbacks from a `useCallback` `renderItem`, so a change to one row does not re-render the
 others. Profiling steps: `PERFORMANCE.md`.
 
-Sync bookkeeping is simpler since l10: a queued edit carries only the server `updatedAt` it was based
+**Sync bookkeeping** is simpler since l10: a queued edit carries only the server `updatedAt` it was based
 on, and a pending row keeps that base version in its own `updatedAt`, so the separate `serverUpdatedAt`
 column is gone (migration v3 in `src/db/database.ts` moves it into ops already queued). The server answers
 409 only when its copy is newer than that base, so a 409 keeps the server copy from the response and
@@ -44,7 +56,7 @@ outbox (`outboxDao.oldest()`) before every request, because an accepted write mo
 same spot onto the new server version (`outboxDao.rebase`).
 
 Kept from l09: a **Nearby** tab (`app/(tabs)/nearby.tsx`) lists the spots stored in SQLite within 2 km,
-nearest first (`src/domain/geo.ts`, haversine). It explains why it needs location before asking with
+nearest first (`distanceKm` in `shared/src/geo.ts`, haversine). It explains why it needs location before asking with
 `expo-location` ("Open Settings" when the OS will not ask again) and watches the position with
 `watchPositionAsync` only while the tab is focused (`useFocusEffect` in `src/hooks/useNearbySpots.ts`).
 A live `spot.updated` event that is news to this device (not the echo of its own edit, see `applyLiveEvent`)

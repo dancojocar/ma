@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 class SpotSearchBar extends StatelessWidget {
   const SpotSearchBar({

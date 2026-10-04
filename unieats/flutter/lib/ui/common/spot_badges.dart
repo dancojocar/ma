@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:unieats_data/unieats_data.dart';
 
-import '../../domain/models.dart';
 import '../../providers/providers.dart';
 
 class OpenBadge extends StatelessWidget {

@@ -2,6 +2,7 @@ import BackgroundTasks
 import Foundation
 import OSLog
 import SwiftData
+import UniEatsDomain
 
 @Observable
 final class SpotRepository {
@@ -194,7 +195,7 @@ final class SpotRepository {
             session.sessionExpired()
             return .stop
         } catch ApiError.conflict(let server) {
-            resolveConflict(entry, server: server)
+            await resolveConflict(entry, patch: patch, server: server)
         } catch ApiError.http(let status, let message) where (400..<500).contains(status) {
             lastSyncError = message
             await reject(entry, status: status)
@@ -238,10 +239,21 @@ final class SpotRepository {
         try? context.save()
     }
 
-    /// The server only answers 409 when its copy is newer than the version the user edited. Later
-    /// queued edits of the spot were based on that same stale version, so they are dropped too.
-    private func resolveConflict(_ entry: OutboxEntry, server: SpotDTO) {
-        if let entity = spot(id: entry.entityId) { markSynced(entity, server: server) }
+    /// The server only answers 409 when its copy is newer than the version the user edited, so the
+    /// shared `SpotConflictResolver` picks the server copy. Later queued edits of the spot were based
+    /// on that same stale version, so they are dropped too.
+    private func resolveConflict(_ entry: OutboxEntry, patch: SpotPatch, server dto: SpotDTO) async {
+        if let entity = spot(id: entry.entityId) {
+            var edited = entity.spot
+            edited.updatedAt = patch.updatedAt
+            if SpotConflictResolver.winner(local: edited, server: Spot(dto: dto)) == .client {
+                // Only a server that breaks CONTRACT §5 gets here. There is no client-wins resend,
+                // so the edit is dropped and the row reloaded from the server.
+                await reject(entry, status: 409)
+                return
+            }
+            markSynced(entity, server: dto)
+        }
         ([entry] + newerEntries(than: entry)).forEach(context.delete)
         try? context.save()
     }

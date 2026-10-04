@@ -14,7 +14,7 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { describeError } from "../../../src/api/errors";
 import { useLocalSpots } from "../../../src/db/hooks";
-import type { LocalSpot } from "../../../src/domain/models";
+import type { LocalSpot } from "@unieats/shared";
 import { CategoryChips } from "../../../src/components/CategoryChips";
 import { LiveBadge } from "../../../src/components/LiveBadge";
 import { SearchBar } from "../../../src/components/SearchBar";

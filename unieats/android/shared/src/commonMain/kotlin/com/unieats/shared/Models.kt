@@ -1,4 +1,4 @@
-package com.unieats.app.data.model
+package com.unieats.shared
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

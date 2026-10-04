@@ -3,9 +3,9 @@ package com.unieats.app.ui.nearby
 import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 import com.unieats.app.data.remote.toUserMessage
-import com.unieats.app.data.repository.SpotRepository
+import com.unieats.app.data.repository.EatsRepository
 import com.unieats.app.location.LatLng
 import com.unieats.app.location.LocationService
 import com.unieats.app.location.NEARBY_RADIUS_METERS
@@ -38,7 +38,7 @@ data class NearbyUiState(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class NearbyViewModel @Inject constructor(
-    private val spotRepository: SpotRepository,
+    private val spotRepository: EatsRepository,
     private val locationService: LocationService
 ) : ViewModel() {
 

@@ -17,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
-import com.unieats.app.data.model.Category
+import com.unieats.shared.Category
 
 @Composable
 fun SpotSearchBar(

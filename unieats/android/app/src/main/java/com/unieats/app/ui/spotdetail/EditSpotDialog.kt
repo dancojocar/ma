@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 
 @Composable
 fun EditSpotDialog(

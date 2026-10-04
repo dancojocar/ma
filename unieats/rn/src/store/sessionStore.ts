@@ -14,7 +14,7 @@ import {
   type StoredSession,
 } from "../auth/sessionStorage";
 import { discardAllLocalChanges, discardOtherUsersChanges } from "../db/localChanges";
-import type { User } from "../domain/models";
+import type { User } from "@unieats/shared";
 
 export type SessionStatus = "restoring" | "locked" | "signedOut" | "signedIn";
 
