@@ -1,4 +1,4 @@
-import type { LocalSpot, Spot, SpotEdit } from "../domain/models";
+import type { LocalSpot, Spot, SpotEdit } from "@unieats/shared";
 import type { CategoryFilter } from "../store/spotsStore";
 import { notifyChanged } from "./changes";
 import { getDb } from "./database";

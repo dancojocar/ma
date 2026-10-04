@@ -1,15 +1,16 @@
 import 'dart:convert';
 
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 import '../network/api_client.dart';
 import 'token_store.dart';
 
-class AuthRepository {
-  AuthRepository(this._api, this._tokens);
+class TokenAuthRepository implements AuthRepository {
+  TokenAuthRepository(this._api, this._tokens);
 
   final ApiClient _api;
   final TokenStore _tokens;
 
+  @override
   Future<User> login(String email, String password) async {
     final result = await _api.login(email, password);
     await _tokens.write(
@@ -19,8 +20,10 @@ class AuthRepository {
     return result.user;
   }
 
+  @override
   Future<void> logout() => _tokens.clear();
 
+  @override
   /// The signed-in user if a stored token has not expired yet, checked
   /// locally from the token's `exp` claim. The server still verifies the
   /// signature on every mutation.

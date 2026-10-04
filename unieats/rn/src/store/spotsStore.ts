@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SpotCategory } from "../domain/models";
+import type { SpotCategory } from "@unieats/shared";
 
 export type CategoryFilter = SpotCategory | "all";
 

@@ -1,6 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 
-import '../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 
 enum LocationAccess { granted, denied, deniedForever, serviceDisabled }
 

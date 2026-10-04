@@ -2,11 +2,11 @@ package com.unieats.app.ui.spotlist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.unieats.app.cloud.RemoteConfig
-import com.unieats.app.data.model.Category
-import com.unieats.app.data.model.Spot
+import com.unieats.app.cloud.FeatureFlags
+import com.unieats.shared.Category
+import com.unieats.shared.Spot
 import com.unieats.app.data.remote.toUserMessage
-import com.unieats.app.data.repository.SpotRepository
+import com.unieats.app.data.repository.EatsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -52,8 +52,8 @@ private const val SEARCH_DEBOUNCE_MS = 300L
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SpotListViewModel @Inject constructor(
-    private val spotRepository: SpotRepository,
-    remoteConfig: RemoteConfig
+    private val spotRepository: EatsRepository,
+    featureFlags: FeatureFlags
 ) : ViewModel() {
 
     /** Everything the user controls plus load status; the rows themselves come from Room. */
@@ -68,7 +68,7 @@ class SpotListViewModel @Inject constructor(
         spotRepository.observePendingSpotIds(),
         spotRepository.observePendingChanges(),
         spotRepository.liveConnection,
-        remoteConfig.flags
+        featureFlags.flags
     ) { pendingIds, pendingChanges, live, flags ->
         Background(pendingIds, pendingChanges, live, flags.showNewRatingUi)
     }
