@@ -15,3 +15,5 @@ function metroHost(): string | null {
 const DEV_HOST = (__DEV__ && metroHost()) || FALLBACK_HOST;
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? `http://${DEV_HOST}:3000/api`;
+
+export const LIVE_URL = `${API_URL.replace(/^http/, "ws").replace(/\/api\/?$/, "")}/live`;

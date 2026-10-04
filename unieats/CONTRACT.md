@@ -56,6 +56,20 @@ Review {
 - **Errors:** always `{ error: { code, message } }` with the matching status:
   400 `validation` (also for a body that is not valid JSON), 404 `not_found`, 500 `server_error`.
 
+## Realtime
+
+`ws://<host>:3000/live` (WebSocket, path `/live`, not under `/api`). After every successful
+spot write the server broadcasts one JSON text message to all connected clients:
+
+```
+{ "type": "spot.created", "spot": Spot }
+{ "type": "spot.updated", "spot": Spot }
+{ "type": "spot.deleted", "id": string }
+```
+
+An idempotent replay does not broadcast again. Reviews are not broadcast. Clients use it for
+live updates (L06) but the app must work without it (reconnect with backoff).
+
 ## Chaos mode (L05 + the networking kata)
 
 The server honours these request headers on every route to simulate a hostile network; clients

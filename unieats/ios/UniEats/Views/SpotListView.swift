@@ -2,11 +2,14 @@ import SwiftUI
 
 struct SpotListView: View {
     let api: ApiClient
+    let live: LiveUpdateService
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
+    @Environment(\.scenePhase) private var scenePhase
 
-    init(api: ApiClient) {
+    init(api: ApiClient, live: LiveUpdateService) {
         self.api = api
+        self.live = live
         _viewModel = State(initialValue: SpotListViewModel(api: api))
     }
 
@@ -38,6 +41,21 @@ struct SpotListView: View {
             .overlay { emptyOrErrorState }
             .refreshable { await viewModel.refresh() }
             .task { await viewModel.refresh() }
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                for await update in live.updates() {
+                    viewModel.apply(update)
+                }
+                viewModel.apply(.disconnected)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
+                        .labelStyle(.titleAndIcon)
+                        .font(.caption)
+                        .foregroundStyle(viewModel.isLive ? .green : .secondary)
+                }
+            }
             .navigationTitle("UniEats")
             .searchable(
                 text: Binding(get: { viewModel.searchQuery }, set: viewModel.onQueryChange),

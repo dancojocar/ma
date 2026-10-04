@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,6 +32,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,6 +94,7 @@ fun SpotListContent(
             TopAppBar(
                 title = { Text("UniEats") },
                 actions = {
+                    LiveBadge(isLive = state.isLive)
                     TextButton(onClick = { sortByRating = !sortByRating }) {
                         Text(if (sortByRating) "Sort: rating" else "Sort: default")
                     }
@@ -157,6 +161,18 @@ private fun ScrollableState(content: @Composable () -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         item { Box(Modifier.fillParentMaxSize()) { content() } }
     }
+}
+
+@Composable
+private fun LiveBadge(isLive: Boolean) {
+    Text(
+        text = if (isLive) "● Live" else "○ Offline",
+        modifier = Modifier.clearAndSetSemantics {
+            contentDescription = if (isLive) "Live updates on" else "Offline"
+        },
+        style = MaterialTheme.typography.labelMedium,
+        color = if (isLive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable
