@@ -40,9 +40,14 @@ jobs:
           distribution: temurin
           java-version: "21"
 
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
+          architecture: x64 # explicit so local act runs on Apple Silicon resolve the x64 Linux SDK
           channel: stable
           cache: true
 
