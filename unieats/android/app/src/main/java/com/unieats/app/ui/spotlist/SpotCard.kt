@@ -19,12 +19,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.unieats.shared.Spot
+import com.unieats.app.ui.TestTags
 import com.unieats.app.ui.components.RatingBadge
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
+import com.unieats.shared.Spot
 
 @Composable
 fun SpotCard(
@@ -36,7 +38,7 @@ fun SpotCard(
     onToggleFavourite: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(onClick = onClick, modifier = modifier.fillMaxWidth()) {
+    Card(onClick = onClick, modifier = modifier.fillMaxWidth().testTag(TestTags.SPOT_LIST_ITEM)) {
         Row(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),

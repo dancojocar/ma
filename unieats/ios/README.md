@@ -1,20 +1,29 @@
-# UniEats iOS — l13-ai
+# UniEats iOS — l14-tests
 
-"Describe this dish": an LLM description streamed from the backend proxy.
+Unit tests (Swift Testing) and one Maestro UI flow.
 
 ## What this tag adds
 
-- `AI/AiDescribeClient.swift` — `POST /api/ai/describe` with the Bearer token and the **full
-  spot** (`{"spot": {…, "openNow": …}}`), read with `URLSession.bytes(for:)` and exposed as an
-  `AsyncThrowingStream<String, Error>`: every `data: {"delta": "…"}` line yields a chunk,
-  `event: done` finishes, `event: error` throws. 401 → back to login, 429 → "wait a minute",
-  no connection → "Server unreachable".
-- **Describe this dish** button on the spot detail (`Views/DescribeDishSection.swift`); the text
-  grows as chunks arrive (`SpotDetailViewModel.describe(_:)`), the request is cancelled when you
-  leave the screen.
-- The API key never ships in the app: the server calls the Anthropic Messages API when it has
-  `ANTHROPIC_API_KEY`, otherwise it streams a deterministic template in 4 chunks, so the demo
-  works offline. To see the streaming clearly: `AI_FALLBACK_CHUNK_MS=1500 npm start`.
+- **`UniEatsTests` target + shared scheme** (also wired into the `UniEats` scheme, so ⌘U works):
+  - `SpotConflictResolverTests` — server newer → server; local newer → client; tie → client.
+  - `SpotDTOMappingTests` — CONTRACT JSON → `SpotDTO` → domain `Spot`; encoded field names;
+    outbox PATCH payload shape.
+  - `OfflineUpsertTests` — in-memory SwiftData: live updates upsert synced rows but never
+    overwrite a `pendingSync` row; two offline edits coalesce into one outbox entry.
+  - `DeepLinkTests` — both link forms accepted, other hosts/paths rejected.
+- **`maestro/ios.yaml`** — login → first spot (`spot-list-item`) → "Reviews (N)"
+  (`spot-detail-reviews`) → **Describe this dish** (`describe-dish-button`) → swipe back.
+  Accessibility identifiers were added for exactly these selectors.
+- An incompatible SwiftData store (e.g. left by another checkout of the app) is discarded and
+  recreated instead of crashing at launch.
+
+```bash
+xcodebuild -project UniEats.xcodeproj -scheme UniEatsTests \
+  -destination 'platform=iOS Simulator,name=iPhone 17' test
+maestro check-syntax maestro/ios.yaml
+cd ../server && npm start            # in another terminal, then with the app installed:
+maestro test maestro/ios.yaml
+```
 
 ## Already in the app (earlier tags)
 
@@ -30,6 +39,7 @@
 | l10 | Animated filtered list, row photo → detail zoom transition, `PERFORMANCE.md` | `Views/SpotListView.swift`, `Views/SpotRow.swift` |
 | l11 | Settings: `show_new_rating_ui` Fetch & activate, consent-gated `CrashReporter`, debug Test crash | `Cloud/`, `Views/SettingsView.swift` |
 | l12 | Local Swift package `UniEatsDomain` (domain `Spot`, `SpotConflictResolver`) linked into the app | `UniEatsDomain/` |
+| l13 | "Describe this dish" streamed over SSE (`URLSession.bytes` + `AsyncThrowingStream`) | `AI/AiDescribeClient.swift` |
 
 ## Run
 
