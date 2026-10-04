@@ -63,14 +63,25 @@ private val Context.sessionDataStore: DataStore<Preferences> by preferencesDataS
  * sealed by [BiometricKeystoreCipher] instead and can only be read after a biometric prompt.
  */
 @Singleton
-class TokenStore @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-    @ApplicationScope scope: CoroutineScope
+class TokenStore internal constructor(
+    private val context: Context,
+    private val dataStore: DataStore<Preferences>,
+    private val cipher: KeystoreCipher,
+    private val biometricCipher: BiometricKeystoreCipher,
+    scope: CoroutineScope
 ) : AuthTokens {
 
-    private val dataStore = context.sessionDataStore
-    private val cipher = KeystoreCipher(KEY_ALIAS)
-    private val biometricCipher = BiometricKeystoreCipher(BIOMETRIC_KEY_ALIAS)
+    @Inject constructor(
+        @ApplicationContext context: Context,
+        @ApplicationScope scope: CoroutineScope
+    ) : this(
+        context,
+        context.sessionDataStore,
+        KeystoreCipher(KEY_ALIAS),
+        BiometricKeystoreCipher(BIOMETRIC_KEY_ALIAS),
+        scope
+    )
+
     private val unlockedToken = MutableStateFlow<String?>(null)
 
     private val prefs = dataStore.data

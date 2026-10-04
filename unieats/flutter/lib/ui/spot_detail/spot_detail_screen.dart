@@ -147,12 +147,16 @@ class _SpotDetailBody extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              Text(
-                reviews.hasValue
-                    ? 'Reviews (${reviews.requireValue.length})'
-                    : 'Reviews',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Semantics(
+                identifier: 'spot-detail-reviews',
+                container: true,
+                child: Text(
+                  reviews.hasValue
+                      ? 'Reviews (${reviews.requireValue.length})'
+                      : 'Reviews',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

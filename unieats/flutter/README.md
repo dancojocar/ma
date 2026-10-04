@@ -137,7 +137,7 @@ plugin or Riverpod stays in the app: Drift, dio, `TokenStore`, `LocationService`
 `NotificationService`, `RemoteFlags` and `CrashReporter`. The package keeps no lock file
 (`packages/unieats_data/.gitignore`); the app's `pubspec.lock` records it as a path dependency.
 
-This tag (`l13-ai`) adds **Describe this dish** on the detail screen
+Since `l13-ai` **Describe this dish** is on the detail screen
 (`lib/ui/spot_detail/describe_dish_card.dart`). `ApiClient.describeSpot` POSTs the full spot (including
 `openNow`) to `/api/ai/describe` with the Bearer token (the `AuthInterceptor`, like every other POST)
 and reads the Server-Sent Events stream as it arrives (dio `ResponseType.stream` +
@@ -151,8 +151,58 @@ offline; with the key it streams Claude's text. If the server is down the card s
 unreachable"; after 10 requests a minute the server answers 429 and the card says "Too many requests";
 a 401 signs out as for any other request.
 
+This tag (`l14-tests`) adds tests. The app's tests use `flutter_test` with fakes instead of a mocking
+library: an in-memory Drift database (`AppDatabase.forTesting(NativeDatabase.memory())`), a
+`ScriptedApi` that answers each request from a queue (`test/support/fakes.dart`), the mock
+`FlutterSecureStorage` store plus a fake biometric store and `LocalAuthentication`, in-memory
+`shared_preferences`, and `ProviderContainer.test` / `ProviderScope` overrides for Riverpod.
+
+```bash
+flutter test                                  # 102 tests
+(cd packages/unieats_data && dart test)       # 15 tests, pure Dart
+maestro test maestro/flutter.yaml             # needs the server + a running emulator/simulator
+```
+
+- `packages/unieats_data/test/` — JSON ↔ models (contract shape, round trip, bad data), live-event
+  parsing, value equality of the models and `Session`, and `SyncConflictResolver` (the server copy wins
+  only when strictly newer).
+- `test/database_test.dart` — upsert by id, pending rows never clobbered, filtering, outbox order,
+  reviews, sign-out discarding every local change vs. discarding only another user's ops, and the
+  schema v1 → v2 migration (`reviews.body` → `text`, old outbox rows keep a null `user_id`).
+- `test/outbox_replay_test.dart` — replay against `ScriptedApi`: order across spots and reviews, one
+  replay at a time, an edit made while its PATCH is in flight survives and is sent next, a 409 where the
+  server copy wins (later queued edits of that spot go too), permanent 4xx/404 vs. offline, timeout,
+  401, 429 and 5xx that keep the op, a retried review reusing its `Idempotency-Key`, live events.
+- `test/auth_test.dart` — `TokenAuthRepository`: restoring the session, biometric unlock (off by
+  default, enable/disable moving the token, a cold start `Locked`, cancel, a new enrollment →
+  `BiometricInvalidated`, an expired token), sign-out discarding the outbox vs. a 401 keeping it, and
+  another user's ops dropped at sign-in.
+- `test/controllers_test.dart` — `AuthNotifier` (login replays the outbox, 401, unlock, "Use password
+  instead"), `BiometricSettingNotifier`, `EditSpotController` and `AddReviewController` (busy state,
+  double tap, errors, signed out, the sheet closed mid-save) and `DescribeDishController` (streaming,
+  double tap, error and retry, cancel when the screen closes).
+- `test/app_router_test.dart` — `authRedirect` for every session state, keeping `?from=` across the
+  splash, unlock and login gates, and `deepLinkToPath`.
+- `test/sse_test.dart` — `parseSse` (comments, CRLF, chunks split mid-frame and mid-UTF-8) and
+  `ApiClient.describeSpot` against a local `HttpServer`: deltas, Bearer token, `event: error`, cut-off,
+  bad JSON, 429, 401, server down.
+- `test/remote_config_test.dart` — "Fetch & activate", the default flag, the new rating badge, and the
+  crash-report consent gate.
+- `test/search_debounce_test.dart` — typing quickly sends one request (the `_generation` guard),
+  category changes skip the delay, paging keeps the filter.
+- `test/widgets_test.dart` — the whole app over in-memory repositories: the Maestro journey (sign in →
+  first spot → `Reviews (N)` → Describe → back → Settings → Sign out, which sits below the fold), a deep
+  link kept through sign-in, the unlock screen, the Settings switches, and the Describe card's live
+  region and error messages.
+- `maestro/flutter.yaml` — the same journey on a device: "Use password instead" if a previous run left
+  biometric unlock on, sign in, first spot (`id: spot-list-item`) → `Reviews (N)`
+  (`id: spot-detail-reviews`) → "Describe this dish" (`id: describe-dish-button`, result
+  `id: describe-dish-result`) → back → Settings → scroll → "Sign out". The ids are
+  `Semantics(identifier: …)` in the widgets. Validate with `maestro check-syntax maestro/flutter.yaml`.
+
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
-Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
+Get a token first: `TOKEN=$(curl -s -X POST localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).token')`.
+Conflict: edit offline, then `curl -X PATCH -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
 http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
 
 Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
@@ -161,7 +211,7 @@ Drift generates `lib/data/database/database.g.dart` (committed). After changing 
 ## Run
 
 Requires Flutter 3.47.6 or newer (developed on 3.50). The Android shell uses the Gradle wrapper (9.8.0) and
-AGP 9.4.1 with built-in Kotlin, and builds with Android Studio 2026.1's bundled JDK 25 as is (JDK 21 works too), so there is
+AGP 9.4.1 with built-in Kotlin, and builds with Android Studio 2026.2's bundled JDK 25 as is (JDK 21 works too), so there is
 no `flutter config --jdk-dir` step. iOS (tested with Xcode 27, deployment target 15.0) links plugins as Swift
 packages: no CocoaPods, no `pod install`.
 
@@ -187,6 +237,7 @@ Android application id and iOS bundle id: `com.unieats.flutter`.
 
 ```bash
 flutter analyze
+flutter test
 flutter build apk --debug
-cd packages/unieats_data && dart pub get && dart analyze   # the shared package on its own
+(cd packages/unieats_data && dart pub get && dart analyze && dart test)   # the shared package on its own
 ```

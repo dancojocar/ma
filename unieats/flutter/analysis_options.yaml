@@ -18,6 +18,8 @@ analyzer:
     - build/**
     - android/**
     - ios/**
+    # Its tests depend on package:test, resolved by `dart pub get` in the package.
+    - packages/unieats_data/test/**
 
 linter:
   # The lint rules applied to this project can be customized in the

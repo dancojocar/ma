@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.unieats.app.R
+import com.unieats.app.ui.TestTags
 import com.unieats.app.ui.permissions.LOCAL_NETWORK_PERMISSIONS
 import com.unieats.app.ui.permissions.RequestPermissionsOnce
 
@@ -92,7 +94,9 @@ fun LoginContent(
                     label = { Text(stringResource(R.string.login_email)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.LOGIN_EMAIL)
                 )
                 OutlinedTextField(
                     value = state.password,
@@ -102,12 +106,20 @@ fun LoginContent(
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { onSubmit() }),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.LOGIN_PASSWORD)
                 )
                 if (state.errorMessage != null) {
                     Text(state.errorMessage, color = MaterialTheme.colorScheme.error)
                 }
-                Button(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = onSubmit,
+                    enabled = state.canSubmit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag(TestTags.LOGIN_SUBMIT)
+                ) {
                     if (state.isLoading) {
                         CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                     } else {

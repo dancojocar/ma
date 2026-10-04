@@ -1,6 +1,6 @@
 import * as SQLite from "expo-sqlite";
 
-const MIGRATIONS = [
+export const MIGRATIONS = [
   `CREATE TABLE spots (
      id TEXT PRIMARY KEY NOT NULL,
      name TEXT NOT NULL,

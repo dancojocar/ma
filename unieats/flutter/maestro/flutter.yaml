@@ -1,0 +1,70 @@
+# UniEats Flutter smoke flow: sign in → list → first spot → reviews → describe → back → sign out.
+# Needs the UniEats server on the host (the app uses 10.0.2.2 on the Android emulator).
+# Run: maestro test maestro/flutter.yaml
+appId: com.unieats.flutter
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+# clearState does not wipe the iOS Keychain: a previous run may still be signed in, or locked
+# if biometric unlock was turned on by hand ("Use password instead" signs out).
+- runFlow:
+    when:
+      visible: "Use password instead"
+    commands:
+      - tapOn: "Use password instead"
+- runFlow:
+    when:
+      visible: "Sign In"
+    commands:
+      - tapOn: "Email"
+      - inputText: "student@unieats.app"
+      - tapOn: "Password"
+      - inputText: "password"
+      - hideKeyboard
+      - tapOn: "Sign In"
+# iOS offers to save the password after the first sign-in.
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 20000
+- tapOn:
+    id: "spot-list-item"
+    index: 0
+- scrollUntilVisible:
+    element:
+      id: "spot-detail-reviews"
+    direction: DOWN
+    timeout: 10000
+# Maestro matches text as a full regular expression: "Reviews (3)", "Reviews (0)", …
+- assertVisible: 'Reviews \(\d+\)'
+- scrollUntilVisible:
+    element:
+      id: "describe-dish-button"
+    direction: UP
+- tapOn:
+    id: "describe-dish-button"
+- extendedWaitUntil:
+    visible:
+      id: "describe-dish-result"
+    timeout: 15000
+- assertNotVisible: "Server unreachable.*"
+# The app-bar back button (Maestro's `back` only exists on Android).
+- tapOn: "Back"
+- assertVisible:
+    id: "spot-list-item"
+    index: 0
+# Sign out lives in Settings (the gear in the list's app bar), at the bottom of the list.
+- tapOn: "Settings"
+- scrollUntilVisible:
+    element:
+      text: "Sign out"
+    direction: DOWN
+- tapOn: "Sign out"
+- assertVisible: "Sign In"

@@ -8,6 +8,10 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation3.runtime.NavKey
@@ -20,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 // FragmentActivity, not ComponentActivity: BiometricPrompt needs one to host its fragment.
 @AndroidEntryPoint
+@OptIn(ExperimentalComposeUiApi::class)
 class MainActivity : FragmentActivity() {
 
     // The same instance UniEatsNavDisplay gets from hiltViewModel(): both use the activity's store.
@@ -39,8 +44,10 @@ class MainActivity : FragmentActivity() {
         val startKeys = backStackFor(intent)
         setContent {
             UniEatsTheme {
+                // testTagsAsResourceId lets Maestro and UI Automator find composables by testTag.
                 UniEatsNavDisplay(
                     startKeys = startKeys,
+                    modifier = Modifier.semantics { testTagsAsResourceId = true },
                     pendingDeepLink = pendingDeepLink,
                     onDeepLinkConsumed = { pendingDeepLink = null }
                 )

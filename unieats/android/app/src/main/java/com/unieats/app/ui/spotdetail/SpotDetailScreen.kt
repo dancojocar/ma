@@ -27,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -36,14 +37,15 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.unieats.app.R
-import com.unieats.shared.Review
-import com.unieats.shared.Spot
+import com.unieats.app.ui.TestTags
 import com.unieats.app.ui.components.ErrorView
 import com.unieats.app.ui.components.LoadingView
 import com.unieats.app.ui.components.MessageView
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
 import com.unieats.app.ui.components.ratingText
+import com.unieats.shared.Review
+import com.unieats.shared.Spot
 
 @Composable
 fun SpotDetailScreen(
@@ -227,7 +229,9 @@ private fun ReviewsHeader(count: Int, onAddReview: () -> Unit) {
             Text(
                 text = pluralStringResource(R.plurals.detail_reviews_header, count, count),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag(TestTags.SPOT_DETAIL_REVIEWS)
             )
             TextButton(onClick = onAddReview) { Text(stringResource(R.string.detail_add_review)) }
         }

@@ -1,5 +1,6 @@
 package com.unieats.app.ui.spotlist
 
+import app.cash.turbine.test
 import com.unieats.app.data.repository.FavouritesRepository
 import com.unieats.app.testing.FakeEatsRepository
 import com.unieats.app.testing.FakeFeatureFlags
@@ -86,6 +87,41 @@ class SpotListViewModelTest {
 
         assertNull(viewModel.uiState.value.errorMessage)
         assertEquals(2, repository.refreshCalls.size)
+    }
+
+    @Test
+    fun `errorShown clears the message so the same error can show again`() = runTest {
+        repository.failRefresh = true
+        val viewModel = createViewModel()
+
+        viewModel.errorShown()
+        assertNull(viewModel.uiState.value.errorMessage)
+
+        viewModel.refresh()
+        assertEquals("Can't reach the server. Is it running on port 3000?", viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `favourites live in the repository, so a new ViewModel sees them`() = runTest {
+        val favourites = FavouritesRepository()
+        SpotListViewModel(repository, favourites, flags).toggleFavourite("spot-3")
+
+        val viewModel = SpotListViewModel(repository, favourites, flags).also { vm ->
+            backgroundScope.launch(mainDispatcherRule.dispatcher) { vm.uiState.collect {} }
+        }
+
+        assertEquals(setOf("spot-3"), viewModel.uiState.value.favouriteIds)
+    }
+
+    @Test
+    fun `a live edit in the repository flows straight into the list`() = runTest {
+        val viewModel = SpotListViewModel(repository, FavouritesRepository(), flags)
+
+        viewModel.uiState.test {
+            assertEquals("Pizza Stop", awaitItem().spots.last().name)
+            repository.editSpot("spot-3", "Pizza Stop (new oven)", "", openNow = false)
+            assertEquals("Pizza Stop (new oven)", awaitItem().spots.last().name)
+        }
     }
 
     @Test

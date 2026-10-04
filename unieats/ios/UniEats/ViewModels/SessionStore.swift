@@ -21,17 +21,17 @@ final class SessionStore {
 
     let biometrics: any BiometricAuthenticating
     private let api: ApiClient
-    private let keychain: KeychainHelper
+    private let tokens: any TokenStoring
     private let defaults: UserDefaults
 
     init(
         api: ApiClient,
-        keychain: KeychainHelper = KeychainHelper(),
+        tokens: any TokenStoring = KeychainHelper(),
         defaults: UserDefaults = .standard,
         biometrics: any BiometricAuthenticating = BiometricAuth()
     ) {
         self.api = api
-        self.keychain = keychain
+        self.tokens = tokens
         self.defaults = defaults
         self.biometrics = biometrics
         userId = defaults.string(forKey: Key.userId)
@@ -47,7 +47,7 @@ final class SessionStore {
         errorMessage = nil
         do {
             let response = try await api.login(email: email, password: password)
-            try keychain.save(response.token)
+            try tokens.save(response.token, requireBiometry: false)
             token = response.token
             userId = response.user.id
             defaults.set(response.user.id, forKey: Key.userId)
@@ -76,7 +76,7 @@ final class SessionStore {
 
         // A new face or finger changes the state hash and invalidates the .biometryCurrentSet item.
         guard biometrics.stateHash(of: context) == storedStateHash,
-              let stored = try? keychain.load(context: context) else {
+              let stored = try? tokens.load(context: context) else {
             return end(notice: String(localized: "Biometrics changed on this device. Please log in with your password."))
         }
         token = stored
@@ -90,14 +90,14 @@ final class SessionStore {
             guard let context = try? await biometrics.authenticate(reason: reason),
                   phase == .signedIn, self.token == token else { return }
             do {
-                try keychain.save(token, requireBiometry: true)
+                try tokens.save(token, requireBiometry: true)
             } catch {
-                try? keychain.save(token)
+                try? tokens.save(token, requireBiometry: false)
                 return
             }
             storedStateHash = biometrics.stateHash(of: context)
         } else {
-            try? keychain.save(token)
+            try? tokens.save(token, requireBiometry: false)
             storedStateHash = nil
         }
         biometricUnlockEnabled = on
@@ -107,7 +107,7 @@ final class SessionStore {
     /// Ends the session only. Use `SpotRepository.logOut()` for an explicit log out, which also
     /// discards edits that have not synced.
     func logout() {
-        keychain.delete()
+        tokens.delete()
         token = nil
         userId = nil
         biometricUnlockEnabled = false
@@ -131,8 +131,8 @@ final class SessionStore {
     private func restore() {
         guard userId != nil else { return logout() }
         if biometricUnlockEnabled {
-            if keychain.hasItem() { phase = .locked } else { logout() }
-        } else if let stored = try? keychain.load() {
+            if tokens.hasItem() { phase = .locked } else { logout() }
+        } else if let stored = try? tokens.load(context: nil) {
             token = stored
             phase = .signedIn
         } else {

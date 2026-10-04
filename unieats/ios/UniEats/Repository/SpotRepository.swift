@@ -14,15 +14,21 @@ final class SpotRepository {
     private let context: ModelContext
     private let api: ApiClient
     private let session: SessionStore
-    private let ai = AiDescribeClient(baseURL: ApiConfig.baseURL)
+    private let ai: AiDescribeClient
     private var retryTask: Task<Void, Never>?
     private var retryAttempt = 0
     private var inFlightOpId: String?
 
-    init(context: ModelContext, api: ApiClient, session: SessionStore) {
+    init(
+        context: ModelContext,
+        api: ApiClient,
+        session: SessionStore,
+        ai: AiDescribeClient = AiDescribeClient(baseURL: ApiConfig.baseURL)
+    ) {
         self.context = context
         self.api = api
         self.session = session
+        self.ai = ai
     }
 
     // MARK: Reads: the server only feeds the local store; views observe it with @Query.

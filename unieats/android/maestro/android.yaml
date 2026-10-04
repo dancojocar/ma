@@ -1,0 +1,87 @@
+appId: com.unieats.app
+name: UniEats Android — sign in → list → detail → describe this dish → back → log out
+---
+# Needs the server running on the host (the emulator reaches it as 10.0.2.2:3000).
+# Biometric unlock is off by default, so a fresh install always starts on the login screen.
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+- extendedWaitUntil:
+    visible:
+      id: "login-email"
+    timeout: 20000
+- tapOn:
+    id: "login-email"
+- inputText: "student@unieats.app"
+- tapOn:
+    id: "login-password"
+- inputText: "password"
+- hideKeyboard
+# The form scrolls: in landscape or on a small screen the button can sit below the fold.
+- scrollUntilVisible:
+    element:
+      id: "login-submit"
+    direction: DOWN
+- tapOn:
+    id: "login-submit"
+
+# The list asks for notifications (API 33+) and local network access (API 37+). launchApp grants
+# them up front; if a device still shows the system dialog, it hides the app's views, so allow it
+# before looking for the list.
+- extendedWaitUntil:
+    notVisible:
+      id: "login-email"
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: "com.android.permissioncontroller:id/permission_allow_button"
+    timeout: 5000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: "com.android.permissioncontroller:id/permission_allow_button"
+    commands:
+      - tapOn:
+          id: "com.android.permissioncontroller:id/permission_allow_button"
+
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 20000
+- assertVisible: "UniEats"
+- tapOn:
+    id: "spot-list-item"
+    index: 0
+
+- scrollUntilVisible:
+    element:
+      id: "spot-detail-reviews"
+    direction: DOWN
+- assertVisible: 'Reviews \(\d+\)'
+
+- scrollUntilVisible:
+    element:
+      id: "describe-dish-button"
+    direction: UP
+- tapOn:
+    id: "describe-dish-button"
+- extendedWaitUntil:
+    visible:
+      id: "dish-description"
+    timeout: 15000
+
+- back
+- assertVisible:
+    id: "spot-list-item"
+    index: 0
+
+# Log out is in the ⋮ menu (Sort by rating / Settings / Log out).
+- tapOn: "More options"
+- tapOn: "Log out"
+- extendedWaitUntil:
+    visible:
+      id: "login-email"
+    timeout: 10000

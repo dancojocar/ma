@@ -13,6 +13,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpRequestRetry
@@ -78,34 +79,41 @@ object AppModule {
         json: Json,
         @ApiBaseUrl baseUrl: String,
         tokens: AuthTokens
-    ): HttpClient = HttpClient(OkHttp) {
-        expectSuccess = true
-        HttpResponseValidator {
-            // A 401 on a request that carried a token means the session is over: dropping the
-            // token sends the UI back to the login screen.
-            handleResponseExceptionWithRequest { cause, request ->
-                if (cause is ClientRequestException &&
-                    cause.response.status == HttpStatusCode.Unauthorized &&
-                    request.headers[HttpHeaders.Authorization] != null
-                ) {
-                    tokens.clear()
-                }
+    ): HttpClient = createHttpClient(OkHttp.create(), json, baseUrl, tokens)
+}
+
+fun createHttpClient(
+    engine: HttpClientEngine,
+    json: Json,
+    baseUrl: String,
+    tokens: AuthTokens
+): HttpClient = HttpClient(engine) {
+    expectSuccess = true
+    HttpResponseValidator {
+        // A 401 on a request that carried a token means the session is over: dropping the
+        // token sends the UI back to the login screen.
+        handleResponseExceptionWithRequest { cause, request ->
+            if (cause is ClientRequestException &&
+                cause.response.status == HttpStatusCode.Unauthorized &&
+                request.headers[HttpHeaders.Authorization] != null
+            ) {
+                tokens.clear()
             }
         }
-        defaultRequest { url(baseUrl) }
-        install(ContentNegotiation) { json(json) }
-        install(HttpTimeout) {
-            connectTimeoutMillis = 10_000
-            requestTimeoutMillis = 15_000
-        }
-        install(HttpRequestRetry) {
-            // 1 attempt + 2 retries = 3 tries, waiting ~1 s then ~2 s.
-            retryOnServerErrors(maxRetries = 2)
-            retryOnException(maxRetries = 2, retryOnTimeout = true)
-            exponentialDelay(baseDelayMs = 500)
-        }
-        install(WebSockets) {
-            pingIntervalMillis = 20_000
-        }
+    }
+    defaultRequest { url(baseUrl) }
+    install(ContentNegotiation) { json(json) }
+    install(HttpTimeout) {
+        connectTimeoutMillis = 10_000
+        requestTimeoutMillis = 15_000
+    }
+    install(HttpRequestRetry) {
+        // 1 attempt + 2 retries = 3 tries, waiting ~1 s then ~2 s.
+        retryOnServerErrors(maxRetries = 2)
+        retryOnException(maxRetries = 2, retryOnTimeout = true)
+        exponentialDelay(baseDelayMs = 500)
+    }
+    install(WebSockets) {
+        pingIntervalMillis = 20_000
     }
 }

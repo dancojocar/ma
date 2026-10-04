@@ -1,4 +1,4 @@
-# UniEats Android — tag `l13-ai`
+# UniEats Android — tag `l14-tests`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -250,6 +250,91 @@ No Firebase dependency: the same ideas against the course server.
 - `ui/spotdetail/DescribeDishSection.kt`: the button is disabled and reads "Describing…" with a
   spinner while the text streams; the text and the error are polite live regions, so TalkBack
   reads them as they change.
+
+## Tests (new in l14)
+
+```bash
+./gradlew -p unieats/android :app:testDebugUnitTest   # JUnit 4 + MockK + Turbine (+ Robolectric), no device
+./gradlew -p unieats/android :shared:allTests          # commonTest on the JVM and the iOS simulator
+```
+
+Plain JVM tests (fakes and MockK mocks, Turbine for flows):
+
+- `SpotListViewModelTest` — against `FakeEatsRepository` and `FakeFeatureFlags`: first load,
+  debounced search, category filter, favourites (also shared by two ViewModels through one
+  `FavouritesRepository`), error + retry, `errorShown()` clearing the message so the same error
+  shows again, a repository change observed with Turbine, the remote flag.
+- `SettingsViewModelTest` — MockK mocks for `RemoteConfig`, `CrashConsent` and `CrashReporter`,
+  Turbine on `uiState`, `verify { crashReporter.recordError(...) }`.
+- `SessionStateTest` — `sessionStateOf()`: no token → `SignedOut`, token → `SignedIn`, biometric
+  token → `Locked` until unlocked.
+- `SessionViewModelTest`, `UnlockViewModelTest` — a mocked `AuthRepository`: the cipher the prompt
+  returns turns biometric unlock on / completes the unlock; a cancelled prompt (`null`) or a
+  missing key changes nothing; the unlock screen's name comes from `Locked` (Turbine).
+- `EntityMappingTest` (Spot/Review ↔ Room entities), `ServerSentEventParserTest`, `GeoTest`.
+- `shared/src/commonTest/.../SyncConflictResolverTest` — newer server wins, newer client wins,
+  tie → client.
+
+Robolectric tests (`@RunWith(RobolectricTestRunner::class)`, `src/test/resources/robolectric.properties`
+pins SDK 35): the real data layer on an in-memory Room database, with the app's `HttpClient`
+setup (`createHttpClient()` in `di/AppModule.kt`, which takes the engine) on a Ktor `MockEngine`.
+`testing/FakeServer.kt` records every request and answers with scripted responses;
+`testing/SyncFixture.kt` wires `DefaultEatsRepository`, `OutboxSync` and `ApiClient` to it.
+
+- `OutboxSyncTest`
+  - Two edits before a replay merge into one queued op.
+  - An edit made while the PATCH is in flight (the fake server edits from inside its handler)
+    becomes a new op; the op being sent is not touched. After the 200 the in-flight op is deleted
+    by its `opId`, the row keeps the newer edit, and the newer op is rebased onto the server's
+    `updatedAt`; the next replay sends it under its own `Idempotency-Key` and the row ends synced.
+  - If the op was discarded (sign out) while its PATCH was in flight, the response writes nothing.
+  - 409: the server wins. Its copy replaces the row, `pendingSync` is cleared, the op is dropped
+    and nothing is resent.
+  - 401: `replay()` returns `NeedsLogin`, the session is cleared, the op and the edited row stay.
+    No token: nothing is sent.
+- `AuthRepositoryTest` — Log out empties the outbox and deletes the optimistic rows (other cached
+  spots stay); the same user signing in after a 401 keeps their op; a different user signing in
+  drops the previous user's ops and their rows **before** the token is saved, while an op with no
+  owner (queued at database version 1) is kept; a failed sign-in changes nothing.
+- `TokenStoreTest` — `TokenStore` on a real DataStore file in a temp folder. Robolectric has no
+  `AndroidKeyStore`, so `KeystoreCipher` is a MockK fake and `BiometricKeystoreCipher` a `spyk`
+  whose ciphers use a software AES-GCM key (the prompt is skipped). Nothing stored → `SignedOut`;
+  a saved session survives a "cold start" (a new `TokenStore` on the same file); `clear()` signs
+  out and deletes the biometric key; turning biometric unlock on keeps the user signed in and makes
+  the next cold start `Locked`; the authenticated cipher unlocks, a cipher for another key does
+  not; `KeyPermanentlyInvalidatedException` (new enrollment) signs out with the notice; turning it
+  off makes the next cold start `SignedIn` again. `TokenStore` has an `internal` constructor that
+  takes the DataStore and both ciphers; Hilt uses the `@Inject` one.
+- `UniEatsDatabaseMigrationTest` — `MigrationTestHelper` creates a version 1 database from
+  `app/schemas/…/1.json`, inserts a spot and an outbox row, runs `AutoMigration(1 -> 2)` and
+  validates it against `2.json`; Room then reads the op with `userId = null`. Robolectric only
+  sees the tested variant's merged assets, so `app/build.gradle.kts` adds `app/schemas` to the
+  **debug** assets (release APKs do not carry them).
+
+### Backup and device transfer
+
+`AndroidManifest.xml` points `dataExtractionRules` at `res/xml/data_extraction_rules.xml` (Android
+12+) and `fullBackupContent` at `res/xml/backup_rules.xml` (Android 11 and lower): both exclude
+every domain from cloud backup and device-to-device transfer, which `allowBackup="false"` alone
+does not cover on Android 12+. The session DataStore file is encrypted with a Keystore key that
+never leaves the device, so a copy could not be decrypted anyway.
+
+### Maestro (UI flow on an emulator)
+
+Start the server, install the debug app, then:
+
+```bash
+maestro test unieats/android/maestro/android.yaml
+```
+
+The flow starts from a cleared app with all permissions granted, signs in with the password
+(biometric unlock is off by default), allows the notification / local network dialog if a device
+still shows one, opens the first spot, checks "Reviews (n)", taps **Describe this dish**, waits
+for the streamed text, goes back and logs out through ⋮ → **Log out**. It finds composables by
+`testTag` (`login-email`, `login-password`, `login-submit`, `spot-list-item`,
+`spot-detail-reviews`, `describe-dish-button`, `dish-description`; see `ui/TestTags.kt`), which
+`MainActivity` exposes as resource ids with `testTagsAsResourceId`.
+`maestro check-syntax maestro/android.yaml` validates the file without a device.
 
 ## Demo: offline edit → reconnect → sync
 

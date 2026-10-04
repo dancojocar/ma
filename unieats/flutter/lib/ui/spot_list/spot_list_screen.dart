@@ -186,6 +186,7 @@ class _SpotList extends ConsumerWidget {
           key: ValueKey(spot.id),
           index: index,
           child: SpotCard(
+            semanticsId: 'spot-list-item',
             spot: spot,
             isFavourite: favouriteIds.contains(spot.id),
             isPending: pendingIds.contains(spot.id),
@@ -288,7 +289,11 @@ class SpotCard extends StatelessWidget {
     required this.onFavouriteToggle,
     required this.onTap,
     this.isPending = false,
+    this.semanticsId,
   });
+
+  /// Stable id for UI tests (Android resource-id / iOS accessibilityIdentifier).
+  final String? semanticsId;
 
   final Spot spot;
   final bool isFavourite;
@@ -299,7 +304,7 @@ class SpotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
+    final card = Card(
       margin: const EdgeInsets.only(top: 12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -363,5 +368,8 @@ class SpotCard extends StatelessWidget {
         ),
       ),
     );
+    return semanticsId == null
+        ? card
+        : Semantics(identifier: semanticsId, container: true, child: card);
   }
 }

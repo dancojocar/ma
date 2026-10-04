@@ -5,7 +5,7 @@ struct SpotListView: View {
     let repository: SpotRepository
     let live: LiveUpdateService
     let favourites: FavouritesStore
-    @Binding var pendingSpotId: String?
+    let router: AppRouter
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
     @Namespace private var photoTransition
@@ -16,12 +16,12 @@ struct SpotListView: View {
         live: LiveUpdateService,
         notifier: SpotChangeNotifier,
         favourites: FavouritesStore,
-        pendingSpotId: Binding<String?>
+        router: AppRouter
     ) {
         self.repository = repository
         self.live = live
         self.favourites = favourites
-        _pendingSpotId = pendingSpotId
+        self.router = router
         _viewModel = State(initialValue: SpotListViewModel(repository: repository, notifier: notifier))
     }
 
@@ -61,10 +61,8 @@ struct SpotListView: View {
                         .navigationTransition(.zoom(sourceID: spotId, in: photoTransition))
                 }
         }
-        .onChange(of: pendingSpotId, initial: true) { _, spotId in
-            guard let spotId else { return }
-            path = [spotId]
-            pendingSpotId = nil
+        .onChange(of: router.pendingSpotId, initial: true) {
+            if let spotId = router.takePendingSpotId() { path = [spotId] }
         }
     }
 }
@@ -111,6 +109,7 @@ private struct SpotListContent: View {
                         onToggleFavourite: { favourites.toggle(entity.id) }
                     )
                 }
+                .accessibilityIdentifier("spot-list-item")
                 .transition(.move(edge: .leading).combined(with: .opacity))
                 .task {
                     if entity.id == spots.last?.id { await viewModel.loadMore() }

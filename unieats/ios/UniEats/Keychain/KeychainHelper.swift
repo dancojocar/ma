@@ -6,7 +6,16 @@ enum KeychainError: Error {
     case unexpectedStatus(OSStatus)
 }
 
-struct KeychainHelper: Sendable {
+/// Where `SessionStore` keeps the token; unit tests pass an in-memory one, because a simulator
+/// build without code signing has no Keychain access.
+protocol TokenStoring {
+    func save(_ token: String, requireBiometry: Bool) throws(KeychainError)
+    func load(context: LAContext?) throws(KeychainError) -> String?
+    func hasItem() -> Bool
+    func delete()
+}
+
+struct KeychainHelper: TokenStoring, Sendable {
     private let service = "com.unieats.app"
     private let account = "session.jwt"
 

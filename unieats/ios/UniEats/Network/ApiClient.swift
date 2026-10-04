@@ -17,13 +17,17 @@ struct ApiClient: Sendable {
     private let baseURL: URL
     private let session: URLSession
 
-    init(baseURL: URL = ApiConfig.baseURL) {
+    init(baseURL: URL = ApiConfig.baseURL, configuration: URLSessionConfiguration = Self.defaultConfiguration) {
         self.baseURL = baseURL
+        self.session = URLSession(configuration: configuration)
+    }
+
+    static var defaultConfiguration: URLSessionConfiguration {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 15
         configuration.timeoutIntervalForResource = 30
         configuration.waitsForConnectivity = false
-        self.session = URLSession(configuration: configuration)
+        return configuration
     }
 
     func listSpots(page: Int, query: String, category: String?) async throws -> SpotsPage {

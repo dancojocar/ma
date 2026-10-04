@@ -27,22 +27,26 @@ class DescribeDishCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        OutlinedButton.icon(
-          onPressed: description.isStreaming
-              ? null
-              : () => ref
-                    .read(describeDishProvider(spot.id).notifier)
-                    .describe(spot),
-          icon: description.isStreaming
-              ? const SizedBox.square(
-                  dimension: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    semanticsLabel: 'Describing',
-                  ),
-                )
-              : const Icon(Icons.auto_awesome_outlined, size: 18),
-          label: const Text('Describe this dish'),
+        Semantics(
+          identifier: 'describe-dish-button',
+          container: true,
+          child: OutlinedButton.icon(
+            onPressed: description.isStreaming
+                ? null
+                : () => ref
+                      .read(describeDishProvider(spot.id).notifier)
+                      .describe(spot),
+            icon: description.isStreaming
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      semanticsLabel: 'Describing',
+                    ),
+                  )
+                : const Icon(Icons.auto_awesome_outlined, size: 18),
+            label: const Text('Describe this dish'),
+          ),
         ),
         if (description.text.isNotEmpty || error != null) ...[
           const SizedBox(height: 8),
@@ -57,6 +61,8 @@ class DescribeDishCard extends ConsumerWidget {
             ),
             // Announced once, when the text is final, not on every chunk.
             child: Semantics(
+              identifier: 'describe-dish-result',
+              container: true,
               liveRegion: !description.isStreaming,
               child: Text(
                 error == null ? description.text : _messageFor(error),

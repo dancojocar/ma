@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -22,6 +23,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.unieats.app.R
+import com.unieats.app.ui.TestTags
 
 @Composable
 fun DescribeDishSection(
@@ -38,7 +40,11 @@ fun DescribeDishSection(
             .animateContentSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilledTonalButton(onClick = onDescribe, enabled = !isStreaming) {
+        FilledTonalButton(
+            onClick = onDescribe,
+            enabled = !isStreaming,
+            modifier = Modifier.testTag(TestTags.DESCRIBE_DISH_BUTTON)
+        ) {
             if (isStreaming) {
                 CircularProgressIndicator(
                     modifier = Modifier
@@ -62,7 +68,9 @@ fun DescribeDishSection(
             Text(
                 text,
                 style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }
+                modifier = Modifier
+                    .testTag(TestTags.DISH_DESCRIPTION)
+                    .semantics { liveRegion = LiveRegionMode.Polite }
             )
         }
         if (error != null) {

@@ -1,6 +1,65 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l13-ai`: the detail screen has **Describe this dish** (`src/components/DescribeDishSection.tsx`, above
+Tag `l14-tests`: the complete app plus its tests.
+
+**Unit tests**: Jest 29 with the `jest-expo` preset (on SDK 57 the preset also needs the
+`@react-native/jest-preset` dev dependency); hooks are rendered with `renderHook` from
+`@testing-library/react-native`. Run `npm test`. The tests are in `src/__tests__/`, their test doubles in
+`src/__tests__/support/`:
+
+- `outboxReplay.test.ts`: the replay loop in `src/repository/spotRepository.ts` against an in-memory server
+  (`support/fakeSpotServer.ts`, which answers 409 with its copy when an edit's base version is older, like the
+  real server). Queued edits replay in order with their op id as `Idempotency-Key`; an edit made while the
+  PATCH of the same spot is in flight is kept and rebased onto the accepted version; an edit made while the server copy is being fetched after the replay is not
+  overwritten by that older copy; a 409 keeps the server copy and drops the queued edits of that spot based on
+  the stale version, while other spots still replay; without a token nothing is sent, and a token change
+  mid-run stops the loop; a 401 ends the session but keeps the op, which replays after the next sign-in; a 5xx
+  keeps it for a retry.
+- `sessionStore.test.ts`: the four session states with `expo-secure-store` and `expo-local-authentication`
+  replaced by fakes (`support/secureStoreFake.ts` keeps items per `keychainService` and lets the test choose
+  the outcome of the biometric prompt, including an enrollment change). Restore (nothing stored, valid,
+  expired, biometric → `locked` without prompting); turning biometric unlock on (it stays off when the iOS
+  confirmation fails) and off; unlock success, cancel (stays `locked`) and enrollment change (signed out with
+  a notice, queued edits kept). Sign out discards the outbox and the optimistic rows, a 401 keeps them, and
+  signing in as a different user discards the previous user's ops.
+- `database.test.ts`: the migrations, from a fresh install and from the databases l07 (v1), l08 (v2) and l10
+  (v3) left behind (built by running the first entries of the exported `MIGRATIONS`), up to v4, with queued
+  edits carried over (base version moved into the payload, owner kept).
+- `pendingLink.test.ts`: `spotIdFromLink` for each accepted link form and the links it ignores, the pending
+  link taken once, and `app/+native-intent.tsx` remembering a link only while not signed in.
+- `isExpired.test.ts`: the JWT `exp` check (boundary, base64url payloads, malformed tokens).
+- `cloud.test.ts`: remote config ("Fetch & activate", a failed fetch keeps the active flags) and the crash
+  reporting consent (off by default, gates the backend, stored in `settings`, the global handler always calls
+  the previous one).
+- `useDishDescription.test.ts`: the hook with `streamDishDescription`, the session store's status/token and
+  `AccessibilityInfo` mocked: the text grows chunk by chunk and is announced once, no request unless signed in,
+  a 401 calls `expire()`, readable errors (429, unreachable, the server's message), leaving the screen aborts
+  quietly.
+- `sse.test.ts` (frames split anywhere, CRLF line ends, a `\r\n` split across two chunks),
+  `modelSchemas.test.ts` (the Zod schemas from `@unieats/shared`), `syncConflict.test.ts` (`resolveConflict`).
+
+The DAOs, SQL and migrations under test are the app's own: `support/memorySqlite.ts` implements the
+synchronous expo-sqlite calls the app makes on Node's built-in `node:sqlite` with in-memory databases, which
+needs Node 22.13 or later. Imports from `@unieats/shared` go through the workspace link
+`node_modules/@unieats/shared` → `shared/`; Jest follows it to the real path and transforms those files like
+app code, so no `moduleNameMapper` is needed. `tsconfig.json` adds `"types": ["jest"]`.
+
+**Maestro flow** `maestro/rn.yaml`: sign in (`login-email`, `login-password`, `login-submit`) → first spot
+(`spot-list-item`) → detail shows `Reviews (n)` (`spot-detail-reviews`) → "Describe this dish"
+(`describe-dish-button`) streams text (`dish-description`) → back to the list (`search-input`) → Profile tab →
+"Sign out" (`logout-button`) → login screen. `clearState` leaves biometric unlock off, so the flow always signs
+in with the password. It waits for the login subtitle rather than `login-email`, because the other UniEats apps
+use the same ids and one of them can still be on screen while the debug build loads its JS from Metro, and it
+dismisses the LogBox toast that Expo Router's dev-only "Can't perform a React state update on a component that
+hasn't mounted yet" warning can raise at launch, which would otherwise cover the tab bar. Needs the server
+running and a dev build on an emulator:
+
+```bash
+npx expo run:android          # or: npx expo prebuild && (cd android && ./gradlew :app:assembleDebug)
+maestro test maestro/rn.yaml   # check only the syntax: maestro check-syntax maestro/rn.yaml
+```
+
+Kept from l13: the detail screen has **Describe this dish** (`src/components/DescribeDishSection.tsx`, above
 "Edit spot"). It POSTs the full spot (incl. `openNow`; `SpotSchema.parse` drops the local `pendingSync`) to
 `/api/ai/describe` with the Bearer token of the signed-in session and streams the Server-Sent Events answer
 into the screen chunk by chunk (`src/api/aiClient.ts`: `expo/fetch`, because React Native's built-in fetch
@@ -145,7 +204,7 @@ do not enforce the prompt when the protected item is read (Expo docs), so check 
 
 Kept from l07: SQLite (`src/db/`) is the only thing screens read; "Edit spot" updates the row optimistically
 and queues an outbox op that `syncPending()` (`src/repository/spotRepository.ts`) replays in order with
-`Idempotency-Key: <opId>`, 409 resolved by last-write-wins, and a row is marked synced only if no newer edit
+`Idempotency-Key: <opId>`, a 409 keeps the server copy (see "Sync bookkeeping" above), and a row is marked synced only if no newer edit
 was queued while its server copy was being fetched. Hooks in `src/db/hooks.ts` read SQLite with
 `useSyncExternalStore` over the per-table versions bumped by `notifyChanged` (`src/db/changes.ts`).
 "Reachable" means `GET <API_URL>/health` answers 200 (`NetInfo.configure` with
@@ -155,7 +214,25 @@ infinite scroll, pull-to-refresh, search / category filter / favourites.
 
 Demo: edit a spot, toggle airplane mode on the emulator, edit another, turn it off → both PATCHes arrive.
 
-Start the server first: `cd unieats/server && npm ci && npm start` (port 3000).
+## What the app does (built up from l01 to l14)
+
+| Tag | Feature | Where |
+|---|---|---|
+| l02 | `FlatList` + `keyExtractor`, `StyleSheet.create` | `app/(tabs)/spots/index.tsx`, `src/components/SpotCard.tsx` |
+| l03 | Zustand store: search, category filter, favourites; stateless `SearchBar` | `src/store/spotsStore.ts` |
+| l04 | expo-router `/spots/[id]`, deep links `unieats://spots/<id>`, `https://unieats.app/spots/<id>` | `app/(tabs)/spots/[id].tsx`, `app.json` |
+| l05 | TanStack `useInfiniteQuery(["spots", q, category])`, Zod, retry 2, loading/error/empty, pull-to-refresh | `src/api/client.ts`, `src/hooks/useSpots.ts` |
+| l06 | live updates over `ws://<host>:3000/live` with backoff | `src/hooks/useLiveSpots.ts` |
+| l07 | expo-sqlite as the only UI source, "Edit spot" → outbox, NetInfo replay, 409 → server copy | `src/db/`, `src/repository/spotRepository.ts` |
+| l08 | login, JWT in memory + expo-secure-store, Bearer on mutations, 401 → login (queued edits kept), sign out discards them, pending deep link, opt-in biometric unlock, add review | `app/login.tsx`, `app/unlock.tsx`, `src/store/sessionStore.ts`, `src/auth/` |
+| l09 | Nearby (2 km, location only while focused), local notification on `spot.updated` | `app/(tabs)/nearby.tsx`, `src/notifications/` |
+| l10 | `FadeInDown` entrance, swipe-to-hide (gesture-handler + Reanimated) | `src/components/SwipeToDismiss.tsx`, `PERFORMANCE.md` |
+| l11 | remote flag `show_new_rating_ui` + "Fetch & activate", `CrashReporter` + consent | `src/cloud/`, Profile tab |
+| l12 | domain package `@unieats/shared` (models, schemas, `resolveConflict`, geo) | `shared/` |
+| l13 | "Describe this dish" streamed over SSE (`expo/fetch`) | `src/api/aiClient.ts` |
+| l14 | Jest unit tests (outbox replay, session + biometrics, migrations, deep links, SSE, …), Maestro flow | `src/__tests__/`, `maestro/rn.yaml` |
+
+Demo account: `student@unieats.app` / `password`.
 
 Screen readers: each list card's main area is one button whose label reads name, category, open/closed,
 rating and price, plus "pending sync" for an unsynced edit (the thumbnail is decorative); the favourite heart is a separate sibling button (not
@@ -177,6 +254,8 @@ crash reports". "Describe this dish" is a button that is busy while the answer s
 "Loading", and the finished description or error is announced once.
 
 ## Run
+
+Start the server first: `cd unieats/server && npm ci && npm start` (port 3000). Then:
 
 ```bash
 cd unieats/rn
@@ -201,6 +280,7 @@ CI=1 npx expo customize tsconfig.json && git checkout -- tsconfig.json   # gener
 npx tsc --noEmit
 npx expo install --check     # versions match Expo SDK 57
 npx expo-doctor
+npm test                     # Jest unit tests (Node 22.13+)
 ```
 
 Without `.expo/types` (written by `expo start` or the `customize` line above) `tsc` still passes but does not
@@ -233,5 +313,14 @@ EXPO_PUBLIC_API_URL=http://192.168.1.23:3000/api npx expo start
 Release Android builds block cleartext HTTP (Expo allows it only in the debug manifest), so a release
 build needs an `https://` `EXPO_PUBLIC_API_URL`.
 
-App id: `com.unieats.rn` (Android package and iOS bundle id), so it installs next to the
-native and Flutter UniEats apps.
+## Demo helpers
+
+- Emulator location (the seed is in Bucharest): `adb emu geo fix 26.1025 44.4268`; iOS simulator: Features →
+  Location → Custom Location 44.4268, 26.1025.
+- Token for curl: `TOKEN=$(curl -s localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | jq -r .token)`
+- Live update + notification: `curl -X PATCH localhost:3000/api/spots/spot-3 -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"rating":4.9}'`
+- Remote flag: `curl -X POST localhost:3000/api/config -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}'`, then Profile → Fetch & activate.
+- Offline sync: edit a spot, turn on airplane mode, edit another, turn it off → both PATCHes reach the server.
+
+App id: `com.unieats.rn` (Android package and iOS bundle id), so it installs next to the native and Flutter
+UniEats apps.

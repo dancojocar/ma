@@ -1,0 +1,75 @@
+appId: com.unieats.rn
+name: UniEats RN — sign in → list → detail → describe this dish → back → sign out
+---
+# Needs the server on the host, port 3000, and a debug build with Metro running. Granting permissions up front
+# keeps the Android 13+ notification prompt and the location prompt out of the flow. clearState leaves
+# biometric unlock off (it is opt-in), so the app opens on the password login.
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+
+# The other UniEats apps use the same test ids, and one of them can be on screen while this app is cleared and
+# relaunched; a debug build then draws nothing until Metro has served the JS. Wait for text only this app's
+# login shows, so the email is not typed before the field exists.
+- extendedWaitUntil:
+    visible: "Sign in to edit spots and write reviews"
+    timeout: 20000
+- tapOn:
+    id: "login-email"
+- inputText: "student@unieats.app"
+- tapOn:
+    id: "login-password"
+- inputText: "password"
+- hideKeyboard
+- tapOn:
+    id: "login-submit"
+
+- extendedWaitUntil:
+    visible:
+      id: "spot-list-item"
+    timeout: 20000
+- assertVisible: "Spots"
+- tapOn:
+    id: "spot-list-item"
+    index: 0
+
+- scrollUntilVisible:
+    element:
+      id: "spot-detail-reviews"
+    direction: DOWN
+- assertVisible:
+    id: "spot-detail-reviews"
+- assertVisible: 'Reviews \(\d+\)'
+
+- scrollUntilVisible:
+    element:
+      id: "describe-dish-button"
+    direction: UP
+- assertVisible: "Describe this dish"
+- tapOn:
+    id: "describe-dish-button"
+- extendedWaitUntil:
+    visible:
+      id: "dish-description"
+    timeout: 15000
+
+- back
+- assertVisible:
+    id: "search-input"
+
+# In a debug build Expo Router can log this warning at launch (its initial-URL lookup resolves before the first
+# render commits); the LogBox toast it raises covers the tab bar, so dismiss it before switching tabs.
+- runFlow:
+    when:
+      visible: "Can't perform a React state update on a component that hasn't mounted yet.*"
+    commands:
+      - tapOn: "Can't perform a React state update on a component that hasn't mounted yet.*"
+      - tapOn: "Dismiss"
+- tapOn: "Profile"
+- tapOn:
+    id: "logout-button"
+- extendedWaitUntil:
+    visible:
+      id: "login-email"
+    timeout: 10000

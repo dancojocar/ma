@@ -19,6 +19,10 @@ activityCompose = "1.13.0"
 work = "2.12.0"
 playServicesLocation = "21.4.0"
 junit = "4.13.2"
+mockk = "1.14.12"
+turbine = "1.2.1"
+robolectric = "4.18.1"
+androidxTestCore = "1.7.0"
 androidxHilt = "1.4.0"
 biometric = "1.1.0"
 fragment = "1.9.1"
@@ -89,6 +93,12 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 
 # Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 
 [plugins]

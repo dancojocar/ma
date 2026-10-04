@@ -1,12 +1,6 @@
 import SwiftData
 import SwiftUI
 
-enum AppTab: Hashable {
-    case spots
-    case nearMe
-    case settings
-}
-
 @main
 struct UniEatsApp: App {
     private let container: ModelContainer
@@ -18,21 +12,37 @@ struct UniEatsApp: App {
     @State private var crashConsent = CrashReportingConsent()
     @State private var connectivity = ConnectivityMonitor()
     @State private var favourites = FavouritesStore()
-    @State private var pendingSpotId: String?
-    @State private var tab = AppTab.spots
+    @State private var router: AppRouter
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        do {
-            container = try ModelContainer(for: SpotEntity.self, ReviewEntity.self, OutboxEntry.self)
-        } catch {
-            fatalError("Could not open the local database: \(error)")
-        }
+        container = Self.makeContainer()
         let api = ApiClient()
         let session = SessionStore(api: api)
         _session = State(initialValue: session)
+        _router = State(initialValue: AppRouter(session: session))
         _remoteConfig = State(initialValue: RemoteConfig(api: api))
         _repository = State(initialValue: SpotRepository(context: container.mainContext, api: api, session: session))
+    }
+
+    private static func makeContainer() -> ModelContainer {
+        let schema = Schema([SpotEntity.self, ReviewEntity.self, OutboxEntry.self])
+        let configuration = ModelConfiguration(schema: schema)
+        if let container = try? ModelContainer(for: schema, configurations: configuration) {
+            return container
+        }
+        // The store is a cache of the server. A store written by an incompatible build (e.g. an
+        // older checkout of this repo) cannot be migrated, so start from an empty one.
+        let store = configuration.url
+        for suffix in ["", "-shm", "-wal"] {
+            let file = store.deletingLastPathComponent().appending(path: store.lastPathComponent + suffix)
+            try? FileManager.default.removeItem(at: file)
+        }
+        do {
+            return try ModelContainer(for: schema, configurations: configuration)
+        } catch {
+            fatalError("Could not open the local database: \(error)")
+        }
     }
 
     var body: some Scene {
@@ -40,14 +50,14 @@ struct UniEatsApp: App {
             Group {
                 switch session.phase {
                 case .signedIn:
-                    TabView(selection: $tab) {
+                    TabView(selection: $router.tab) {
                         Tab("Spots", systemImage: "fork.knife", value: AppTab.spots) {
                             SpotListView(
                                 repository: repository,
                                 live: live,
                                 notifier: notifier,
                                 favourites: favourites,
-                                pendingSpotId: $pendingSpotId
+                                router: router
                             )
                         }
                         Tab("Near Me", systemImage: "location", value: AppTab.nearMe) {
@@ -70,15 +80,10 @@ struct UniEatsApp: App {
                     LoginView(session: session)
                 }
             }
-            // Here rather than in SpotListView, so a link opened while logged out or locked is
-            // kept and opened after login or unlock.
-            .onOpenURL { url in
-                guard let spotId = DeepLink.spotId(from: url) else { return }
-                pendingSpotId = spotId
-                tab = .spots
-            }
+            // Here rather than in SpotListView, which exists only while signed in.
+            .onOpenURL(perform: router.open)
             .onChange(of: session.isLoggedIn) { _, loggedIn in
-                if !loggedIn { tab = .spots }
+                if !loggedIn { router.sessionEnded() }
             }
             .task(id: session.isLoggedIn) {
                 connectivity.start { [repository] in
