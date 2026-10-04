@@ -1,25 +1,43 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l06-async`: everything from l05 (server list with `useInfiniteQuery` keyed
-`["spots", q, category]`, Zod, loading/error/empty states, pull-to-refresh, photos, read-only reviews,
-search/filter/favourites) plus live updates: `src/hooks/useLiveSpots.ts` opens `ws://<host>:3000/live`
-while the list is focused and the app is in the foreground, reconnects with exponential backoff
-(1 s → 30 s), and on every `spot.created/updated/deleted` calls
-`queryClient.invalidateQueries({ queryKey: ["spots"] })`. Below the filters the list shows "● Live"
-(or "○ Reconnecting…").
-`src/api/queryClient.ts` feeds `AppState` into TanStack's `focusManager`, so stale queries (30 s) also
-refetch when the app returns to the foreground.
-Demo: `curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"rating":5}'`.
+Tag `l07-offline`: offline-first. SQLite (`expo-sqlite`, `src/db/`) is the only thing screens read;
+TanStack Query (`useSpotsSync`, keyed `["spots", q, category]`) now just fetches pages and upserts them
+into SQLite without touching rows that have unsynced edits. "Edit spot" on the detail screen
+(name / description / open now) updates the row optimistically (`pendingSync = 1`) and appends
+`{ opId, type: "update", entityId, payload }` to the `outbox` table. `src/repository/spotRepository.ts`
+`syncPending()` replays the outbox in order with `Idempotency-Key: <opId>` whenever
+`@react-native-community/netinfo` reports the server reachable again; a 409 is resolved by
+last-write-wins on `updatedAt` (`src/domain/syncConflict.ts`). After the replay, a row is marked synced
+only if no newer edit was queued while its server copy was being fetched, so an edit made mid-sync is
+kept and replayed on the next pass. The banner shows "Offline · N changes pending".
+Live updates (`/live`) keep working and are written into SQLite.
+
+Reading SQLite from React: every DAO write calls `notifyChanged(table)` (`src/db/changes.ts`), and the
+hooks in `src/db/hooks.ts` subscribe with `useSyncExternalStore`, re-running their query only when that
+table's version changes. We don't use expo-sqlite's `SQLiteProvider`/`addDatabaseChangeListener` because
+the DAOs are also called outside React (repository, outbox replay, live events) and the change listener
+fires once per row.
+
+"Reachable" means `GET <API_URL>/health` answers 200: `NetInfo.configure` sets
+`useNativeReachability: false`, without which Android and iOS use the OS's own internet check and ignore
+`reachabilityUrl`. `src/api/queryClient.ts` feeds NetInfo's `isConnected` into TanStack's `onlineManager`
+(queries pause instead of failing while offline; an empty list or detail screen then says
+"You're offline…" instead of spinning) and `AppState` into `focusManager`, so stale queries (30 s) refetch
+when the app returns to the foreground.
+Still from earlier tags: infinite scroll, pull-to-refresh, search/filter/favourites, read-only reviews.
+
+Demo: edit a spot, toggle airplane mode on the emulator, edit another, turn it off → both PATCHes arrive.
 
 Start the server first: `cd unieats/server && npm ci && npm start` (port 3000).
 
 Screen readers: each list card's main area is one button whose label reads name, category, open/closed,
-rating and price (the thumbnail is decorative); the favourite heart is a separate sibling button (not
+rating and price, plus "pending sync" for an unsynced edit (the thumbnail is decorative); the favourite heart is a separate sibling button (not
 nested inside the card's button, so both stay reachable) that reports its selected state; category chips
 read as "<name> category" buttons with a selected state and the search field is labelled "Search spots";
 on the detail screen the rating and review stars read as "out of 5"
 and the header photo is labelled; loading spinners are labelled "Loading"; the live indicator reads "Live updates on" or
-"Reconnecting to live updates" and is a polite live region, so TalkBack announces status changes; the tab-bar emoji is hidden because the tab already announces its title.
+"Reconnecting to live updates" and is a polite live region, so TalkBack announces status changes, as does
+the offline / pending-changes banner; the edit form's fields and "Open now" switch are labelled; the tab-bar emoji is hidden because the tab already announces its title.
 
 ## Run
 

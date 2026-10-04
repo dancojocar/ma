@@ -7,11 +7,13 @@ export function ReviewList({
   reviews,
   isLoading,
   error,
+  notice = null,
   onRetry,
 }: {
   reviews: Review[] | undefined;
   isLoading: boolean;
   error: string | null;
+  notice?: string | null;
   onRetry: () => void;
 }) {
   return (
@@ -23,6 +25,7 @@ export function ReviewList({
           <Text style={styles.error}>{error} Tap to retry.</Text>
         </Pressable>
       )}
+      {notice && <Text style={styles.empty}>{notice}</Text>}
       {reviews?.map((r) => (
         <View key={r.id} style={styles.review}>
           <View style={styles.header}>

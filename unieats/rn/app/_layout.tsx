@@ -4,8 +4,11 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { queryClient } from "../src/api/queryClient";
+import { useSyncOnReconnect } from "../src/sync/useSyncOnReconnect";
 
 export default function RootLayout() {
+  useSyncOnReconnect();
+
   return (
     <GestureHandlerRootView style={styles.flex}>
       <QueryClientProvider client={queryClient}>

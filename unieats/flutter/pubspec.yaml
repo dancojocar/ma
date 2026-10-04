@@ -14,11 +14,16 @@ dependencies:
   go_router: ^18.1.4
   material_ui: ^1.11.1
   dio: ^5.9.0
-
+  drift: ^2.35.0
+  drift_flutter: ^0.3.1
+  connectivity_plus: ^7.0.0
+  uuid: ^4.5.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: ^2.7.0
+  drift_dev: ^2.35.0
 
 flutter:
   uses-material-design: true

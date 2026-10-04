@@ -1,8 +1,8 @@
-# UniEats Android — tag `l06-async`
+# UniEats Android — tag `l07-offline`
 
-The list and the detail screen come from the UniEats server over HTTP (Ktor + kotlinx
-serialization), and the list follows server changes live over a WebSocket. Search, category filter and favourites still work; search and filter are sent to
-the server as `q` and `category`.
+Offline-first: Room is the only thing the screens read. The network refreshes Room, the
+WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
+WorkManager job replays when the device is online.
 
 ## Run
 
@@ -16,59 +16,55 @@ On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
 
 ## What to look at
 
-- `di/AppModule.kt` — one `HttpClient(OkHttp)` with `HttpTimeout` (connect 10 s, request 15 s),
-  `HttpRequestRetry` (3 tries, exponential back-off), JSON content negotiation and the base URL
-  `http://10.0.2.2:3000/api/` (`BuildConfig.API_BASE_URL`).
-- `data/remote/ApiClient.kt` — `GET /spots?page&limit&q&category`, `GET /spots/{id}`,
-  `GET /spots/{id}/reviews`. The list endpoint returns a wrapper (`SpotsPage`), not a bare array.
-- `data/remote/ApiResult.kt` + `data/repository/SpotRepository.kt` — every call returns a
-  `Result`; failures become a readable message (no swallowed exceptions).
-- `ui/spotlist/SpotListViewModel.kt` — explicit `isLoading` / `errorMessage` / empty states,
-  `refresh()` for pull-to-refresh, `loadNextPage()` with `currentPage` + `hasNextPage`. Favourites
-  still come from `FavouritesRepository`, shared with the detail screen.
-- `ui/spotlist/SpotListScreen.kt` — `PullToRefreshBox`, a full-screen error with **Retry**, a
-  snackbar with Retry when a refresh or next page fails, and infinite scroll that stops when the
-  server says `hasNextPage: false` (25 seeded spots = page 1 with 20, page 2 with 5). The loading,
-  error and empty states sit in a one-item `LazyColumn` so they can be pulled to refresh too. When
-  the snackbar is dismissed the screen calls `errorShown()`, which clears the message, so the same
-  error shows again next time and infinite scroll resumes.
-- Photos come from each spot's `photoUrl` (Coil, picsum.photos), so images need internet.
-- The detail screen loads the spot and its reviews (read-only — adding a review needs login,
-  which arrives at `l08-auth`), with the same loading / error + Retry / not-found states.
-- `AndroidManifest.xml` — `INTERNET`, plus `ACCESS_LOCAL_NETWORK`: from Android 17 (API 37)
-  apps targeting it need this permission to reach devices on the local network, which includes
-  the laptop at `10.0.2.2`. It is only declared here; on API 37 it is also a runtime permission,
-  and the request is added at `l09` next to the location prompt. Not verified on an API 37 device
-  yet (the API 37 emulator crashes on the course machine); on API 35/36 nothing changes. Loopback
-  is not "local network", so `adb reverse` + `localhost:3000` (above) is the fallback.
+- `data/local/` — `SpotEntity` (with `pendingSync`), `ReviewEntity`, `OutboxEntity`
+  `{seq, opId, type, entityId, payload, attempted}`; `SpotDao.getPendingSync()` / `markSynced()`.
+  `UniEatsDatabase` exports its schema (Room Gradle plugin, `room { schemaDirectory(...) }`) to
+  `app/schemas/…/1.json`, which is committed. Any later schema change bumps `version` and adds an
+  `autoMigrations` entry checked against these files.
+- `data/repository/SpotRepository.kt` — `observe…()` flows from Room; `refreshSpots()` upserts by
+  id and never overwrites a row with `pendingSync = true`; `editSpot()` updates the row
+  optimistically and queues an `update` op, or merges into the spot's queued op if that one has
+  not been sent yet. Live WebSocket events are written to Room; the socket is shared by the list
+  and the detail screen and closes 5 s after neither is visible.
+- `data/sync/` — `ConnectivityObserver` (`registerDefaultNetworkCallback` as a Flow; online means
+  `INTERNET` **and** `VALIDATED`, the same test WorkManager's `CONNECTED` constraint uses), and
+  `SyncScheduler`: after every edit it enqueues the one-shot `SyncWorker` with `APPEND_OR_REPLACE`
+  (a run after the current one), and when the network comes back with `KEEP` (no duplicate if a
+  run is already waiting or running). `OutboxSync.replay()` sends the ops in order with
+  `Idempotency-Key = opId`; 409 → last-write-wins via `SyncConflictResolver` (the newer
+  `updatedAt` wins, a tie goes to the client).
+- Editing while a replay is in flight: before an op is sent it is marked `attempted` in the same
+  transaction that reads it, so a new edit queues a second op instead of changing what was sent
+  under that key. When the response arrives, `finish()` deletes the op by `opId` and only writes
+  the server copy into the row if no other op is queued for the spot. If one is, the server took
+  our earlier edit, so the newer op's base `updatedAt` moves to the server's new version and the
+  next run sends it without a 409.
+- UI: **Edit spot** on the detail screen (name, description, open now), a "Waiting to sync" label
+  on edited spots and an "N changes pending" banner on the list.
+- `AndroidManifest.xml` — `INTERNET`, `ACCESS_NETWORK_STATE` (connectivity callback), and
+  `ACCESS_LOCAL_NETWORK`: from Android 17 (API 37) apps targeting it need this permission to reach
+  the laptop at `10.0.2.2`. It is only declared here; the runtime request is added at `l09` next to
+  the location prompt. Not verified on an API 37 device yet (the API 37 emulator crashes on the
+  course machine); loopback is not "local network", so `adb reverse` + `localhost:3000` is the
+  fallback. The manifest also removes WorkManager's default initializer, because
+  `UniEatsApplication` provides a configuration with `HiltWorkerFactory`.
 
-Unchanged from l04: Navigation 3 with the two-pane layout, deep links, Material Symbols vector
-drawables via `painterResource`, the TalkBack descriptions on the rating and reviews, and the
-light/dark theme.
+Unchanged from earlier labs: Navigation 3 with the two-pane layout and deep links,
+`FavouritesRepository` shared by the list and the detail screen, pull-to-refresh on every state,
+Material Symbols vector drawables via `painterResource`, the TalkBack descriptions on the rating,
+reviews and live badge, and the light/dark theme.
 
-## Live updates (new in l06)
+## Demo: offline edit → reconnect → sync
 
-- `data/remote/LiveUpdates.kt` — `events()` is a cold `Flow<LiveEvent>` over the server's
-  WebSocket `ws://10.0.2.2:3000/live` (`BuildConfig.LIVE_URL`). It parses
-  `spot.created / spot.updated / spot.deleted` and reconnects with exponential back-off
-  (1 s → 30 s) when the connection drops.
-- `ui/spotlist/SpotListViewModel.kt` — the socket is part of the upstream of
-  `uiState = combine(_uiState, liveConnection).stateIn(viewModelScope, WhileSubscribed(5_000), …)`.
-  `collectAsStateWithLifecycle()` stops collecting when the screen is not visible, so 5 s later the
-  socket closes; it reopens when you come back. A rotation (< 5 s) keeps it open.
-- The top bar shows **● Live** while connected (TalkBack reads "Live updates on" / "Offline", not the glyph).
+1. Open a spot, tap **Edit spot**, change the name, Save — the list shows it immediately.
+2. Turn on airplane mode (or stop the server), edit again: "1 change pending" stays visible.
+3. Turn the network back on (or restart the server): the banner disappears, and the server log shows
+   one `PATCH` with the `Idempotency-Key` header.
+4. Conflict: edit a spot offline, change the same spot with curl
+   (`curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"name":"Server name"}'`),
+   then go online — the server's newer version wins (409 → the row is replaced, the op dropped).
 
-Demo: keep the list open and change a spot from a terminal — the row updates without a refresh:
+Kill and relaunch the app at any point: cached spots show instantly and the outbox survives.
 
-```bash
-curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (new oven)"}'
-```
-
-Press Home, wait 5 s, and the server log shows the socket closing.
-
-## Try the failure paths
-
-- Stop the server and pull to refresh / relaunch: after 3 tries you get the error state + Retry.
-- The server's chaos headers (`X-Chaos-Delay`, `X-Chaos-Status`, `X-Chaos-Malformed`,
-  `X-Chaos-Drop`) all end in a message, never a crash.
-- Use App Inspection → Network Inspector to watch the calls.
+An emulator whose network has no internet (only the laptop is reachable) never counts as online:
+the network is not `VALIDATED`, so neither the connectivity trigger nor WorkManager runs the sync.

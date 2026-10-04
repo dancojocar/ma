@@ -13,10 +13,10 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -24,8 +24,10 @@ data class SpotDetailUiState(
     val spot: Spot? = null,
     val reviews: List<Review> = emptyList(),
     val isFavourite: Boolean = false,
+    val isPendingSync: Boolean = false,
     val isLoading: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isLive: Boolean = false
 )
 
 @HiltViewModel(assistedFactory = SpotDetailViewModel.Factory::class)
@@ -41,33 +43,47 @@ class SpotDetailViewModel @AssistedInject constructor(
     }
 
     private val _uiState = MutableStateFlow(SpotDetailUiState())
-    val uiState: StateFlow<SpotDetailUiState> = _uiState.asStateFlow()
+
+    private val spotWithReviews = combine(
+        spotRepository.observeSpot(spotId),
+        spotRepository.observeReviews(spotId)
+    ) { spot, reviews -> spot to reviews }
+
+    val uiState: StateFlow<SpotDetailUiState> = combine(
+        _uiState,
+        spotWithReviews,
+        spotRepository.observePendingSpotIds(),
+        favourites.favouriteIds,
+        spotRepository.liveConnection
+    ) { state, (spot, reviews), pendingIds, favouriteIds, live ->
+        state.copy(
+            spot = spot,
+            reviews = reviews,
+            isFavourite = spotId in favouriteIds,
+            isPendingSync = spotId in pendingIds,
+            isLive = live
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), _uiState.value)
 
     init {
-        favourites.favouriteIds
-            .onEach { ids -> _uiState.update { it.copy(isFavourite = spotId in ids) } }
-            .launchIn(viewModelScope)
-        load()
+        refresh()
     }
 
-    fun load() {
+    fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val spot = async { spotRepository.fetchSpot(spotId) }
-            val reviews = async { spotRepository.fetchReviews(spotId) }
-            val spotResult = spot.await()
-            val reviewsResult = reviews.await()
-            val error = spotResult.exceptionOrNull() ?: reviewsResult.exceptionOrNull()
-            _uiState.update {
-                it.copy(
-                    spot = spotResult.getOrNull() ?: it.spot,
-                    reviews = reviewsResult.getOrNull() ?: it.reviews,
-                    isLoading = false,
-                    errorMessage = error?.toUserMessage()
-                )
-            }
+            val spot = async { spotRepository.refreshSpot(spotId) }
+            val reviews = async { spotRepository.refreshReviews(spotId) }
+            val error = spot.await().exceptionOrNull() ?: reviews.await().exceptionOrNull()
+            _uiState.update { it.copy(isLoading = false, errorMessage = error?.toUserMessage()) }
         }
     }
 
     fun toggleFavourite() = favourites.toggle(spotId)
+
+    fun saveEdit(name: String, description: String, openNow: Boolean) {
+        viewModelScope.launch {
+            spotRepository.editSpot(spotId, name.trim(), description.trim(), openNow)
+        }
+    }
 }

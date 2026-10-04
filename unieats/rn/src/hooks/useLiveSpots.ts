@@ -1,23 +1,14 @@
-import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { LIVE_URL } from "../api/config";
-import { LiveEventSchema, type LiveEvent } from "../domain/schemas";
+import { LiveEventSchema } from "../domain/schemas";
+import { applyLiveEvent } from "../repository/spotRepository";
 import { useAppActive } from "./useAppActive";
 
 export type LiveStatus = "connecting" | "live";
 
 const MAX_BACKOFF_MS = 30_000;
-
-function applyLiveEvent(queryClient: QueryClient, event: LiveEvent) {
-  // Every ["spots", q, category] page set may contain (or now match) the spot, so refetch them all.
-  queryClient.invalidateQueries({ queryKey: ["spots"] });
-  if (event.type === "spot.deleted") {
-    queryClient.invalidateQueries({ queryKey: ["spot", event.id] });
-  } else {
-    queryClient.setQueryData(["spot", event.spot.id], event.spot);
-  }
-}
 
 /** Connected only while the calling screen is focused and the app is in the foreground. */
 export function useLiveSpots(): LiveStatus {
@@ -41,14 +32,14 @@ export function useLiveSpots(): LiveStatus {
         socket.onopen = () => {
           attempt = 0;
           setStatus("live");
-          // Events sent while we were disconnected are lost; resync once on every reconnect.
+          // Events sent while we were disconnected are lost; refetch the loaded pages into SQLite.
           if (connectedBefore.current) queryClient.invalidateQueries({ queryKey: ["spots"] });
           connectedBefore.current = true;
         };
         socket.onmessage = (message) => {
           try {
             const parsed = LiveEventSchema.safeParse(JSON.parse(String(message.data)));
-            if (parsed.success) applyLiveEvent(queryClient, parsed.data);
+            if (parsed.success) applyLiveEvent(parsed.data);
           } catch {
             // Ignore frames that are not JSON; the next valid event still applies.
           }

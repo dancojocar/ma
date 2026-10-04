@@ -1,15 +1,18 @@
+import { onlineManager } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { describeError } from "../../../src/api/errors";
+import { useLocalSpots } from "../../../src/db/hooks";
 import { CategoryChips } from "../../../src/components/CategoryChips";
 import { LiveBadge } from "../../../src/components/LiveBadge";
 import { SearchBar } from "../../../src/components/SearchBar";
 import { SpotCard } from "../../../src/components/SpotCard";
+import { SyncBanner } from "../../../src/components/SyncBanner";
 import { EmptyView, ErrorView, LoadingView } from "../../../src/components/StatusViews";
 import { useDebouncedValue } from "../../../src/hooks/useDebouncedValue";
 import { useLiveSpots } from "../../../src/hooks/useLiveSpots";
-import { useSpotsInfinite } from "../../../src/hooks/useSpots";
+import { useSpotsSync } from "../../../src/hooks/useSpots";
 import { useSpotsStore } from "../../../src/store/spotsStore";
 
 export default function SpotListScreen() {
@@ -22,12 +25,14 @@ export default function SpotListScreen() {
   const toggleFavourite = useSpotsStore((s) => s.toggleFavourite);
 
   const q = useDebouncedValue(searchQuery.trim(), 300);
-  const query = useSpotsInfinite(q, categoryFilter);
+  const query = useSpotsSync(q, categoryFilter);
+  const spots = useLocalSpots(q, categoryFilter);
   const liveStatus = useLiveSpots();
-  const spots = useMemo(() => query.data?.pages.flatMap((p) => p.spots) ?? [], [query.data]);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
+    // Offline, refetch() stays paused until reconnect and the spinner would never stop.
+    if (!onlineManager.isOnline()) return;
     setRefreshing(true);
     await query.refetch();
     setRefreshing(false);
@@ -40,7 +45,9 @@ export default function SpotListScreen() {
   };
 
   let body;
-  if (query.isPending) {
+  if (spots.length === 0 && query.fetchStatus === "paused") {
+    body = <EmptyView message="You're offline. Spots will load when you reconnect." />;
+  } else if (spots.length === 0 && query.isPending) {
     body = <LoadingView />;
   } else if (query.isError && spots.length === 0) {
     body = <ErrorView message={describeError(query.error)} onRetry={() => query.refetch()} />;
@@ -83,6 +90,7 @@ export default function SpotListScreen() {
         <CategoryChips value={categoryFilter} onChange={setCategoryFilter} />
         <LiveBadge status={liveStatus} />
       </View>
+      <SyncBanner />
       {body}
     </View>
   );

@@ -1,5 +1,6 @@
 package com.unieats.app.ui.spotlist
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -114,6 +116,7 @@ fun SpotListContent(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             CategoryFilterRow(selected = state.categoryFilter, onSelect = onCategorySelected)
+            if (state.pendingChanges > 0) PendingChangesBanner(state.pendingChanges)
             PullToRefreshBox(
                 isRefreshing = state.isRefreshing,
                 onRefresh = onRefresh,
@@ -136,6 +139,7 @@ fun SpotListContent(
                             SpotCard(
                                 spot = spot,
                                 isFavourite = spot.id in state.favouriteIds,
+                                isPending = spot.id in state.pendingSpotIds,
                                 onClick = { onSpotClick(spot.id) },
                                 onToggleFavourite = { onToggleFavourite(spot.id) },
                                 modifier = Modifier.animateItem()
@@ -161,6 +165,20 @@ private fun ScrollableState(content: @Composable () -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         item { Box(Modifier.fillParentMaxSize()) { content() } }
     }
+}
+
+@Composable
+private fun PendingChangesBanner(count: Int) {
+    Text(
+        text = if (count == 1) "1 change pending" else "$count changes pending",
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(8.dp))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    )
 }
 
 @Composable

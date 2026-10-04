@@ -5,6 +5,7 @@ enum ApiError: Error, LocalizedError {
     case noConnectivity
     case timeout
     case decodingFailed(Error)
+    case conflict(server: SpotDTO)
 
     var errorDescription: String? {
         switch self {
@@ -16,6 +17,8 @@ enum ApiError: Error, LocalizedError {
             "The server took too long to answer."
         case .decodingFailed:
             "The server sent data the app could not read."
+        case .conflict:
+            "Someone else changed this spot first."
         }
     }
 }

@@ -11,20 +11,37 @@ Widgets come from the `material_ui` package; state is Riverpod 3 without code ge
   `RetryInterceptor` (3 retries, exponential backoff) for GETs; failures become a sealed `AppError`.
   `ProviderScope(retry: (_, _) => null)` turns off Riverpod 3's own provider retry, so retrying
   stays in this one place.
-- `lib/providers/providers.dart` — `SpotPagesNotifier` (`AsyncNotifier`, autoDispose since `l06-async`) does the manual pagination.
+- `lib/providers/providers.dart` — `SpotPagingNotifier` (`AsyncNotifier`, autoDispose) does the manual
+  pagination; since `l07-offline` each page is written to the local database instead of held in memory.
 
-This tag (`l06-async`) adds live updates: `liveEventsProvider` (a `StreamProvider.autoDispose`) listens to
-`ws://<host>:3000/live` (`lib/data/network/live_updates.dart`), and `spot.created/updated/deleted`
-events patch the visible list in place. A "Live/Offline" dot in the app bar shows the connection; on a
-drop it reconnects with backoff (1 s doubling to 30 s). While the detail screen covers the list,
-Riverpod pauses the list's listeners and the stream with them; going back resumes it and the list catches
-up. The socket closes when the list screen is disposed or the app goes to the background, and reopens on
-resume. Try it:
+Since `l06-async` a WebSocket (`ws://<host>:3000/live`) streams spot changes into the app
+(`lib/data/network/live_updates.dart`), reconnecting with backoff; a "Live/Offline" dot shows it. The
+socket closes when no visible screen watches it or the app goes to the background.
 
-```bash
-curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (live)"}' \
-  http://localhost:3000/api/spots/spot-3
-```
+This tag (`l07-offline`) makes a local Drift database the single source of truth
+(`lib/data/database/`): screens only watch Drift; network refreshes and live events upsert into it
+without touching rows that have unsynced edits. "Edit spot" on the detail screen changes the row at
+once and queues an outbox op; `SpotRepository.syncOutbox()` replays it with `Idempotency-Key` when the
+device reconnects (`connectivity_plus`, behind `connectivityProvider`), the WebSocket reconnects, the
+app starts, or you tap "Sync now". Ops replay strictly in the order they were made. A 409 resolves
+last-write-wins on `updatedAt` (`lib/data/sync/sync_conflict_resolver.dart`): if the local edit wins,
+it is resent from its place in the queue with the server's version as base and a new
+`Idempotency-Key` (the server remembers the 409 under the old key); if the server wins, every queued
+edit of that spot is dropped, since they all built on the version the server has replaced. An edit made
+while its spot is syncing stays queued and is sent next. An edit the server rejects for good (another
+4xx) is dropped on its own; the screen shows the server copy unless later edits are still queued. The
+edit sheet's Save button is disabled while saving (`EditSpotController` in `providers.dart`) and shows the error if the edit can't be stored.
+
+`liveSyncProvider` writes live events into Drift. Both the list and the detail screen watch it, because
+Riverpod 3 pauses the list's listeners while the detail screen covers it; with only the list watching,
+the detail screen would stop receiving live changes.
+
+Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
+Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
+http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
+
+Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
+`database.dart` run `dart run build_runner build --delete-conflicting-outputs`.
 
 ## Run
 

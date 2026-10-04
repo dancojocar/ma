@@ -3,6 +3,7 @@ import SwiftUI
 struct SpotRow: View {
     let spot: Spot
     let isFavourite: Bool
+    var isPending = false
     let onToggleFavourite: () -> Void
 
     var body: some View {
@@ -16,6 +17,12 @@ struct SpotRow: View {
                     Text(spot.name)
                         .font(.headline)
                         .lineLimit(1)
+                    if isPending {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .accessibilityLabel("Pending sync")
+                    }
                     Spacer()
                     Button(action: onToggleFavourite) {
                         Image(systemName: isFavourite ? "heart.fill" : "heart")
