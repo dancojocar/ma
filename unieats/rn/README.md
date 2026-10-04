@@ -1,13 +1,13 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l09-push-location`: a **Nearby** tab lists saved spots within 2 km (`src/domain/geo.ts`,
-haversine). It explains why it needs location, asks with `expo-location`
-(`requestForegroundPermissionsAsync`; "Open Settings" when blocked), and watches the position with
-`watchPositionAsync` only while the tab is focused — the subscription is removed on blur/unmount
-(`src/hooks/useNearbySpots.ts`). A live `spot.updated` event from another device fires a local
-notification "<spot> was updated" (`src/notifications/spotNotifications.ts`, expo-notifications; Android 13+
-asks for POST_NOTIFICATIONS after sign-in); tapping it opens the spot. Both plugins are configured in
-`app.json`. No FCM/APNs: notifications are local, driven by the WebSocket.
+Tag `l10-polish`: list rows enter with Reanimated 4 `FadeInDown` (staggered by index) and can be
+swiped away (left or right) to hide them for the session: `src/components/SwipeToDismiss.tsx` uses a
+`react-native-gesture-handler` `Gesture.Pan()` driving a `useSharedValue` with `withTiming`, all on the UI
+thread, and hands the dismissal back to React with `scheduleOnRN` (`react-native-worklets`); "Show N hidden"
+brings them back. Profiling steps: `PERFORMANCE.md`.
+
+Kept from l09: the Nearby tab (2 km, `expo-location` watch only while focused) and a local notification
+"<spot> was updated" from live `spot.updated` events (`expo-notifications`).
 
 Emulator location (the seed is in Bucharest): `adb emu geo fix 26.1025 44.4268`; iOS simulator:
 Features → Location → Custom Location 44.4268, 26.1025. Trigger a notification:

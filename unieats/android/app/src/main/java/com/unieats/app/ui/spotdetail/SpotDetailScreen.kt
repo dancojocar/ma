@@ -165,7 +165,7 @@ private fun SpotHeader(spot: Spot, isPendingSync: Boolean, onEdit: () -> Unit) {
                 "★ ${spot.ratingText()} / 5 · ${spot.priceText()}",
                 style = MaterialTheme.typography.bodyLarge
             )
-            Text(spot.description, style = MaterialTheme.typography.bodyMedium)
+            AboutCard(spot)
             OutlinedButton(onClick = onEdit) { Text("Edit spot") }
         }
     }

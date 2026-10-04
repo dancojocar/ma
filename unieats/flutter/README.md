@@ -23,7 +23,7 @@ the JWT is kept in `flutter_secure_storage`, sent as `Authorization: Bearer` on 
 outbox replay, a 401 ends the session, "Sign out" is in the list's app bar and "Add review" posts
 through the outbox. Drift schema v2 renamed the reviews column `body` → `text` with a migration.
 
-This tag (`l09-push-location`) adds:
+Since `l09-push-location`:
 - **Spots near me** (`/nearby`, the arrow in the list's app bar): spots within 2 km, nearest first,
   from `geolocator`. The screen explains why before the system permission prompt, offers "Open
   settings" when access is blocked, and position updates stop as soon as the screen closes
@@ -32,6 +32,11 @@ This tag (`l09-push-location`) adds:
 - **Local notifications** "<spot> was updated" (`flutter_local_notifications`) fired by the live
   WebSocket's `spot.updated` event — no FCM/APNs. Android 13+ asks for `POST_NOTIFICATIONS` when the
   list first opens. Try: `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
+
+This tag (`l10-polish`) adds motion: the spot photo flies from the list card to the detail header
+(`Hero(tag: 'spot-photo-<id>')`) and cards fade/slide in with a 40 ms stagger (`AnimatedEntrance` in
+`lib/ui/spot_list/spot_list_screen.dart`, an `AnimationController` per card, disposed with it, skipped
+under "reduce motion"). Profiling steps: [PERFORMANCE.md](PERFORMANCE.md).
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

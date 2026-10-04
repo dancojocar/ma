@@ -1,27 +1,19 @@
-# UniEats iOS — l09-push-location
+# UniEats iOS — l10-polish
 
-"Spots near me" and change notifications.
+Animations and a profiling checklist.
 
 ## What this tag adds
 
-- **Near Me tab** (`Views/NearMeView.swift`, `Location/LocationManager.swift`): CoreLocation
-  with a when-in-use permission request (`NSLocationWhenInUseUsageDescription` in
-  `UniEats/Info.plist`); lists spots within **2 km**, nearest first, from SwiftData.
-  `startUpdatingLocation()` runs only while the screen is visible (`onAppear`) and
-  `stopUpdatingLocation()` is called in `onDisappear`.
-- **Local notification "<spot> was updated"** (`Notifications/SpotChangeNotifier.swift`): fired
-  from the l06 live `spot.updated` event, not from opening any screen. Permission is requested
-  after login; the notification-center delegate shows the banner while the app is in the
-  foreground (the live socket only runs then). No APNs/FCM: real push is a legacy demo.
-
-Demo (simulator):
-
-```bash
-xcrun simctl location booted set 44.427,26.103   # campus centre, Bucharest
-```
-
-Open **Near Me** → allow location → spots sorted by distance. Back on **Spots**, PATCH a spot
-with curl (below) → banner "Pizza Stop (new oven) was updated".
+- Filtered list animates: `.animation(.easeInOut(duration: 0.25), value: spots.map(\.id))` on the
+  `List` in `Views/SpotListView.swift`, rows use
+  `.transition(.move(edge: .leading).combined(with: .opacity))` — tap a category chip or type in
+  search and rows slide/fade instead of jumping.
+- Shared-element style hero: the row photo is a `matchedTransitionSource(id: spot.id, in:)` and
+  the pushed detail uses `.navigationTransition(.zoom(sourceID:in:))` (iOS 18), so the photo
+  zooms into the detail screen and back. (`matchedGeometryEffect` only works between views that
+  coexist in one hierarchy, e.g. a `ZStack`; across a `NavigationStack` push the zoom
+  transition is the supported API.)
+- `PERFORMANCE.md` — Instruments steps (SwiftUI, Animation Hitches, Time Profiler, Allocations).
 
 ## Already in the app (earlier tags)
 
@@ -33,6 +25,7 @@ with curl (below) → banner "Pizza Stop (new oven) was updated".
 | l06 | Live updates over `ws://localhost:3000/live`, reconnect with backoff | `Network/LiveUpdateService.swift` |
 | l07 | SwiftData source of truth, "Edit spot" → outbox → replay, 409 last-write-wins, "N changes pending" | `Repository/SpotRepository.swift` |
 | l08 | Login, JWT in Keychain, Bearer on mutations, 401 → login, add review | `ViewModels/SessionStore.swift`, `Keychain/KeychainHelper.swift` |
+| l09 | Near Me tab (CoreLocation, 2 km), local notification from live `spot.updated` | `Views/NearMeView.swift`, `Notifications/SpotChangeNotifier.swift` |
 
 ## Run
 
