@@ -2,7 +2,6 @@ name: Server CI
 
 on:
   push:
-    branches: [master, unieats-2026]
     paths:
       - "unieats/server/**"
       - ".github/workflows/server.yml"
