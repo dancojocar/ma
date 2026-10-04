@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SettingsSection } from "../../src/components/SettingsSection";
 import { useSessionStore } from "../../src/store/sessionStore";
 
 export default function ProfileScreen() {
@@ -6,7 +7,7 @@ export default function ProfileScreen() {
   const logout = useSessionStore((s) => s.logout);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{user?.displayName[0]?.toUpperCase() ?? "?"}</Text>
@@ -17,12 +18,14 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Sign out</Text>
         </Pressable>
       </View>
-    </View>
+      <SettingsSection />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 16, gap: 12 },
+  container: { flex: 1, backgroundColor: "#f5f5f5" },
+  content: { padding: 16, gap: 12 },
   card: { backgroundColor: "#fff", borderRadius: 12, padding: 20, alignItems: "center", gap: 6 },
   avatar: {
     width: 72,

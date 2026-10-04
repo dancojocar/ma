@@ -54,3 +54,9 @@ export const LiveEventSchema = z.discriminatedUnion("type", [
 ]);
 
 export type LiveEvent = z.infer<typeof LiveEventSchema>;
+
+export const RemoteConfigSchema = z.object({
+  flags: z.object({ show_new_rating_ui: z.boolean() }),
+});
+
+export type RemoteConfig = z.infer<typeof RemoteConfigSchema>;

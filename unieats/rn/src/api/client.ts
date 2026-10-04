@@ -2,10 +2,12 @@ import { z } from "zod";
 import type { Review, Spot, SpotCategory, SpotEdit } from "../domain/models";
 import {
   LoginResponseSchema,
+  RemoteConfigSchema,
   ReviewSchema,
   SpotPageSchema,
   SpotSchema,
   type LoginResponse,
+  type RemoteConfig,
   type SpotPage,
 } from "../domain/schemas";
 import { API_URL } from "./config";
@@ -124,4 +126,8 @@ export function conflictServerCopy(error: unknown): Spot | null {
   if (!(error instanceof ApiError) || error.status !== 409) return null;
   const parsed = SpotSchema.safeParse((error.body as { spot?: unknown } | undefined)?.spot);
   return parsed.success ? parsed.data : null;
+}
+
+export function getRemoteConfig(): Promise<RemoteConfig> {
+  return request("/config", RemoteConfigSchema);
 }

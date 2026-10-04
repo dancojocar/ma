@@ -16,6 +16,7 @@ import '../data/network/live_updates.dart';
 import '../data/repository/review_repository.dart';
 import '../data/repository/spot_repository.dart';
 import '../domain/models.dart';
+import '../services/crash_reporter.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
 
@@ -366,3 +367,49 @@ final nearbySpotsProvider =
           .watchSpots()
           .map((spots) => location.nearby(position, spots));
     });
+
+/// Remote feature flags, like Firebase Remote Config: the app ships the
+/// defaults, "Fetch & activate" pulls `GET /api/config` and applies it at once.
+class RemoteFlags {
+  const RemoteFlags({this.showNewRatingUi = false, this.fetchedAt});
+
+  final bool showNewRatingUi;
+  final DateTime? fetchedAt;
+}
+
+class RemoteConfigNotifier extends Notifier<RemoteFlags> {
+  @override
+  RemoteFlags build() => const RemoteFlags();
+
+  Future<void> fetchAndActivate() async {
+    final flags = await ref.read(apiClientProvider).fetchConfig();
+    state = RemoteFlags(
+      showNewRatingUi: flags['show_new_rating_ui'] ?? false,
+      fetchedAt: DateTime.now(),
+    );
+  }
+}
+
+final remoteConfigProvider =
+    NotifierProvider<RemoteConfigNotifier, RemoteFlags>(
+      RemoteConfigNotifier.new,
+    );
+
+/// `main` overrides this with the instance its error hooks report to.
+final crashReporterProvider = Provider<ConsentGatedCrashReporter>(
+  (_) => ConsentGatedCrashReporter(const LoggingCrashReporter()),
+);
+
+class CrashConsentNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() => ref.read(crashReporterProvider).hasConsent();
+
+  Future<void> set(bool granted) async {
+    await ref.read(crashReporterProvider).setConsent(granted);
+    state = AsyncData(granted);
+  }
+}
+
+final crashConsentProvider = AsyncNotifierProvider<CrashConsentNotifier, bool>(
+  CrashConsentNotifier.new,
+);
