@@ -1,12 +1,14 @@
 package com.unieats.app.data.repository
 
 import androidx.room.withTransaction
+import com.unieats.app.data.auth.AuthTokens
 import com.unieats.app.data.local.OutboxEntity
 import com.unieats.app.data.local.OutboxType
 import com.unieats.app.data.local.UniEatsDatabase
 import com.unieats.app.data.local.toDomain
 import com.unieats.app.data.local.toEntity
 import com.unieats.app.data.model.Category
+import com.unieats.app.data.model.NewReview
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
 import com.unieats.app.data.model.SpotPatch
@@ -38,6 +40,7 @@ class SpotRepository @Inject constructor(
     private val db: UniEatsDatabase,
     private val api: ApiClient,
     private val json: Json,
+    private val tokens: AuthTokens,
     private val syncScheduler: SyncScheduler,
     liveUpdates: LiveUpdates,
     @ApplicationScope appScope: CoroutineScope
@@ -82,7 +85,13 @@ class SpotRepository @Inject constructor(
         reviewDao.upsertAll(api.getReviews(spotId).map { it.toEntity() })
     }
 
+    suspend fun addReview(spotId: String, stars: Int, text: String): Result<Unit> = apiCall {
+        val saved = api.addReview(spotId, NewReview(stars, text.trim()))
+        reviewDao.upsertAll(listOf(saved.toEntity()))
+    }
+
     suspend fun editSpot(id: String, name: String, description: String, openNow: Boolean) {
+        val userId = tokens.userId() ?: return
         db.withTransaction {
             val current = spotDao.getById(id) ?: return@withTransaction
             spotDao.upsert(
@@ -101,7 +110,8 @@ class SpotRepository @Inject constructor(
                         type = OutboxType.UPDATE,
                         entityId = id,
                         payload = payload,
-                        createdAt = System.currentTimeMillis()
+                        createdAt = System.currentTimeMillis(),
+                        userId = userId
                     )
                 )
             }

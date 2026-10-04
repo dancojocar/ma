@@ -14,6 +14,13 @@ function describeBody(body) {
   return typeof body;
 }
 
+function describeAuthorization(header) {
+  const [scheme, token] = header.split(' ');
+  if (!token) return `${scheme} (no token)`;
+  const shown = token.length > 20 ? `${token.slice(0, 10)}…${token.slice(-6)}` : token;
+  return `${scheme} ${shown} (${token.length} chars)`;
+}
+
 function requestLogger(req, res, next) {
   const startedAt = Date.now();
   const id = (req.headers['x-request-id'] || Math.random().toString(36).slice(2, 8)).toString();
@@ -41,6 +48,7 @@ function requestLogger(req, res, next) {
   console.log(`\n→ ${tag} ${req.method} ${req.originalUrl}`);
   if (Object.keys(req.query).length) console.log(`  ${tag}   query: ${preview(req.query)}`);
   if (req.headers['content-type']) console.log(`  ${tag}   content-type: ${req.headers['content-type']}`);
+  if (req.headers.authorization) console.log(`  ${tag}   authorization: ${describeAuthorization(req.headers.authorization)}`);
   if (req.headers['idempotency-key']) console.log(`  ${tag}   idempotency-key: ${req.headers['idempotency-key']}`);
   if (chaos.length) console.log(`  ${tag}   chaos: ${chaos.join(' ')}`);
 
@@ -49,6 +57,7 @@ function requestLogger(req, res, next) {
     const type = res.getHeader('content-type') || 'none';
     const bytes = res.getHeader('content-length') || 0;
     console.log(`← ${tag} ${res.statusCode} ${req.method} ${req.originalUrl} (${ms} ms)`);
+    if (req.user) console.log(`  ${tag}   user: ${req.user.id} <${req.user.email}>`);
     if (req.body && bodyParsed && Object.keys(req.body).length) {
       console.log(`  ${tag}   request body: ${preview(req.body)}`);
     }

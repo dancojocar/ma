@@ -18,5 +18,7 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSFaceIDUsageDescription</key>
+	<string>UniEats uses Face ID to unlock your saved session.</string>
 </dict>
 </plist>

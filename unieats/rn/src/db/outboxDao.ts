@@ -6,8 +6,8 @@ type OutboxRow = Omit<OutboxOp, "payload"> & { payload: string };
 
 export function enqueue(op: Omit<OutboxOp, "seq">) {
   getDb().runSync(
-    "INSERT INTO outbox (opId, type, entityId, payload, createdAt) VALUES (?, ?, ?, ?, ?)",
-    [op.opId, op.type, op.entityId, JSON.stringify(op.payload), op.createdAt],
+    "INSERT INTO outbox (opId, type, entityId, userId, payload, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+    [op.opId, op.type, op.entityId, op.userId, JSON.stringify(op.payload), op.createdAt],
   );
 }
 
@@ -28,4 +28,12 @@ export function hasOpsFor(entityId: string): boolean {
 
 export function count(): number {
   return getDb().getFirstSync<{ n: number }>("SELECT COUNT(*) AS n FROM outbox")?.n ?? 0;
+}
+
+export function clear(): number {
+  return getDb().runSync("DELETE FROM outbox").changes;
+}
+
+export function removeOtherUsersOps(userId: string): number {
+  return getDb().runSync("DELETE FROM outbox WHERE userId IS NOT NULL AND userId <> ?", [userId]).changes;
 }

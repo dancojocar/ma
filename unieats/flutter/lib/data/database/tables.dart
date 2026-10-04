@@ -27,7 +27,9 @@ class Reviews extends Table {
   TextColumn get spotId => text()();
   TextColumn get author => text()();
   IntColumn get stars => integer()();
-  TextColumn get body => text()();
+
+  /// Was `body` in schema v1; v2 renamed the SQL column to match the API's `text`.
+  TextColumn get reviewText => text().named('text')();
   IntColumn get createdAt => integer()();
 
   @override
@@ -43,4 +45,8 @@ class Outbox extends Table {
   TextColumn get entityId => text()();
   TextColumn get payload => text()();
   IntColumn get createdAt => integer()();
+
+  /// Who queued the op (`user.id` from `/auth/login`). Null for ops queued in
+  /// schema v1, before there were accounts.
+  TextColumn get userId => text().nullable()();
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../data/database/database.dart' show localIdPrefix;
 import '../../domain/models.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
@@ -40,6 +41,18 @@ class SpotDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: spot.value == null
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (_) => AddReviewSheet(spotId: spotId),
+              ),
+              icon: const Icon(Icons.rate_review_outlined),
+              label: const Text('Add review'),
+            ),
       body: switch (spot) {
         AsyncValue(:final value?) => RefreshIndicator(
           onRefresh: () => _refresh(ref),
@@ -159,6 +172,7 @@ class _SpotDetailBody extends ConsumerWidget {
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -293,11 +307,100 @@ class ReviewTile extends StatelessWidget {
           children: [
             if (review.text.isNotEmpty) Text(review.text),
             Text(
-              '${date.day}/${date.month}/${date.year}',
+              review.id.startsWith(localIdPrefix)
+                  ? 'Waiting to sync'
+                  : '${date.day}/${date.month}/${date.year}',
               style: theme.textTheme.labelSmall,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class AddReviewSheet extends ConsumerStatefulWidget {
+  const AddReviewSheet({super.key, required this.spotId});
+
+  final String spotId;
+
+  @override
+  ConsumerState<AddReviewSheet> createState() => _AddReviewSheetState();
+}
+
+class _AddReviewSheetState extends ConsumerState<AddReviewSheet> {
+  final _text = TextEditingController();
+  int _stars = 5;
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final posted = await ref
+        .read(addReviewProvider(widget.spotId).notifier)
+        .submit(stars: _stars, text: _text.text.trim());
+    if (posted && mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final submit = ref.watch(addReviewProvider(widget.spotId));
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        MediaQuery.viewInsetsOf(context).bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Add review', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 1; i <= 5; i++)
+                IconButton(
+                  tooltip: '$i stars',
+                  onPressed: () => setState(() => _stars = i),
+                  icon: Icon(
+                    i <= _stars
+                        ? Icons.star_rounded
+                        : Icons.star_outline_rounded,
+                    color: Colors.amber[700],
+                    size: 32,
+                  ),
+                ),
+            ],
+          ),
+          TextField(
+            controller: _text,
+            maxLines: 3,
+            decoration: const InputDecoration(labelText: 'Your review'),
+          ),
+          const SizedBox(height: 12),
+          if (submit case AsyncValue(:final error?, isLoading: false)) ...[
+            Text(
+              '$error',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            const SizedBox(height: 8),
+          ],
+          FilledButton(
+            onPressed: submit.isLoading ? null : _submit,
+            child: submit.isLoading
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Post review'),
+          ),
+        ],
       ),
     );
   }

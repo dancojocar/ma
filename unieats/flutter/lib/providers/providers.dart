@@ -5,7 +5,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 
+import '../data/auth/auth_interceptor.dart';
+import '../data/auth/auth_repository.dart';
+import '../data/auth/token_store.dart';
 import '../data/database/database.dart';
 import '../data/network/api_client.dart';
 import '../data/network/api_config.dart';
@@ -20,8 +24,17 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
+final tokenStoreProvider = Provider<TokenStore>((_) => TokenStore());
+
 final dioProvider = Provider<Dio>((ref) {
   final dio = createDio(apiBaseUrl);
+  dio.interceptors.insert(
+    0,
+    AuthInterceptor(
+      ref.watch(tokenStoreProvider),
+      onUnauthorized: () => ref.read(authProvider.notifier).sessionExpired(),
+    ),
+  );
   ref.onDispose(dio.close);
   return dio;
 });
@@ -29,6 +42,114 @@ final dioProvider = Provider<Dio>((ref) {
 final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(ref.watch(dioProvider)),
 );
+
+final localAuthProvider = Provider<LocalAuthentication>(
+  (_) => LocalAuthentication(),
+);
+
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(
+    ref.watch(apiClientProvider),
+    ref.watch(tokenStoreProvider),
+    ref.watch(spotRepositoryProvider),
+    ref.watch(localAuthProvider),
+  ),
+);
+
+/// The router sends `SignedOut` to `/login` and `Locked` to `/unlock`.
+class AuthNotifier extends AsyncNotifier<Session> {
+  AuthRepository get _repo => ref.read(authRepositoryProvider);
+
+  @override
+  Future<Session> build() => _repo.restoreSession();
+
+  Future<void> login(String email, String password) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () async => SignedIn(await _repo.login(email, password)),
+    );
+    if (state.value is SignedIn) _syncOutbox();
+  }
+
+  Future<void> unlock() async {
+    final locked = state.value;
+    if (locked is! Locked || state.isLoading) return;
+    state = const AsyncLoading();
+    try {
+      state = AsyncData(SignedIn(await _repo.unlock()));
+      _syncOutbox();
+    } on BiometricCancelled {
+      state = AsyncData(locked);
+    } on Exception catch (e, stackTrace) {
+      _endWith(e, stackTrace);
+    }
+  }
+
+  /// Sign out, also "Use password instead" on the unlock screen: unsynced
+  /// local changes are discarded.
+  Future<void> logout() async {
+    await _repo.logout();
+    state = const AsyncData(SignedOut());
+  }
+
+  /// A mutation came back 401: the token expired or was revoked. Queued edits
+  /// stay for when the same user signs in again.
+  Future<void> sessionExpired() async {
+    if (state.value is! SignedIn) return;
+    await _repo.endSession();
+    _endWith(const SessionExpired(), StackTrace.current);
+  }
+
+  void _endWith(Object error, StackTrace stackTrace) {
+    // Riverpod keeps the previous value next to an error; set SignedOut first
+    // so the old session is gone, not just hidden behind the error.
+    state = const AsyncData(SignedOut());
+    state = AsyncError(error, stackTrace);
+  }
+
+  void _syncOutbox() =>
+      unawaited(ref.read(spotRepositoryProvider).syncOutbox());
+}
+
+final authProvider = AsyncNotifierProvider<AuthNotifier, Session>(
+  AuthNotifier.new,
+);
+
+final signedInUserProvider = Provider<User?>(
+  (ref) => switch (ref.watch(authProvider).value) {
+    SignedIn(:final user) => user,
+    _ => null,
+  },
+);
+
+/// Whether to offer "Unlock with biometrics" at all.
+final biometricAvailableProvider = FutureProvider.autoDispose<bool>(
+  (ref) => ref.watch(authRepositoryProvider).biometricsAvailable(),
+);
+
+/// The "Unlock with biometrics" switch. Off until the user turns it on.
+class BiometricSettingNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() => ref.read(authRepositoryProvider).biometricEnabled();
+
+  /// A failure (prompt cancelled, Android older than 9) keeps the old value
+  /// and leaves the error in `state` for a SnackBar.
+  Future<void> set(bool enabled) async {
+    if (state.isLoading) return;
+    state = const AsyncLoading();
+    final repo = ref.read(authRepositoryProvider);
+    final result = await AsyncValue.guard(() async {
+      enabled ? await repo.enableBiometric() : await repo.disableBiometric();
+      return enabled;
+    });
+    if (ref.mounted) state = result;
+  }
+}
+
+final biometricSettingProvider =
+    AsyncNotifierProvider.autoDispose<BiometricSettingNotifier, bool>(
+      BiometricSettingNotifier.new,
+    );
 
 final spotRepositoryProvider = Provider<SpotRepository>(
   (ref) =>
@@ -301,12 +422,15 @@ class EditSpotController extends AsyncNotifier<void> {
     if (state.isLoading) return false;
     state = const AsyncLoading();
     final result = await AsyncValue.guard(() async {
+      final user = ref.read(signedInUserProvider);
+      if (user == null) throw StateError('Not signed in');
       final repo = ref.read(spotRepositoryProvider);
       await repo.editSpot(
         spotId,
         name: name,
         description: description,
         openNow: openNow,
+        userId: user.id,
       );
       unawaited(repo.syncOutbox());
     });
@@ -318,3 +442,33 @@ class EditSpotController extends AsyncNotifier<void> {
 
 final editSpotProvider = AsyncNotifierProvider.autoDispose
     .family<EditSpotController, void, String>(EditSpotController.new);
+
+class AddReviewController extends AsyncNotifier<void> {
+  AddReviewController(this.spotId);
+
+  final String spotId;
+
+  @override
+  FutureOr<void> build() {}
+
+  /// Returns false while a submit is already running or when it fails; the
+  /// failure is then in `state`.
+  Future<bool> submit({required int stars, required String text}) async {
+    if (state.isLoading) return false;
+    state = const AsyncLoading();
+    final result = await AsyncValue.guard(() async {
+      final user = ref.read(signedInUserProvider);
+      if (user == null) throw StateError('Not signed in');
+      await ref
+          .read(reviewRepositoryProvider)
+          .addReview(spotId, stars: stars, text: text, author: user);
+      unawaited(ref.read(spotRepositoryProvider).syncOutbox());
+    });
+    if (!ref.mounted) return false;
+    state = result;
+    return !result.hasError;
+  }
+}
+
+final addReviewProvider = AsyncNotifierProvider.autoDispose
+    .family<AddReviewController, void, String>(AddReviewController.new);

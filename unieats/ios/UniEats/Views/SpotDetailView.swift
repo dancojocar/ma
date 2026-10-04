@@ -6,6 +6,7 @@ struct SpotDetailView: View {
     private let isFavourite: Bool
     private let onToggleFavourite: () -> Void
     @State private var isEditing = false
+    @State private var isAddingReview = false
     @Query private var spots: [SpotEntity]
     @Query private var reviewEntities: [ReviewEntity]
 
@@ -26,8 +27,12 @@ struct SpotDetailView: View {
                 SpotDetailContent(
                     spot: entity.spot,
                     isPending: entity.pendingSync,
-                    reviews: reviewEntities.map(Review.init(entity:))
+                    reviews: reviewEntities.map(Review.init(entity:)),
+                    onAddReview: { isAddingReview = true }
                 )
+                .sheet(isPresented: $isAddingReview) {
+                    AddReviewView(onSubmit: viewModel.addReview)
+                }
             } else if let message = viewModel.errorMessage {
                 ContentUnavailableView {
                     Label("Couldn't load this spot", systemImage: "wifi.exclamationmark")
@@ -65,6 +70,7 @@ private struct SpotDetailContent: View {
     let spot: Spot
     let isPending: Bool
     let reviews: [Review]
+    let onAddReview: () -> Void
 
     var body: some View {
         ScrollView {
@@ -102,7 +108,7 @@ private struct SpotDetailContent: View {
                         .font(.body)
                         .foregroundStyle(.secondary)
 
-                    ReviewsSection(reviews: reviews)
+                    ReviewsSection(reviews: reviews, onAddReview: onAddReview)
                 }
                 .padding()
             }

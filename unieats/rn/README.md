@@ -1,30 +1,71 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l07-offline`: offline-first. SQLite (`expo-sqlite`, `src/db/`) is the only thing screens read;
-TanStack Query (`useSpotsSync`, keyed `["spots", q, category]`) now just fetches pages and upserts them
-into SQLite without touching rows that have unsynced edits. "Edit spot" on the detail screen
-(name / description / open now) updates the row optimistically (`pendingSync = 1`) and appends
-`{ opId, type: "update", entityId, payload }` to the `outbox` table. `src/repository/spotRepository.ts`
-`syncPending()` replays the outbox in order with `Idempotency-Key: <opId>` whenever
-`@react-native-community/netinfo` reports the server reachable again; a 409 is resolved by
-last-write-wins on `updatedAt` (`src/domain/syncConflict.ts`). After the replay, a row is marked synced
-only if no newer edit was queued while its server copy was being fetched, so an edit made mid-sync is
-kept and replayed on the next pass. The banner shows "Offline · N changes pending".
-Live updates (`/live`) keep working and are written into SQLite.
+Tag `l08-auth`: sign in (`student@unieats.app` / `password`) before the tabs open. The JWT from
+`POST /api/auth/login` is kept in memory in a Zustand store (`src/store/sessionStore.ts`) and persisted with
+`expo-secure-store` (`keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY`, `src/auth/sessionStorage.ts`).
+Every mutation — outbox replay of "Edit spot" and the new "Add a review" form
+(`src/components/AddReviewForm.tsx`, `POST /spots/:id/reviews` with an `Idempotency-Key`) — sends
+`Authorization: Bearer <jwt>`; a 401 (or an expired token at start-up) signs you out and returns to the login
+screen with a notice. Reviews stay online-only: their `useMutation` in `app/(tabs)/spots/[id].tsx` sets
+`networkMode: "always"`, so offline it fails at once with "Can't reach the server" instead of pausing in
+`onlineManager`. The Profile tab (`app/(tabs)/profile.tsx`) shows the user and "Sign out".
 
-Reading SQLite from React: every DAO write calls `notifyChanged(table)` (`src/db/changes.ts`), and the
-hooks in `src/db/hooks.ts` subscribe with `useSyncExternalStore`, re-running their query only when that
-table's version changes. We don't use expo-sqlite's `SQLiteProvider`/`addDatabaseChangeListener` because
-the DAOs are also called outside React (repository, outbox replay, live events) and the change listener
-fires once per row.
+Session and routing: `sessionStore` has four states, `restoring` (reading SecureStore at start-up),
+`locked` (biometric unlock is on and has not happened yet), `signedOut` and `signedIn`. The root Stack in
+`app/_layout.tsx` puts `(tabs)`, `unlock` and `login` behind `Stack.Protected` guards on that status, so no
+screen redirects by hand: login, unlock, a 401 and "Sign out" only change the store, and when a guard turns
+false the Stack falls back to its first screen, `app/index.tsx`, which redirects by status. The native splash
+(`expo-splash-screen`) stays up while `restoring`; `(tabs)` is allowed during that time so a cold-start deep
+link with a stored session opens the spot directly (`app/(tabs)/_layout.tsx` renders nothing until the
+session is known, so the list and its WebSocket don't start under the splash).
 
-"Reachable" means `GET <API_URL>/health` answers 200: `NetInfo.configure` sets
-`useNativeReachability: false`, without which Android and iOS use the OS's own internet check and ignore
-`reachabilityUrl`. `src/api/queryClient.ts` feeds NetInfo's `isConnected` into TanStack's `onlineManager`
-(queries pause instead of failing while offline; an empty list or detail screen then says
-"You're offline…" instead of spinning) and `AppState` into `focusManager`, so stale queries (30 s) refetch
-when the app returns to the foreground.
-Still from earlier tags: infinite scroll, pull-to-refresh, search/filter/favourites, read-only reviews.
+Deep links while signed out or locked: `app/+native-intent.tsx` (`redirectSystemPath`) sees the launch URL
+and every incoming link; when the user is not signed in it remembers a `/spots/<id>` link
+(`src/auth/pendingLink.ts`, accepts `unieats://spots/<id>` and `https://unieats.app/spots/<id>`), and
+`app/index.tsx` opens it instead of `/spots` once sign-in or unlock lands there.
+
+Sign out vs. an ended session: every outbox op records the `user.id` of the account that queued it
+(`outbox.userId`, migration v2 in `src/db/database.ts`). "Sign out" — and "Use password instead" on the
+unlock screen — discards all queued edits and the optimistic rows they changed, then refetches
+(`discardAllLocalChanges` in `src/db/localChanges.ts`); Profile and the unlock screen say how many unsynced
+changes that will drop. A 401 or a biometric key invalidation keeps the queue, because usually the same
+person signs back in and their edits replay; whenever a session starts (`startSession` in `sessionStore`),
+ops queued by a different user are discarded first (`discardOtherUsersChanges`). A replay that is already
+running stops as soon as the token changes, so nothing is sent with a token that is no longer current.
+
+Biometric unlock (opt-in, off by default): Profile shows "Unlock with Face ID / Touch ID / fingerprint /
+biometrics" only when `src/auth/biometrics.ts` finds strong biometrics enrolled
+(`SecureStore.canUseBiometricAuthentication()` plus `expo-local-authentication`'s `hasHardwareAsync` and
+`isEnrolledAsync`). Turning it on (`setBiometric` in `sessionStore`) moves the session into a second
+SecureStore item written with `requireAuthentication: true` under its own `keychainService`
+(`saveBiometricSession` in `src/auth/sessionStorage.ts`). On Android that item is encrypted with a Keystore
+AES-GCM key that needs a `BIOMETRIC_STRONG` match for every use and is invalidated when a fingerprint or face
+is enrolled, so the prompt appears while saving; on iOS it is a Keychain item with `.biometryCurrentSet`,
+which iOS creates without asking, so `LocalAuthentication.authenticateAsync` confirms first. The plain item
+is deleted and a non-secret flag tells the next start-up to show `app/unlock.tsx` ("Unlock UniEats"), which
+reads the item: the OS prompt guards the read, and the token cannot be decrypted without a match (it is not
+a yes/no check in JavaScript). Cancel or failure shows "Try again" and "Use password instead" (signs out).
+After an enrollment change the item can no longer be read (`getItemAsync` resolves `null`), so the app
+clears it and shows the login screen with "Biometrics on this device changed. Sign in with your password."
+Turning the switch off writes the plain item back without a prompt. Sign out and a 401 delete both items
+and the flag. `app.json` passes `faceIDPermission` to the `expo-secure-store` and
+`expo-local-authentication` config plugins (`NSFaceIDUsageDescription` on iOS; `USE_BIOMETRIC` on Android).
+
+Trying biometric unlock needs a dev build (`npx expo run:android` / `npx expo run:ios`); in Expo Go the switch
+is hidden because Expo Go lacks this app's Face ID usage string. Android emulator: enroll a fingerprint in
+Settings → Security, turn the switch on, and answer each prompt with `adb -e emu finger touch 1`. iOS
+simulator: Features → Face ID → Enrolled, then Matching Face / Non-matching Face at the prompt. Simulators
+do not enforce the prompt when the protected item is read (Expo docs), so check unlock on a real device.
+
+Kept from l07: SQLite (`src/db/`) is the only thing screens read; "Edit spot" updates the row optimistically
+and queues an outbox op that `syncPending()` (`src/repository/spotRepository.ts`) replays in order with
+`Idempotency-Key: <opId>`, 409 resolved by last-write-wins, and a row is marked synced only if no newer edit
+was queued while its server copy was being fetched. Hooks in `src/db/hooks.ts` read SQLite with
+`useSyncExternalStore` over the per-table versions bumped by `notifyChanged` (`src/db/changes.ts`).
+"Reachable" means `GET <API_URL>/health` answers 200 (`NetInfo.configure` with
+`useNativeReachability: false`); `src/api/queryClient.ts` wires NetInfo into `onlineManager` (empty screens
+say "You're offline…") and `AppState` into `focusManager`. Also kept: "N changes pending", live updates,
+infinite scroll, pull-to-refresh, search / category filter / favourites.
 
 Demo: edit a spot, toggle airplane mode on the emulator, edit another, turn it off → both PATCHes arrive.
 
@@ -38,6 +79,9 @@ on the detail screen the rating and review stars read as "out of 5"
 and the header photo is labelled; loading spinners are labelled "Loading"; the live indicator reads "Live updates on" or
 "Reconnecting to live updates" and is a polite live region, so TalkBack announces status changes, as does
 the offline / pending-changes banner; the edit form's fields and "Open now" switch are labelled; the tab-bar emoji is hidden because the tab already announces its title.
+The login fields are labelled "Email" and "Password" and the session notice is a polite live region; the
+review star picker is a "Rating" radio group whose stars read "1 star" … "5 stars" with a checked state; the
+biometric switch is labelled with its visible text.
 
 ## Run
 
@@ -49,8 +93,8 @@ npx expo start        # scan the QR code with Expo Go (SDK 57), or press a (Andr
 
 The project `.npmrc` sets `legacy-peer-deps=false`, so `npm ci` installs the same complete tree on npm 10 and 11 even if your global `~/.npmrc` enables legacy peer deps.
 
-Expo Go works for this tag (every module it uses ships inside Expo Go for SDK 57); the `unieats://` and https
-deep links from l04 need a dev build: `npx expo run:android` (Android Studio's bundled Java 25 is fine: the
+Expo Go runs this tag (every module it uses ships inside Expo Go for SDK 57) except biometric unlock, whose
+switch is hidden there; biometric unlock and the `unieats://` and https deep links from l04 need a dev build: `npx expo run:android` (Android Studio's bundled Java 25 is fine: the
 `plugins/withPrefabNativeAccess.js` config plugin makes the generated `android/gradlew` pass the JDK 24+
 native-access flag that AGP 8.12's Prefab step needs).
 

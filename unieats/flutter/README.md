@@ -18,23 +18,60 @@ Since `l06-async` a WebSocket (`ws://<host>:3000/live`) streams spot changes int
 (`lib/data/network/live_updates.dart`), reconnecting with backoff; a "Live/Offline" dot shows it. The
 socket closes when no visible screen watches it or the app goes to the background.
 
-This tag (`l07-offline`) makes a local Drift database the single source of truth
-(`lib/data/database/`): screens only watch Drift; network refreshes and live events upsert into it
-without touching rows that have unsynced edits. "Edit spot" on the detail screen changes the row at
-once and queues an outbox op; `SpotRepository.syncOutbox()` replays it with `Idempotency-Key` when the
-device reconnects (`connectivity_plus`, behind `connectivityProvider`), the WebSocket reconnects, the
-app starts, or you tap "Sync now". Ops replay strictly in the order they were made. A 409 resolves
-last-write-wins on `updatedAt` (`lib/data/sync/sync_conflict_resolver.dart`): if the local edit wins,
-it is resent from its place in the queue with the server's version as base and a new
-`Idempotency-Key` (the server remembers the 409 under the old key); if the server wins, every queued
-edit of that spot is dropped, since they all built on the version the server has replaced. An edit made
-while its spot is syncing stays queued and is sent next. An edit the server rejects for good (another
-4xx) is dropped on its own; the screen shows the server copy unless later edits are still queued. The
-edit sheet's Save button is disabled while saving (`EditSpotController` in `providers.dart`) and shows the error if the edit can't be stored.
+Since `l07-offline` a local Drift database is the single source of truth (`lib/data/database/`):
+screens only watch Drift; refreshes and live events upsert into it without touching rows with unsynced
+edits. "Edit spot" queues an outbox op that `SpotRepository.syncOutbox()` replays in order with
+`Idempotency-Key` on reconnect (`connectivity_plus`, behind `connectivityProvider`), when the WebSocket
+reconnects, at app start, or from "Sync now". A 409 resolves last-write-wins on `updatedAt`
+(`lib/data/sync/sync_conflict_resolver.dart`): a winning local edit is resent from its place in the queue
+with a new `Idempotency-Key`; if the server wins, every queued edit of that spot is dropped. An edit made
+while its spot is syncing stays queued and is sent next. `liveSyncProvider` writes live events into Drift;
+both the list and the detail screen watch it, because Riverpod 3 pauses the list's listeners while the
+detail screen covers it.
 
-`liveSyncProvider` writes live events into Drift. Both the list and the detail screen watch it, because
-Riverpod 3 pauses the list's listeners while the detail screen covers it; with only the list watching,
-the detail screen would stop receiving live changes.
+This tag (`l08-auth`) adds sign-in. `lib/app_router.dart` has one `MaterialApp.router` whose
+`authRedirect` sends every location to a gate screen until the session allows it: `/splash` while the
+stored session loads, `/unlock` while it is locked (below), `/login` without one (demo user
+`student@unieats.app` / `password`). Each gate keeps the original destination in `?from=`, so a deep link
+opened while signed out or locked lands on its spot afterwards. `AuthNotifier` in `providers.dart` holds
+a sealed `Session` (`SignedOut`, `Locked`, `SignedIn`, in `lib/domain/models.dart`);
+`signedInUserProvider` exposes the user.
+
+- `lib/data/auth/token_store.dart` — JWT and user in `flutter_secure_storage` (Android: AES-GCM with a
+  Keystore-wrapped key; iOS Keychain "after first unlock, this device only").
+- `lib/data/auth/auth_repository.dart` — `POST /auth/login`, restores the session at start-up (the JWT's
+  `exp` is checked locally), sign-out.
+- `lib/data/auth/auth_interceptor.dart` — `Authorization: Bearer` on every mutation, outbox replay
+  included. A 401 to a request that carried a token ends the session: the login screen says "Your
+  session expired".
+- `lib/ui/login/login_screen.dart` — the sign-in form. "Sign out" is in the list's ⋮ menu.
+- "Add review" on the detail screen posts through the outbox (`ReviewRepository.addReview`): the review
+  shows at once under a `local:` id ("Waiting to sync") and is swapped for the server's copy on replay.
+  `AddReviewController` (like `EditSpotController`) disables the Post button while saving and shows the
+  error if the review can't be stored.
+
+Queued edits belong to a user. Every outbox row stores the `user.id` that `/auth/login` returned (Drift
+schema v2 adds `outbox.user_id` and renames the reviews column `body` → `text`). Sign out discards
+unsynced changes: the outbox, `local:` reviews and pending spot rows go, and the list refetches after the
+next sign-in. An expired session (401) or a biometric change keeps them, and they replay when the same
+user signs in again; when a different user signs in, `AuthRepository.login` discards the other user's
+ops before storing the new token. A 401 during replay is not permanent, so the op stays queued.
+
+Biometric unlock is opt-in: "Unlock with biometrics" in the ⋮ menu, shown only when the device has a
+strong biometric enrolled (`local_auth`), off until you turn it on. Turning it on moves the JWT into a
+second `flutter_secure_storage` store whose key needs a biometric check, so the token cannot be read
+without one: on Android a Keystore AES-GCM key with user authentication (`BIOMETRIC_STRONG`) and
+`setInvalidatedByBiometricEnrollment(true)`, opened through `BiometricPrompt` with a `CryptoObject`
+(Android 9+); on iOS a Keychain item with `biometryCurrentSet`. On a cold start the app opens "Unlock
+UniEats" (`lib/ui/login/unlock_screen.dart`) and prompts; cancelling leaves you there, and "Use password
+instead" signs out. A new fingerprint or face invalidates the key: the app signs you out with "Biometrics
+changed on this device". Sign out and a 401 delete the protected token too; turning the switch off puts
+the token back in the normal store. Files: `token_store.dart`, `auth_repository.dart`,
+`unlock_screen.dart`, `android/app/src/main/kotlin/com/unieats/flutter/MainActivity.kt`
+(`FlutterFragmentActivity`, which `local_auth` needs), `android/app/src/main/AndroidManifest.xml`
+(`USE_BIOMETRIC`) and `ios/Runner/Info.plist` (`NSFaceIDUsageDescription`). Demo: enroll a fingerprint
+on the emulator, turn the switch on, restart the app and run `adb -e emu finger touch 1`; on the iOS
+Simulator use Features → Face ID → Enrolled, then Matching Face.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'

@@ -46,6 +46,19 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
+      "expo-splash-screen",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "UniEats uses Face ID to unlock your saved session."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "UniEats uses Face ID to unlock your saved session."
+        }
+      ],
       "./plugins/withPrefabNativeAccess"
     ]
   }

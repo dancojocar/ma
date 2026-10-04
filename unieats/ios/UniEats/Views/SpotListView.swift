@@ -4,13 +4,17 @@ import SwiftUI
 struct SpotListView: View {
     let repository: SpotRepository
     let live: LiveUpdateService
+    let session: SessionStore
+    @Binding var pendingSpotId: String?
     @State private var viewModel: SpotListViewModel
     @State private var path: [String] = []
     @Environment(\.scenePhase) private var scenePhase
 
-    init(repository: SpotRepository, live: LiveUpdateService) {
+    init(repository: SpotRepository, live: LiveUpdateService, session: SessionStore, pendingSpotId: Binding<String?>) {
         self.repository = repository
         self.live = live
+        self.session = session
+        _pendingSpotId = pendingSpotId
         _viewModel = State(initialValue: SpotListViewModel(repository: repository))
     }
 
@@ -28,6 +32,9 @@ struct SpotListView: View {
                     await viewModel.apply(.disconnected)
                 }
                 .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        accountMenu
+                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         Label(viewModel.isLive ? "Live" : "Offline", systemImage: "circle.fill")
                             .labelStyle(.titleAndIcon)
@@ -49,10 +56,25 @@ struct SpotListView: View {
                     )
                 }
         }
-        .onOpenURL { url in
-            if let spotId = DeepLink.spotId(from: url) {
-                path = [spotId]
+        .onChange(of: pendingSpotId, initial: true) { _, spotId in
+            guard let spotId else { return }
+            path = [spotId]
+            pendingSpotId = nil
+        }
+    }
+
+    private var accountMenu: some View {
+        Menu("Account", systemImage: "person.crop.circle") {
+            if session.biometrics.isAvailable {
+                Toggle(
+                    "Unlock with \(session.biometrics.kindName)",
+                    isOn: Binding(
+                        get: { session.biometricUnlockEnabled },
+                        set: { on in Task { await session.setBiometricUnlock(on) } }
+                    )
+                )
             }
+            Button("Log out", role: .destructive, action: repository.logOut)
         }
     }
 }

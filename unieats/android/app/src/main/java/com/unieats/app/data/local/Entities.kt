@@ -36,7 +36,9 @@ data class ReviewEntity(
 /**
  * One queued write. Rows are replayed in [seq] order; [opId] is sent as the Idempotency-Key.
  * Once [attempted], the request may have reached the server, so the row is never edited again:
- * a retry must resend exactly what the key was first used for.
+ * a retry must resend exactly what the key was first used for. [userId] is the signed-in user
+ * who made the edit; another user signing in discards it. Null for ops queued before the column
+ * existed (database version 1): those are kept and replayed by whoever signs in.
  */
 @Entity(tableName = "outbox", indices = [Index("opId", unique = true), Index("entityId")])
 data class OutboxEntity(
@@ -46,6 +48,7 @@ data class OutboxEntity(
     val entityId: String,
     val payload: String,
     val createdAt: Long,
+    val userId: String?,
     val attempted: Boolean = false
 )
 

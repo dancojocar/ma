@@ -14,12 +14,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -35,10 +40,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.unieats.app.R
 import com.unieats.app.data.model.Category
 import com.unieats.app.ui.components.ErrorView
 import com.unieats.app.ui.components.LoadingView
@@ -47,6 +56,10 @@ import com.unieats.app.ui.components.MessageView
 @Composable
 fun SpotListScreen(
     onSpotClick: (String) -> Unit,
+    onLogout: () -> Unit,
+    biometricAvailable: Boolean,
+    biometricEnabled: Boolean,
+    onToggleBiometric: (Boolean) -> Unit,
     viewModel: SpotListViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -59,7 +72,11 @@ fun SpotListScreen(
         onLoadMore = viewModel::loadNextPage,
         onRetry = viewModel::retry,
         onErrorShown = viewModel::errorShown,
-        onSpotClick = onSpotClick
+        onSpotClick = onSpotClick,
+        onLogout = onLogout,
+        biometricAvailable = biometricAvailable,
+        biometricEnabled = biometricEnabled,
+        onToggleBiometric = onToggleBiometric
     )
 }
 
@@ -74,7 +91,11 @@ fun SpotListContent(
     onLoadMore: () -> Unit,
     onRetry: () -> Unit,
     onErrorShown: () -> Unit,
-    onSpotClick: (String) -> Unit
+    onSpotClick: (String) -> Unit,
+    onLogout: () -> Unit,
+    biometricAvailable: Boolean,
+    biometricEnabled: Boolean,
+    onToggleBiometric: (Boolean) -> Unit
 ) {
     var sortByRating by rememberSaveable { mutableStateOf(false) }
     val spots = remember(state.spots, sortByRating) {
@@ -100,6 +121,13 @@ fun SpotListContent(
                     TextButton(onClick = { sortByRating = !sortByRating }) {
                         Text(if (sortByRating) "Sort: rating" else "Sort: default")
                     }
+                    OverflowMenu(
+                        onLogout = onLogout,
+                        // Also shown when biometrics were removed meanwhile, so it can be turned off.
+                        showBiometricToggle = biometricAvailable || biometricEnabled,
+                        biometricEnabled = biometricEnabled,
+                        onToggleBiometric = onToggleBiometric
+                    )
                 }
             )
         },
@@ -164,6 +192,41 @@ fun SpotListContent(
 private fun ScrollableState(content: @Composable () -> Unit) {
     LazyColumn(Modifier.fillMaxSize()) {
         item { Box(Modifier.fillParentMaxSize()) { content() } }
+    }
+}
+
+@Composable
+private fun OverflowMenu(
+    onLogout: () -> Unit,
+    showBiometricToggle: Boolean,
+    biometricEnabled: Boolean,
+    onToggleBiometric: (Boolean) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(painterResource(R.drawable.ic_more_vert), contentDescription = "More options")
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            if (showBiometricToggle) {
+                DropdownMenuItem(
+                    text = { Text("Unlock with biometrics") },
+                    trailingIcon = { Switch(checked = biometricEnabled, onCheckedChange = null) },
+                    onClick = {
+                        expanded = false
+                        onToggleBiometric(!biometricEnabled)
+                    },
+                    modifier = Modifier.semantics { stateDescription = if (biometricEnabled) "On" else "Off" }
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("Log out") },
+                onClick = {
+                    expanded = false
+                    onLogout()
+                }
+            )
+        }
     }
 }
 

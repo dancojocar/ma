@@ -43,4 +43,10 @@ interface SpotDao {
 
     @Query("DELETE FROM spots WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM spots WHERE pendingSync = 1")
+    suspend fun deletePending()
+
+    @Query("DELETE FROM spots WHERE pendingSync = 1 AND id NOT IN (SELECT entityId FROM outbox)")
+    suspend fun deletePendingWithoutOps()
 }

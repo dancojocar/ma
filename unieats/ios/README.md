@@ -1,9 +1,78 @@
-# UniEats iOS — l07-offline
+# UniEats iOS — l08-auth
+
+Login + protected mutations on top of the offline-first app (l07).
+
+## What this tag adds
+
+- `Views/LoginView.swift` — email/password (`student@unieats.app` / `password`).
+- `ViewModels/SessionStore.swift` — `POST /api/auth/login`; keeps the JWT in memory and in the
+  Keychain and `user.id` from the response in `UserDefaults`. `phase` is `.signedOut`, `.locked`
+  or `.signedIn`, and `UniEatsApp` switches on it: `LoginView`, `UnlockView` or the spot list.
+  `sessionExpired()` (any 401) ends the session with "Your session expired".
+- `Keychain/KeychainHelper.swift` — one generic-password item. `save` deletes and re-adds it
+  (`SecItemUpdate` cannot change access control): normally with
+  `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` (not in backups, not migrated to a new device),
+  with biometric unlock on with a `SecAccessControl` of
+  `kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly` + `.biometryCurrentSet`. `load` never
+  prompts; `hasItem()` checks for a session without reading it.
+- `ApiClient` sends `Authorization: Bearer <jwt>` on every mutation (outbox PATCH replay and
+  review POST). A 401 → `ApiError.unauthorized` → back to the login screen.
+- **Log out** (Account menu, top left of the list) calls `SpotRepository.logOut()`: it deletes
+  the Keychain item and also discards the outbox and the rows that were only showing unsynced
+  edits (they are reloaded from the server), so the next person to log in on the device never
+  sends them. A 401 keeps queued edits: each `OutboxEntry` records the `userId` that made it,
+  the same user's edits replay after logging in again, and `sync()` discards edits made by any
+  other user.
+- **Add review** (first appears here, POST needs auth): "Add review" in the detail's
+  "Reviews (N)" section → stars + text → `POST /api/spots/:id/reviews` with an
+  `Idempotency-Key`; the new review is stored in SwiftData and shows immediately.
+  `Models/ReviewDraft.swift` keeps one key per draft: posting again after a timeout or 5xx reuses
+  it (the server answers with the review it already created), changing stars or text gets a new
+  one (the server caches every response below 500, so an old 4xx would otherwise come back).
+- Deep links: `.onOpenURL` sits on the root of `UniEatsApp`, so a link opened while logged out
+  or locked is kept (`pendingSpotId`) and opened after login or unlock.
+
+### Biometric unlock (opt-in, off by default)
+
+- After logging in, Account › **Unlock with Face ID** (Touch ID / Optic ID on those devices). The
+  toggle only appears when `canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics)` is true,
+  i.e. biometrics are enrolled. Turning it on asks for Face ID, then re-stores the token as the
+  `.biometryCurrentSet` item; turning it off re-stores it as a normal item.
+- `Keychain/BiometricAuth.swift` — `LAContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
+  localizedReason: "Unlock UniEats")` returns the evaluated context; `KeychainHelper.load(context:)`
+  passes it as `kSecUseAuthenticationContext`, so reading the token needs no second prompt. The
+  token is bound to the biometric check by the Keychain, not by an app flag.
+- Cold start with the flag on: `SessionStore` does not read the token, it goes to `.locked` and
+  `Views/UnlockView.swift` ("Unlock UniEats") prompts at once. Success → straight into the app.
+  Cancel or a failed match stays on that screen; **Use password instead** is an explicit log out
+  (outbox discarded, as above) and shows the login screen.
+- Enrolling a new face or finger invalidates the item. The app also compares
+  `LAContext.domainState.biometry.stateHash` with the one stored when the toggle was turned on;
+  either way it signs out (queued edits kept) and the login screen says "Biometrics changed on
+  this device". Log out and a 401 delete the item and turn the toggle off.
+- `NSFaceIDUsageDescription` is in `UniEats/Info.plist`.
+
+Demo of expiry: restart the server with another secret (`JWT_SECRET=rotated npm start`), edit a
+spot → the app returns to login; log in again → the pending edit syncs.
+
+Face ID in the simulator: Features › Face ID › Enrolled, then Matching Face / Non-matching Face.
+The same from a terminal:
+
+```bash
+xcrun simctl spawn booted notifyutil -s com.apple.BiometricKit.enrollmentChanged 1
+xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit.enrollmentChanged   # enrolled
+xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit_Sim.pearl.match     # matching face
+xcrun simctl spawn booted notifyutil -p com.apple.BiometricKit_Sim.pearl.nomatch   # non-matching
+```
+
+The simulator stores the item with its access control but does not enforce it on reads, and
+re-enrolling there does not change the state hash: check the protection and the
+enrollment-change path on a device.
+
+## From l07 (offline-first, unchanged)
 
 Offline-first: SwiftData is the only thing the UI reads; the server feeds it, and edits made
 offline are queued in an outbox and replayed when the server is reachable again.
-
-## What this tag adds
 
 - `Models/SpotEntity.swift`, `ReviewEntity.swift`, `OutboxEntry.swift` — SwiftData `@Model`s.
   `SpotEntity.pendingSync` flags rows with unsynced edits; `OutboxEntry` stores

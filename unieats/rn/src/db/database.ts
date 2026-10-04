@@ -33,6 +33,8 @@ const MIGRATIONS = [
      payload TEXT NOT NULL,
      createdAt INTEGER NOT NULL
    );`,
+  // v2: ops queued before sign-in existed have no owner (NULL).
+  `ALTER TABLE outbox ADD COLUMN userId TEXT;`,
 ];
 
 let db: SQLite.SQLiteDatabase | null = null;

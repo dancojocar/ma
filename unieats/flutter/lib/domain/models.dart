@@ -157,3 +157,100 @@ class Review {
   @override
   int get hashCode => Object.hash(id, spotId, author, stars, text, createdAt);
 }
+
+class User {
+  const User({
+    required this.id,
+    required this.email,
+    required this.displayName,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) => User(
+    id: json['id'] as String,
+    email: json['email'] as String,
+    displayName: json['displayName'] as String,
+  );
+
+  final String id;
+  final String email;
+  final String displayName;
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'email': email,
+    'displayName': displayName,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      other is User &&
+      other.id == id &&
+      other.email == email &&
+      other.displayName == displayName;
+
+  @override
+  int get hashCode => Object.hash(id, email, displayName);
+}
+
+/// Where the app stands with the server: no session, a stored session that
+/// needs biometrics before it can be used, or a usable session.
+sealed class Session {
+  const Session();
+}
+
+final class SignedOut extends Session {
+  const SignedOut();
+
+  @override
+  bool operator ==(Object other) => other is SignedOut;
+
+  @override
+  int get hashCode => (SignedOut).hashCode;
+}
+
+final class Locked extends Session {
+  const Locked(this.user);
+
+  final User user;
+
+  @override
+  bool operator ==(Object other) => other is Locked && other.user == user;
+
+  @override
+  int get hashCode => Object.hash(Locked, user);
+}
+
+final class SignedIn extends Session {
+  const SignedIn(this.user);
+
+  final User user;
+
+  @override
+  bool operator ==(Object other) => other is SignedIn && other.user == user;
+
+  @override
+  int get hashCode => Object.hash(SignedIn, user);
+}
+
+class SessionExpired implements Exception {
+  const SessionExpired();
+
+  @override
+  String toString() => 'Your session expired. Please sign in again.';
+}
+
+/// The biometric key is gone, e.g. a fingerprint or face was added.
+class BiometricInvalidated implements Exception {
+  const BiometricInvalidated();
+
+  @override
+  String toString() =>
+      'Biometrics changed on this device. Please sign in again.';
+}
+
+class BiometricCancelled implements Exception {
+  const BiometricCancelled();
+
+  @override
+  String toString() => 'Biometric prompt cancelled.';
+}

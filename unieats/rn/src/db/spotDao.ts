@@ -100,3 +100,8 @@ export function deleteSpot(id: string) {
   getDb().runSync("DELETE FROM spots WHERE id = ?", [id]);
   notifyChanged("spots");
 }
+
+/** Drops optimistic rows whose outbox ops are gone; the next fetch brings back the server copy. */
+export function discardPendingWithoutOps() {
+  getDb().runSync("DELETE FROM spots WHERE pendingSync = 1 AND id NOT IN (SELECT entityId FROM outbox)");
+}

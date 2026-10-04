@@ -27,7 +27,10 @@ data class SpotDetailUiState(
     val isPendingSync: Boolean = false,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val isLive: Boolean = false
+    val isLive: Boolean = false,
+    val isReviewFormOpen: Boolean = false,
+    val isSubmittingReview: Boolean = false,
+    val reviewError: String? = null
 )
 
 @HiltViewModel(assistedFactory = SpotDetailViewModel.Factory::class)
@@ -80,6 +83,21 @@ class SpotDetailViewModel @AssistedInject constructor(
     }
 
     fun toggleFavourite() = favourites.toggle(spotId)
+
+    fun openReviewForm() = _uiState.update { it.copy(isReviewFormOpen = true, reviewError = null) }
+
+    fun dismissReviewForm() = _uiState.update { it.copy(isReviewFormOpen = false, reviewError = null) }
+
+    fun submitReview(stars: Int, text: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSubmittingReview = true, reviewError = null) }
+            spotRepository.addReview(spotId, stars, text)
+                .onSuccess { _uiState.update { it.copy(isSubmittingReview = false, isReviewFormOpen = false) } }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSubmittingReview = false, reviewError = error.toUserMessage()) }
+                }
+        }
+    }
 
     fun saveEdit(name: String, description: String, openNow: Boolean) {
         viewModelScope.launch {

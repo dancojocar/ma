@@ -1,6 +1,13 @@
 import { z } from "zod";
 import type { Review, Spot, SpotCategory, SpotEdit } from "../domain/models";
-import { ReviewSchema, SpotPageSchema, SpotSchema, type SpotPage } from "../domain/schemas";
+import {
+  LoginResponseSchema,
+  ReviewSchema,
+  SpotPageSchema,
+  SpotSchema,
+  type LoginResponse,
+  type SpotPage,
+} from "../domain/schemas";
 import { API_URL } from "./config";
 import { ApiError } from "./errors";
 
@@ -8,14 +15,15 @@ const TIMEOUT_MS = 10_000;
 export const PAGE_SIZE = 20;
 
 interface RequestOptions {
-  method?: "GET" | "PATCH";
+  method?: "GET" | "POST" | "PATCH";
   body?: unknown;
+  token?: string;
   idempotencyKey?: string;
   signal?: AbortSignal;
 }
 
 async function request<T>(path: string, schema: z.ZodType<T>, options: RequestOptions = {}): Promise<T> {
-  const { method = "GET", body, idempotencyKey, signal } = options;
+  const { method = "GET", body, token, idempotencyKey, signal } = options;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   const onCancel = () => controller.abort();
@@ -23,6 +31,7 @@ async function request<T>(path: string, schema: z.ZodType<T>, options: RequestOp
 
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (token) headers.Authorization = `Bearer ${token}`;
   if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
 
   let response: Response;
@@ -86,13 +95,29 @@ export function getReviews(spotId: string, signal?: AbortSignal): Promise<Review
 export function patchSpot(
   id: string,
   edit: SpotEdit & { updatedAt: number },
-  idempotencyKey: string,
+  auth: { token: string; idempotencyKey: string },
 ): Promise<Spot> {
   return request(`/spots/${encodeURIComponent(id)}`, SpotSchema, {
     method: "PATCH",
     body: edit,
-    idempotencyKey,
+    ...auth,
   });
+}
+
+export function postReview(
+  spotId: string,
+  review: { stars: number; text: string },
+  auth: { token: string; idempotencyKey: string },
+): Promise<Review> {
+  return request(`/spots/${encodeURIComponent(spotId)}/reviews`, ReviewSchema, {
+    method: "POST",
+    body: review,
+    ...auth,
+  });
+}
+
+export function login(email: string, password: string): Promise<LoginResponse> {
+  return request("/auth/login", LoginResponseSchema, { method: "POST", body: { email, password } });
 }
 
 export function conflictServerCopy(error: unknown): Spot | null {

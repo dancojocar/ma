@@ -23,6 +23,12 @@ export interface Review {
   createdAt: number;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
 export interface LocalSpot extends Spot {
   pendingSync: boolean;
 }
@@ -34,6 +40,7 @@ export interface OutboxOp {
   opId: string;
   type: "update";
   entityId: string;
+  userId: string | null;
   payload: SpotEdit & { editedAt: number };
   createdAt: number;
 }

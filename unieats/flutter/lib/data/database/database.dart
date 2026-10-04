@@ -6,6 +6,9 @@ import 'tables.dart';
 
 part 'database.g.dart';
 
+/// Ids of rows created offline that the server has not assigned an id to yet.
+const localIdPrefix = 'local:';
+
 @DriftDatabase(tables: [Spots, Reviews, Outbox])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'unieats'));
@@ -13,7 +16,17 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.renameColumn(reviews, 'body', reviews.reviewText);
+        await m.addColumn(outbox, outbox.userId);
+      }
+    },
+  );
 
   Stream<List<Spot>> watchSpots({String query = '', SpotCategory? category}) {
     final pattern = '%${query.trim()}%';
@@ -87,13 +100,18 @@ class AppDatabase extends _$AppDatabase {
           .watch()
           .map((rows) => rows.map((r) => r.toReview()).toList());
 
-  /// Makes the local reviews of [spotId] match [serverReviews] in one transaction.
+  /// Makes the local reviews of [spotId] match [serverReviews] in one
+  /// transaction, keeping reviews still waiting in the outbox.
   Future<void> replaceReviews(String spotId, List<Review> serverReviews) =>
       transaction(() async {
         final ids = serverReviews.map((r) => r.id).toList();
-        await (delete(
-          reviews,
-        )..where((t) => t.spotId.equals(spotId) & t.id.isNotIn(ids))).go();
+        await (delete(reviews)..where(
+              (t) =>
+                  t.spotId.equals(spotId) &
+                  t.id.isNotIn(ids) &
+                  t.id.like('$localIdPrefix%').not(),
+            ))
+            .go();
         await batch((b) {
           for (final review in serverReviews) {
             b.insert(
@@ -105,11 +123,25 @@ class AppDatabase extends _$AppDatabase {
         });
       });
 
+  Future<void> insertReview(Review review) =>
+      into(reviews).insert(review.toCompanion());
+
+  /// Swaps an optimistic `local:` review for the one the server created.
+  Future<void> confirmReview(String localId, Review saved) =>
+      transaction(() async {
+        await (delete(reviews)..where((t) => t.id.equals(localId))).go();
+        await into(reviews).insertOnConflictUpdate(saved.toCompanion());
+      });
+
+  Future<void> deleteReview(String id) =>
+      (delete(reviews)..where((t) => t.id.equals(id))).go();
+
   Future<void> enqueue({
     required String opId,
     required String type,
     required String entityId,
     required String payload,
+    required String userId,
   }) => into(outbox).insert(
     OutboxCompanion.insert(
       opId: opId,
@@ -117,6 +149,7 @@ class AppDatabase extends _$AppDatabase {
       entityId: entityId,
       payload: payload,
       createdAt: DateTime.now().millisecondsSinceEpoch,
+      userId: Value(userId),
     ),
   );
 
@@ -140,6 +173,29 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> removeOpsFor(String entityId) =>
       (delete(outbox)..where((t) => t.entityId.equals(entityId))).go();
+
+  /// Drops every queued op, the `local:` reviews and the pending spot edits,
+  /// so the next refresh shows the server's data.
+  Future<void> discardLocalChanges() => _discardOps(delete(outbox));
+
+  /// Drops the ops another account queued; a legacy op without a user stays.
+  Future<void> discardOpsNotBy(String userId) =>
+      _discardOps(delete(outbox)..where((t) => t.userId.equals(userId).not()));
+
+  Future<void> _discardOps(DeleteStatement<$OutboxTable, OutboxOp> ops) =>
+      transaction(() async {
+        await ops.go();
+        Expression<bool> stillQueued(GeneratedColumn<String> id) =>
+            id.isInQuery(selectOnly(outbox)..addColumns([outbox.entityId]));
+        await (delete(reviews)..where(
+              (t) => t.id.like('$localIdPrefix%') & stillQueued(t.id).not(),
+            ))
+            .go();
+        await (delete(spots)..where(
+              (t) => t.pendingSync.equals(true) & stillQueued(t.id).not(),
+            ))
+            .go();
+      });
 
   Stream<int> watchOutboxCount() =>
       select(outbox).watch().map((ops) => ops.length);
@@ -187,7 +243,7 @@ extension ReviewRowMapping on ReviewRow {
     spotId: spotId,
     author: author,
     stars: stars,
-    text: body,
+    text: reviewText,
     createdAt: createdAt,
   );
 }
@@ -198,7 +254,7 @@ extension ReviewMapping on Review {
     spotId: spotId,
     author: author,
     stars: stars,
-    body: text,
+    reviewText: text,
     createdAt: createdAt,
   );
 }

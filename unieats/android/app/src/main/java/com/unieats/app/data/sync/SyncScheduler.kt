@@ -35,6 +35,10 @@ class SyncScheduler @Inject constructor(
     // APPEND_OR_REPLACE: an edit made while a replay is running still gets its own run after it.
     fun requestSync() = enqueue(ExistingWorkPolicy.APPEND_OR_REPLACE)
 
+    fun cancel() {
+        WorkManager.getInstance(context).cancelUniqueWork(SyncWorker.NAME)
+    }
+
     private fun enqueue(policy: ExistingWorkPolicy) {
         val request = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())

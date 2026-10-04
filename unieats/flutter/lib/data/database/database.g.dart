@@ -757,10 +757,12 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  static const VerificationMeta _reviewTextMeta = const VerificationMeta(
+    'reviewText',
+  );
   @override
-  late final GeneratedColumn<String> body = GeneratedColumn<String>(
-    'body',
+  late final GeneratedColumn<String> reviewText = GeneratedColumn<String>(
+    'text',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -783,7 +785,7 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
     spotId,
     author,
     stars,
-    body,
+    reviewText,
     createdAt,
   ];
   @override
@@ -827,13 +829,13 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
     } else if (isInserting) {
       context.missing(_starsMeta);
     }
-    if (data.containsKey('body')) {
+    if (data.containsKey('text')) {
       context.handle(
-        _bodyMeta,
-        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+        _reviewTextMeta,
+        reviewText.isAcceptableOrUnknown(data['text']!, _reviewTextMeta),
       );
     } else if (isInserting) {
-      context.missing(_bodyMeta);
+      context.missing(_reviewTextMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -868,9 +870,9 @@ class $ReviewsTable extends Reviews with TableInfo<$ReviewsTable, ReviewRow> {
         DriftSqlType.int,
         data['${effectivePrefix}stars'],
       )!,
-      body: attachedDatabase.typeMapping.read(
+      reviewText: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}body'],
+        data['${effectivePrefix}text'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -890,14 +892,16 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
   final String spotId;
   final String author;
   final int stars;
-  final String body;
+
+  /// Was `body` in schema v1; v2 renamed the SQL column to match the API's `text`.
+  final String reviewText;
   final int createdAt;
   const ReviewRow({
     required this.id,
     required this.spotId,
     required this.author,
     required this.stars,
-    required this.body,
+    required this.reviewText,
     required this.createdAt,
   });
   @override
@@ -907,7 +911,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
     map['spot_id'] = Variable<String>(spotId);
     map['author'] = Variable<String>(author);
     map['stars'] = Variable<int>(stars);
-    map['body'] = Variable<String>(body);
+    map['text'] = Variable<String>(reviewText);
     map['created_at'] = Variable<int>(createdAt);
     return map;
   }
@@ -918,7 +922,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       spotId: Value(spotId),
       author: Value(author),
       stars: Value(stars),
-      body: Value(body),
+      reviewText: Value(reviewText),
       createdAt: Value(createdAt),
     );
   }
@@ -933,7 +937,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       spotId: serializer.fromJson<String>(json['spotId']),
       author: serializer.fromJson<String>(json['author']),
       stars: serializer.fromJson<int>(json['stars']),
-      body: serializer.fromJson<String>(json['body']),
+      reviewText: serializer.fromJson<String>(json['reviewText']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
     );
   }
@@ -945,7 +949,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       'spotId': serializer.toJson<String>(spotId),
       'author': serializer.toJson<String>(author),
       'stars': serializer.toJson<int>(stars),
-      'body': serializer.toJson<String>(body),
+      'reviewText': serializer.toJson<String>(reviewText),
       'createdAt': serializer.toJson<int>(createdAt),
     };
   }
@@ -955,14 +959,14 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
     String? spotId,
     String? author,
     int? stars,
-    String? body,
+    String? reviewText,
     int? createdAt,
   }) => ReviewRow(
     id: id ?? this.id,
     spotId: spotId ?? this.spotId,
     author: author ?? this.author,
     stars: stars ?? this.stars,
-    body: body ?? this.body,
+    reviewText: reviewText ?? this.reviewText,
     createdAt: createdAt ?? this.createdAt,
   );
   ReviewRow copyWithCompanion(ReviewsCompanion data) {
@@ -971,7 +975,9 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
       spotId: data.spotId.present ? data.spotId.value : this.spotId,
       author: data.author.present ? data.author.value : this.author,
       stars: data.stars.present ? data.stars.value : this.stars,
-      body: data.body.present ? data.body.value : this.body,
+      reviewText: data.reviewText.present
+          ? data.reviewText.value
+          : this.reviewText,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -983,14 +989,15 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
           ..write('spotId: $spotId, ')
           ..write('author: $author, ')
           ..write('stars: $stars, ')
-          ..write('body: $body, ')
+          ..write('reviewText: $reviewText, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, spotId, author, stars, body, createdAt);
+  int get hashCode =>
+      Object.hash(id, spotId, author, stars, reviewText, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -999,7 +1006,7 @@ class ReviewRow extends DataClass implements Insertable<ReviewRow> {
           other.spotId == this.spotId &&
           other.author == this.author &&
           other.stars == this.stars &&
-          other.body == this.body &&
+          other.reviewText == this.reviewText &&
           other.createdAt == this.createdAt);
 }
 
@@ -1008,7 +1015,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
   final Value<String> spotId;
   final Value<String> author;
   final Value<int> stars;
-  final Value<String> body;
+  final Value<String> reviewText;
   final Value<int> createdAt;
   final Value<int> rowid;
   const ReviewsCompanion({
@@ -1016,7 +1023,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     this.spotId = const Value.absent(),
     this.author = const Value.absent(),
     this.stars = const Value.absent(),
-    this.body = const Value.absent(),
+    this.reviewText = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1025,21 +1032,21 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     required String spotId,
     required String author,
     required int stars,
-    required String body,
+    required String reviewText,
     required int createdAt,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        spotId = Value(spotId),
        author = Value(author),
        stars = Value(stars),
-       body = Value(body),
+       reviewText = Value(reviewText),
        createdAt = Value(createdAt);
   static Insertable<ReviewRow> custom({
     Expression<String>? id,
     Expression<String>? spotId,
     Expression<String>? author,
     Expression<int>? stars,
-    Expression<String>? body,
+    Expression<String>? reviewText,
     Expression<int>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -1048,7 +1055,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
       if (spotId != null) 'spot_id': spotId,
       if (author != null) 'author': author,
       if (stars != null) 'stars': stars,
-      if (body != null) 'body': body,
+      if (reviewText != null) 'text': reviewText,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1059,7 +1066,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     Value<String>? spotId,
     Value<String>? author,
     Value<int>? stars,
-    Value<String>? body,
+    Value<String>? reviewText,
     Value<int>? createdAt,
     Value<int>? rowid,
   }) {
@@ -1068,7 +1075,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
       spotId: spotId ?? this.spotId,
       author: author ?? this.author,
       stars: stars ?? this.stars,
-      body: body ?? this.body,
+      reviewText: reviewText ?? this.reviewText,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1089,8 +1096,8 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
     if (stars.present) {
       map['stars'] = Variable<int>(stars.value);
     }
-    if (body.present) {
-      map['body'] = Variable<String>(body.value);
+    if (reviewText.present) {
+      map['text'] = Variable<String>(reviewText.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
@@ -1108,7 +1115,7 @@ class ReviewsCompanion extends UpdateCompanion<ReviewRow> {
           ..write('spotId: $spotId, ')
           ..write('author: $author, ')
           ..write('stars: $stars, ')
-          ..write('body: $body, ')
+          ..write('reviewText: $reviewText, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -1186,6 +1193,15 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxOp> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     seq,
@@ -1194,6 +1210,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxOp> {
     entityId,
     payload,
     createdAt,
+    userId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1253,6 +1270,12 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxOp> {
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    }
     return context;
   }
 
@@ -1286,6 +1309,10 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxOp> {
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      ),
     );
   }
 
@@ -1302,6 +1329,10 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
   final String entityId;
   final String payload;
   final int createdAt;
+
+  /// Who queued the op (`user.id` from `/auth/login`). Null for ops queued in
+  /// schema v1, before there were accounts.
+  final String? userId;
   const OutboxOp({
     required this.seq,
     required this.opId,
@@ -1309,6 +1340,7 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
     required this.entityId,
     required this.payload,
     required this.createdAt,
+    this.userId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1319,6 +1351,9 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
     map['entity_id'] = Variable<String>(entityId);
     map['payload'] = Variable<String>(payload);
     map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || userId != null) {
+      map['user_id'] = Variable<String>(userId);
+    }
     return map;
   }
 
@@ -1330,6 +1365,9 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
       entityId: Value(entityId),
       payload: Value(payload),
       createdAt: Value(createdAt),
+      userId: userId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userId),
     );
   }
 
@@ -1345,6 +1383,7 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
       entityId: serializer.fromJson<String>(json['entityId']),
       payload: serializer.fromJson<String>(json['payload']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
+      userId: serializer.fromJson<String?>(json['userId']),
     );
   }
   @override
@@ -1357,6 +1396,7 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
       'entityId': serializer.toJson<String>(entityId),
       'payload': serializer.toJson<String>(payload),
       'createdAt': serializer.toJson<int>(createdAt),
+      'userId': serializer.toJson<String?>(userId),
     };
   }
 
@@ -1367,6 +1407,7 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
     String? entityId,
     String? payload,
     int? createdAt,
+    Value<String?> userId = const Value.absent(),
   }) => OutboxOp(
     seq: seq ?? this.seq,
     opId: opId ?? this.opId,
@@ -1374,6 +1415,7 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
     entityId: entityId ?? this.entityId,
     payload: payload ?? this.payload,
     createdAt: createdAt ?? this.createdAt,
+    userId: userId.present ? userId.value : this.userId,
   );
   OutboxOp copyWithCompanion(OutboxCompanion data) {
     return OutboxOp(
@@ -1383,6 +1425,7 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
       payload: data.payload.present ? data.payload.value : this.payload,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      userId: data.userId.present ? data.userId.value : this.userId,
     );
   }
 
@@ -1394,14 +1437,15 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
           ..write('type: $type, ')
           ..write('entityId: $entityId, ')
           ..write('payload: $payload, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('userId: $userId')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(seq, opId, type, entityId, payload, createdAt);
+      Object.hash(seq, opId, type, entityId, payload, createdAt, userId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1411,7 +1455,8 @@ class OutboxOp extends DataClass implements Insertable<OutboxOp> {
           other.type == this.type &&
           other.entityId == this.entityId &&
           other.payload == this.payload &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.userId == this.userId);
 }
 
 class OutboxCompanion extends UpdateCompanion<OutboxOp> {
@@ -1421,6 +1466,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
   final Value<String> entityId;
   final Value<String> payload;
   final Value<int> createdAt;
+  final Value<String?> userId;
   const OutboxCompanion({
     this.seq = const Value.absent(),
     this.opId = const Value.absent(),
@@ -1428,6 +1474,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
     this.entityId = const Value.absent(),
     this.payload = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.userId = const Value.absent(),
   });
   OutboxCompanion.insert({
     this.seq = const Value.absent(),
@@ -1436,6 +1483,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
     required String entityId,
     required String payload,
     required int createdAt,
+    this.userId = const Value.absent(),
   }) : opId = Value(opId),
        type = Value(type),
        entityId = Value(entityId),
@@ -1448,6 +1496,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
     Expression<String>? entityId,
     Expression<String>? payload,
     Expression<int>? createdAt,
+    Expression<String>? userId,
   }) {
     return RawValuesInsertable({
       if (seq != null) 'seq': seq,
@@ -1456,6 +1505,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
       if (entityId != null) 'entity_id': entityId,
       if (payload != null) 'payload': payload,
       if (createdAt != null) 'created_at': createdAt,
+      if (userId != null) 'user_id': userId,
     });
   }
 
@@ -1466,6 +1516,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
     Value<String>? entityId,
     Value<String>? payload,
     Value<int>? createdAt,
+    Value<String?>? userId,
   }) {
     return OutboxCompanion(
       seq: seq ?? this.seq,
@@ -1474,6 +1525,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
       entityId: entityId ?? this.entityId,
       payload: payload ?? this.payload,
       createdAt: createdAt ?? this.createdAt,
+      userId: userId ?? this.userId,
     );
   }
 
@@ -1498,6 +1550,9 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
     if (createdAt.present) {
       map['created_at'] = Variable<int>(createdAt.value);
     }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
     return map;
   }
 
@@ -1509,7 +1564,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxOp> {
           ..write('type: $type, ')
           ..write('entityId: $entityId, ')
           ..write('payload: $payload, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('userId: $userId')
           ..write(')'))
         .toString();
   }
@@ -1872,7 +1928,7 @@ typedef $$ReviewsTableCreateCompanionBuilder = ReviewsCompanion Function({
   required String spotId,
   required String author,
   required int stars,
-  required String body,
+  required String reviewText,
   required int createdAt,
   Value<int> rowid,
 });
@@ -1881,7 +1937,7 @@ typedef $$ReviewsTableUpdateCompanionBuilder = ReviewsCompanion Function({
   Value<String> spotId,
   Value<String> author,
   Value<int> stars,
-  Value<String> body,
+  Value<String> reviewText,
   Value<int> createdAt,
   Value<int> rowid,
 });
@@ -1915,8 +1971,8 @@ class $$ReviewsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get body => $composableBuilder(
-    column: $table.body,
+  ColumnFilters<String> get reviewText => $composableBuilder(
+    column: $table.reviewText,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1955,8 +2011,8 @@ class $$ReviewsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get body => $composableBuilder(
-    column: $table.body,
+  ColumnOrderings<String> get reviewText => $composableBuilder(
+    column: $table.reviewText,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1987,8 +2043,10 @@ class $$ReviewsTableAnnotationComposer
   GeneratedColumn<int> get stars =>
       $composableBuilder(column: $table.stars, builder: (column) => column);
 
-  GeneratedColumn<String> get body =>
-      $composableBuilder(column: $table.body, builder: (column) => column);
+  GeneratedColumn<String> get reviewText => $composableBuilder(
+    column: $table.reviewText,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2026,7 +2084,7 @@ class $$ReviewsTableTableManager
                 Value<String> spotId = const Value.absent(),
                 Value<String> author = const Value.absent(),
                 Value<int> stars = const Value.absent(),
-                Value<String> body = const Value.absent(),
+                Value<String> reviewText = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ReviewsCompanion(
@@ -2034,7 +2092,7 @@ class $$ReviewsTableTableManager
                 spotId: spotId,
                 author: author,
                 stars: stars,
-                body: body,
+                reviewText: reviewText,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -2044,7 +2102,7 @@ class $$ReviewsTableTableManager
                 required String spotId,
                 required String author,
                 required int stars,
-                required String body,
+                required String reviewText,
                 required int createdAt,
                 Value<int> rowid = const Value.absent(),
               }) => ReviewsCompanion.insert(
@@ -2052,7 +2110,7 @@ class $$ReviewsTableTableManager
                 spotId: spotId,
                 author: author,
                 stars: stars,
-                body: body,
+                reviewText: reviewText,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -2094,6 +2152,7 @@ typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
   required String entityId,
   required String payload,
   required int createdAt,
+  Value<String?> userId,
 });
 typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
   Value<int> seq,
@@ -2102,6 +2161,7 @@ typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
   Value<String> entityId,
   Value<String> payload,
   Value<int> createdAt,
+  Value<String?> userId,
 });
 
 class $$OutboxTableFilterComposer
@@ -2140,6 +2200,11 @@ class $$OutboxTableFilterComposer
 
   ColumnFilters<int> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2182,6 +2247,11 @@ class $$OutboxTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$OutboxTableAnnotationComposer
@@ -2210,6 +2280,9 @@ class $$OutboxTableAnnotationComposer
 
   GeneratedColumn<int> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
 }
 
 class $$OutboxTableTableManager
@@ -2246,6 +2319,7 @@ class $$OutboxTableTableManager
                 Value<String> entityId = const Value.absent(),
                 Value<String> payload = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
+                Value<String?> userId = const Value.absent(),
               }) => OutboxCompanion(
                 seq: seq,
                 opId: opId,
@@ -2253,6 +2327,7 @@ class $$OutboxTableTableManager
                 entityId: entityId,
                 payload: payload,
                 createdAt: createdAt,
+                userId: userId,
               ),
           createCompanionCallback:
               ({
@@ -2262,6 +2337,7 @@ class $$OutboxTableTableManager
                 required String entityId,
                 required String payload,
                 required int createdAt,
+                Value<String?> userId = const Value.absent(),
               }) => OutboxCompanion.insert(
                 seq: seq,
                 opId: opId,
@@ -2269,6 +2345,7 @@ class $$OutboxTableTableManager
                 entityId: entityId,
                 payload: payload,
                 createdAt: createdAt,
+                userId: userId,
               ),
           withReferenceMapper: (p0) => p0
               .map(

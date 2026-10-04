@@ -24,6 +24,8 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>UniEats uses Face ID to unlock your saved session.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -37,4 +37,10 @@ interface OutboxDao {
 
     @Query("DELETE FROM outbox WHERE entityId = :entityId")
     suspend fun deleteByEntityId(entityId: String)
+
+    @Query("DELETE FROM outbox WHERE userId != :userId")
+    suspend fun deleteNotOwnedBy(userId: String)
+
+    @Query("DELETE FROM outbox")
+    suspend fun deleteAll()
 }

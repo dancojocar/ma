@@ -1,4 +1,4 @@
-# UniEats Android — tag `l07-offline`
+# UniEats Android — tag `l08-auth`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -17,10 +17,11 @@ On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
 ## What to look at
 
 - `data/local/` — `SpotEntity` (with `pendingSync`), `ReviewEntity`, `OutboxEntity`
-  `{seq, opId, type, entityId, payload, attempted}`; `SpotDao.getPendingSync()` / `markSynced()`.
+  `{seq, opId, type, entityId, payload, userId, attempted}`; `SpotDao.getPendingSync()` /
+  `markSynced()`.
   `UniEatsDatabase` exports its schema (Room Gradle plugin, `room { schemaDirectory(...) }`) to
-  `app/schemas/…/1.json`, which is committed. Any later schema change bumps `version` and adds an
-  `autoMigrations` entry checked against these files.
+  `app/schemas/…/<version>.json` (`1.json` from l07, `2.json` from l08), which are committed. Each
+  schema change bumps `version` and adds an `autoMigrations` entry checked against these files.
 - `data/repository/SpotRepository.kt` — `observe…()` flows from Room; `refreshSpots()` upserts by
   id and never overwrites a row with `pendingSync = true`; `editSpot()` updates the row
   optimistically and queues an `update` op, or merges into the spot's queued op if that one has
@@ -53,6 +54,74 @@ Unchanged from earlier labs: Navigation 3 with the two-pane layout and deep link
 `FavouritesRepository` shared by the list and the detail screen, pull-to-refresh on every state,
 Material Symbols vector drawables via `painterResource`, the TalkBack descriptions on the rating,
 reviews and live badge, and the light/dark theme.
+
+## Login and protected writes (new in l08)
+
+- Sign in with `student@unieats.app` / `password`. The server protects every mutation from this
+  tag on. `ui/login/LoginScreen.kt` scrolls when the form does not fit (landscape with the
+  keyboard open) and stays centred when it does; `consumeWindowInsets(innerPadding)` keeps
+  `imePadding()` from adding the navigation bar a second time.
+- `data/auth/TokenStore.kt` — the JWT, display name and user id in Jetpack DataStore
+  (`files/datastore/session.preferences_pb`), each value encrypted by `data/auth/KeystoreCipher.kt`
+  (AES-256-GCM with a key generated in the Android Keystore; no `security-crypto`, whose
+  `EncryptedSharedPreferences` is deprecated). `allowBackup="false"` keeps it out of backups.
+  `session` is a `StateFlow<SessionState>`: `Loading` until DataStore has been read, then
+  `SignedOut`, `Locked` (biometric unlock, below) or `SignedIn`. `AuthTokens.token()` is `suspend`
+  and waits for `Loading` to end, so a request made at startup still carries the token.
+- `MainActivity` keeps the system splash screen up (`installSplashScreen()` +
+  `setKeepOnScreenCondition`) while the session is `Loading`, so the first frame is already the
+  login screen, the unlock screen or the list.
+- `data/remote/ApiClient.kt` — `authorized(token)` adds `Authorization: Bearer <jwt>` to PATCH and
+  review POST (reads stay anonymous); `OutboxSync` replays with the same header.
+- `di/AppModule.kt` — a 401 on a request that carried a token clears the session, and
+  `ui/navigation/NavGraph.kt` puts `Login` on the back stack (also when the 1 h token expires).
+  Signing in again restores `startKeys`, so a deep link that opened the app is not lost.
+- Who owns a queued edit: each outbox op records the `user.id` from the `/auth/login` response.
+  - A 401 (or a biometric change, below) keeps queued edits. If the same user signs in again
+    they replay; if a different user signs in, `OutboxSync.discardOtherUsers()` drops the other
+    user's ops and their optimistic rows before the new token is saved
+    (`AuthRepository.login()`).
+  - **Log out** (and "Use password instead") discards them: `AuthRepository.logout()` cancels the
+    sync job, `OutboxSync.discardAll()` empties the outbox and deletes the `pendingSync` rows (the
+    next load fetches the server copies), then clears the session.
+  - The `userId` column is the database's first schema change: `UniEatsDatabase` is now version 2
+    with `AutoMigration(from = 1, to = 2)`, which Room generates from the committed `1.json` and
+    `2.json` (`ALTER TABLE outbox ADD COLUMN userId`), so installing over an l07 build keeps the
+    cached spots and the outbox; ops queued there have no `userId` and replay for whoever signs in.
+- **Log out** is in the ⋮ menu of the list; **Add review** is on the detail screen (online only:
+  POST needs the server). The star picker in `ui/spotdetail/AddReviewDialog.kt` is a
+  `selectableGroup()` of five `Role.RadioButton` items, so TalkBack reads "3 stars, selected".
+
+## Biometric unlock (new in l08, off by default)
+
+- Turn it on in the ⋮ menu: **Unlock with biometrics**. It is offered only on API 30+ with a
+  strong (class 3) biometric enrolled (`ui/auth/BiometricPrompter.kt`, `canUseBiometricUnlock()`,
+  re-checked on every resume). Off by default, so a password sign-in works as before.
+- `data/auth/BiometricKeystoreCipher.kt` — a second Keystore AES-256-GCM key, created with
+  `setUserAuthenticationRequired(true)`, `setUserAuthenticationParameters(0, AUTH_BIOMETRIC_STRONG)`
+  (every single use needs a prompt) and `setInvalidatedByBiometricEnrollment(true)`. The key is
+  usable only through a `Cipher` that `BiometricPrompt` has authenticated, passed in as a
+  `CryptoObject`. This is what makes it more than a yes/no gate in front of the app: without the
+  fingerprint, the token cannot be decrypted at all.
+- Turning it on: `SessionViewModel.enableBiometric()` prompts with an encrypt cipher, and
+  `TokenStore.enableBiometric()` stores the token sealed with it (`jwt_biometric`) and removes the
+  normally encrypted copy. Turning it off writes the normal copy back and deletes the key; no
+  prompt.
+- Cold start with biometrics on: the session is `Locked`, `NavGraph.kt` shows `Unlock`
+  (`ui/auth/UnlockScreen.kt` + `UnlockViewModel`), which prompts once by itself ("Unlock UniEats",
+  negative button "Use password"). Success opens the token into memory only, the session becomes
+  `SignedIn`, and the outbox replays (`AuthRepository.completeUnlock()` requests a sync; while
+  locked, `token()` is null and the worker stops with `NeedsLogin`). Cancel leaves you on the
+  screen with **Unlock** and **Use password instead**, which signs out.
+- A new fingerprint or face invalidates the key (`KeyPermanentlyInvalidatedException`):
+  `TokenStore.unlockCipher()` clears the session and the login screen shows "Biometrics changed
+  on this device. Sign in again." Queued edits stay, as after a 401.
+- Log out and a 401 delete the biometric key along with the session.
+- `MainActivity` is a `FragmentActivity`, because `BiometricPrompt` needs one to host its
+  fragment.
+- Emulator (API 30+): Settings → Security → set a PIN, then add a fingerprint, and run
+  `adb -e emu finger touch 1` when the sensor asks. At the app's prompt, `adb -e emu finger touch 1`
+  again. To see the enrollment-change path, add a second fingerprint and relaunch the app.
 
 ## Demo: offline edit → reconnect → sync
 
