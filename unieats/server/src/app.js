@@ -1,10 +1,11 @@
 const express = require('express');
-const { chaos } = require('./middleware');
+const { chaos, requestLogger } = require('./middleware');
 const { sendError } = require('./errors');
 const spotsRouter = require('./routes/spots');
 
 const app = express();
 
+if (process.env.NODE_ENV !== 'test' && process.env.LOG_REQUESTS !== '0') app.use(requestLogger);
 app.use(chaos);
 app.use(express.json());
 

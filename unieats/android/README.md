@@ -1,7 +1,7 @@
-# UniEats Android — tag `l05-rest`
+# UniEats Android — tag `l06-async`
 
-The list and the detail screen now come from the UniEats server over HTTP (Ktor + kotlinx
-serialization). Search, category filter and favourites still work; search and filter are sent to
+The list and the detail screen come from the UniEats server over HTTP (Ktor + kotlinx
+serialization), and the list follows server changes live over a WebSocket. Search, category filter and favourites still work; search and filter are sent to
 the server as `q` and `category`.
 
 ## Run
@@ -31,6 +31,26 @@ On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
 - Photos come from each spot's `photoUrl` (Coil).
 - The detail screen loads the spot and its reviews (read-only — adding a review needs login,
   which arrives at `l08-auth`).
+
+## Live updates (new in l06)
+
+- `data/remote/LiveUpdates.kt` — `events()` is a cold `Flow<LiveEvent>` over the server's
+  WebSocket `ws://10.0.2.2:3000/live` (`BuildConfig.LIVE_URL`). It parses
+  `spot.created / spot.updated / spot.deleted` and reconnects with exponential back-off
+  (1 s → 30 s) when the connection drops.
+- `ui/spotlist/SpotListViewModel.kt` — the socket is part of the upstream of
+  `uiState = combine(_uiState, liveConnection).stateIn(viewModelScope, WhileSubscribed(5_000), …)`.
+  `collectAsStateWithLifecycle()` stops collecting when the screen is not visible, so 5 s later the
+  socket closes; it reopens when you come back. A rotation (< 5 s) keeps it open.
+- The top bar shows **● Live** while connected.
+
+Demo: keep the list open and change a spot from a terminal — the row updates without a refresh:
+
+```bash
+curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (new oven)"}'
+```
+
+Press Home, wait 5 s, and the server log shows the socket closing.
 
 ## Try the failure paths
 

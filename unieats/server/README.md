@@ -16,6 +16,23 @@ npm test         # Jest + supertest, no running server needed
 
 `PORT` changes the port.
 
+For the live-update demo there is a `Makefile` that wraps the curl calls (`make help` lists everything):
+
+```bash
+make list                                                   # ids, names, openNow
+make create NAME='Live Burger' CATEGORY=fastfood OPEN=true  # fields: NAME CATEGORY RATING PRICE LAT LNG OPEN PHOTO DESCRIPTION
+make update ID=spot-3 NAME='Pizza Stop (new oven)'
+make open ID=spot-1 / make close ID=spot-1 / make rename ID=spot-1 NAME='…'
+make delete ID=<uuid>
+make watch                                                  # wscat on /live
+```
+
+Every request is logged to the console: an arrow in (`→`) with method, path, query and
+notable headers, then an arrow out (`←`) with the status, duration, the parsed request
+body, the response `Content-Type`, size and shape, and a preview of the JSON body.
+`✕` marks a connection that closed before the response finished (e.g. `X-Chaos-Drop`).
+Set `LOG_REQUESTS=0` to turn it off; it is off during `npm test`.
+
 ## Endpoints
 
 | Method | Path | Notes |
@@ -42,6 +59,17 @@ curl -s -X POST http://localhost:3000/api/spots \
 
 curl -s -X PATCH http://localhost:3000/api/spots/spot-1 \
   -H 'Content-Type: application/json' -d '{"openNow":false}' | jq .
+```
+
+## Live updates (WebSocket)
+
+`ws://localhost:3000/live` (not `/api/live`) receives one JSON message per change:
+`{ "type": "spot.created" | "spot.updated", "spot": Spot }` or `{ "type": "spot.deleted", "id": "…" }`.
+
+```bash
+npx wscat -c ws://localhost:3000/live          # terminal 1
+curl -s -X PATCH http://localhost:3000/api/spots/spot-1 \
+  -H 'Content-Type: application/json' -d '{"openNow":false}'   # terminal 2
 ```
 
 ## Chaos headers

@@ -12,3 +12,12 @@ String get apiBaseUrl {
   final host = !kIsWeb && Platform.isAndroid ? '10.0.2.2' : 'localhost';
   return 'http://$host:3000/api';
 }
+
+/// The WebSocket lives at the server root (`ws://<host>:3000/live`), not under `/api`.
+Uri get liveUrl {
+  final api = Uri.parse(apiBaseUrl);
+  return api.replace(
+    scheme: api.scheme == 'https' ? 'wss' : 'ws',
+    path: '/live',
+  );
+}
