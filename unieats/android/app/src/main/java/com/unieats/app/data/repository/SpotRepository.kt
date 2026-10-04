@@ -1,18 +1,21 @@
 package com.unieats.app.data.repository
 
+import com.unieats.app.data.model.Category
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
-import com.unieats.app.data.model.seedReviews
-import com.unieats.app.data.model.seedSpots
+import com.unieats.app.data.model.SpotsPage
+import com.unieats.app.data.remote.ApiClient
+import com.unieats.app.data.remote.apiCall
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SpotRepository @Inject constructor() {
+class SpotRepository @Inject constructor(private val api: ApiClient) {
 
-    fun getSpots(): List<Spot> = seedSpots
+    suspend fun fetchSpots(page: Int, query: String, category: Category?): Result<SpotsPage> =
+        apiCall { api.listSpots(page, query, category) }
 
-    fun getSpot(id: String): Spot? = seedSpots.firstOrNull { it.id == id }
+    suspend fun fetchSpot(id: String): Result<Spot> = apiCall { api.getSpot(id) }
 
-    fun getReviews(spotId: String): List<Review> = seedReviews.filter { it.spotId == spotId }
+    suspend fun fetchReviews(spotId: String): Result<List<Review>> = apiCall { api.getReviews(spotId) }
 }
