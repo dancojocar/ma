@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 import com.unieats.app.ui.components.priceText
 import java.text.DateFormat
 import java.util.Date

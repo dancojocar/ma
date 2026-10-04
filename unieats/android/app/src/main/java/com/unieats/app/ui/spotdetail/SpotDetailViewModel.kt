@@ -4,10 +4,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.unieats.app.data.model.Review
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Review
+import com.unieats.shared.Spot
 import com.unieats.app.data.remote.toUserMessage
-import com.unieats.app.data.repository.SpotRepository
+import com.unieats.app.data.repository.EatsRepository
 import com.unieats.app.ui.navigation.SpotDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -34,7 +34,7 @@ data class SpotDetailUiState(
 
 @HiltViewModel
 class SpotDetailViewModel @Inject constructor(
-    private val spotRepository: SpotRepository,
+    private val spotRepository: EatsRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 

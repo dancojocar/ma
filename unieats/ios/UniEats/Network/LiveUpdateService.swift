@@ -1,4 +1,5 @@
 import Foundation
+import UniEatsDomain
 
 enum LiveUpdate: Sendable, Equatable {
     case connected

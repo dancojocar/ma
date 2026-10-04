@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		AB000001000012 /* UniEatsDomain in Frameworks */ = {isa = PBXBuildFile; productRef = AB000002000012 /* UniEatsDomain */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A3000001000001 /* UniEats.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniEats.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -15,6 +19,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB000001000012 /* UniEatsDomain in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,9 @@
 				A5000002000001 /* UniEats */,
 			);
 			name = UniEats;
+			packageProductDependencies = (
+				AB000002000012 /* UniEatsDomain */,
+			);
 			productName = UniEats;
 			productReference = A3000001000001 /* UniEats.app */;
 			productType = "com.apple.product-type.application";
@@ -106,6 +114,9 @@
 				Base,
 			);
 			mainGroup = A5000001000001;
+			packageReferences = (
+				AB000003000012 /* XCLocalSwiftPackageReference "UniEatsDomain" */,
+			);
 			productRefGroup = A5000009000001 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -337,6 +348,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		AB000003000012 /* XCLocalSwiftPackageReference "UniEatsDomain" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = UniEatsDomain;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AB000002000012 /* UniEatsDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = UniEatsDomain;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 	};
 	rootObject = A9000001000001 /* Project object */;

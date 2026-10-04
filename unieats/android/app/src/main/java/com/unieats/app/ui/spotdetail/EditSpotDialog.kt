@@ -17,7 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 
 @Composable
 fun EditSpotDialog(

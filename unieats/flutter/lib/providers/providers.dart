@@ -15,7 +15,7 @@ import '../data/network/api_config.dart';
 import '../data/network/live_updates.dart';
 import '../data/repository/review_repository.dart';
 import '../data/repository/spot_repository.dart';
-import '../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 import '../services/crash_reporter.dart';
 import '../services/location_service.dart';
 import '../services/notification_service.dart';
@@ -46,7 +46,7 @@ final apiClientProvider = Provider<ApiClient>(
 );
 
 final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AuthRepository(
+  (ref) => TokenAuthRepository(
     ref.watch(apiClientProvider),
     ref.watch(tokenStoreProvider),
   ),
@@ -96,12 +96,14 @@ final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
 );
 
 final spotRepositoryProvider = Provider<SpotRepository>(
-  (ref) =>
-      SpotRepository(ref.watch(databaseProvider), ref.watch(apiClientProvider)),
+  (ref) => DriftSpotRepository(
+    ref.watch(databaseProvider),
+    ref.watch(apiClientProvider),
+  ),
 );
 
 final reviewRepositoryProvider = Provider<ReviewRepository>(
-  (ref) => ReviewRepository(
+  (ref) => DriftReviewRepository(
     ref.watch(databaseProvider),
     ref.watch(apiClientProvider),
   ),
@@ -220,8 +222,6 @@ class SpotPagingNotifier extends AutoDisposeAsyncNotifier<SpotPaging> {
     final (query, category) = ref.watch(
       spotListProvider.select((s) => (s.searchQuery.trim(), s.categoryFilter)),
     );
-    final cancelToken = CancelToken();
-    ref.onDispose(cancelToken.cancel);
 
     if (query.isNotEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -233,7 +233,6 @@ class SpotPagingNotifier extends AutoDisposeAsyncNotifier<SpotPaging> {
           limit: pageSize,
           query: query,
           category: category,
-          cancelToken: cancelToken,
         );
     return SpotPaging(page: first.page, hasNextPage: first.hasNextPage);
   }

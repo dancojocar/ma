@@ -1,4 +1,5 @@
 import Foundation
+import UniEatsDomain
 import UserNotifications
 
 final class SpotChangeNotifier: NSObject, UNUserNotificationCenterDelegate, Sendable {

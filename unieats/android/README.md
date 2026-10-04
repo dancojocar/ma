@@ -1,4 +1,4 @@
-# UniEats Android — tag `l11-cloud`
+# UniEats Android — tag `l12-kmp`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -85,6 +85,21 @@ No Firebase dependency: the same ideas against the course server.
   (`UniEatsApplication`). Debug builds have a **Test crash** button that calls
   `crashReporter.recordError()` — watch Logcat tag `CrashReporter`. Swapping in Crashlytics is a
   new implementation bound in `di/CloudModule.kt`.
+
+## Shared KMP module + testable architecture (new in l12)
+
+- `shared/` is a Kotlin Multiplatform module (`kotlin("multiplatform")`): targets
+  `androidTarget()`, `iosArm64()` and `iosSimulatorArm64()`. `commonMain` holds the domain models
+  (`Spot`, `Review`, `Category`, request/response types) and `SyncConflictResolver` (server wins only
+  when its `updatedAt` is strictly newer; a tie goes to the client). The app depends on `:shared`.
+- Tests that run on the JVM **and** on the iOS simulator:
+  `./gradlew :shared:allTests` (`shared/src/commonTest`).
+- iOS framework: `./gradlew :shared:assembleUniEatsSharedXCFramework` →
+  `shared/build/XCFrameworks/{debug,release}/UniEatsShared.xcframework` (needs Xcode on macOS).
+- `data/repository/EatsRepository.kt` — the interface the ViewModels use;
+  `DefaultEatsRepository` (Room + Ktor + WebSocket) is bound to it in `di/AppModule.kt`.
+- Unit tests without Android: `./gradlew :app:testDebugUnitTest` runs `SpotListViewModelTest`
+  against `FakeEatsRepository` and `FakeFeatureFlags` (`app/src/test`).
 
 ## Demo: offline edit → reconnect → sync
 

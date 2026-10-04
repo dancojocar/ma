@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 import 'app_error.dart';
 import 'retry_interceptor.dart';
 

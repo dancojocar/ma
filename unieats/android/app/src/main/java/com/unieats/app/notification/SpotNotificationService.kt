@@ -12,7 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.unieats.app.R
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 import com.unieats.app.ui.navigation.DEEP_LINK_APP
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
