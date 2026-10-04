@@ -1,11 +1,11 @@
 const { Router } = require('express');
-const { getSpots, getSpotById } = require('../store');
+const crypto = require('crypto');
+const store = require('../store');
+const { idempotency } = require('../idempotency');
+const { pickSpotFields } = require('../validation');
+const { notFound, validation } = require('../errors');
 
 const router = Router();
-
-function notFound(res) {
-  return res.status(404).json({ error: { code: 'not_found', message: 'Spot not found' } });
-}
 
 router.get('/', (req, res) => {
   const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
   const q = String(req.query.q || '').toLowerCase().trim();
   const category = String(req.query.category || '').toLowerCase().trim();
 
-  let results = getSpots();
+  let results = store.getSpots();
   if (q) {
     results = results.filter(
       (s) => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)
@@ -32,8 +32,69 @@ router.get('/', (req, res) => {
 });
 
 router.get('/:id', (req, res) => {
-  const spot = getSpotById(req.params.id);
+  const spot = store.getSpotById(req.params.id);
   return spot ? res.json(spot) : notFound(res);
+});
+
+router.post('/', idempotency, (req, res) => {
+  const { fields, error } = pickSpotFields(req.body || {});
+  if (error) return validation(res, error);
+  if (!fields.name || !fields.category) return validation(res, 'name and category are required');
+
+  const spot = store.addSpot({
+    id: crypto.randomUUID(),
+    rating: 0,
+    priceLevel: 1,
+    lat: 0,
+    lng: 0,
+    openNow: false,
+    photoUrl: '',
+    description: '',
+    ...fields,
+    updatedAt: Date.now(),
+  });
+  return res.status(201).json(spot);
+});
+
+router.patch('/:id', idempotency, (req, res) => {
+  if (!store.getSpotById(req.params.id)) return notFound(res);
+
+  const { fields, error } = pickSpotFields(req.body || {});
+  if (error) return validation(res, error);
+
+  return res.json(store.updateSpot(req.params.id, fields));
+});
+
+router.delete('/:id', idempotency, (req, res) => {
+  if (!store.deleteSpot(req.params.id)) return notFound(res);
+  return res.status(204).end();
+});
+
+router.get('/:id/reviews', (req, res) => {
+  if (!store.getSpotById(req.params.id)) return notFound(res);
+  return res.json(store.getReviewsForSpot(req.params.id));
+});
+
+router.post('/:id/reviews', idempotency, (req, res) => {
+  if (!store.getSpotById(req.params.id)) return notFound(res);
+
+  const { stars, text = '', author = 'Anonymous' } = req.body || {};
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) {
+    return validation(res, 'stars must be an integer 1-5');
+  }
+  if (typeof text !== 'string' || typeof author !== 'string') {
+    return validation(res, 'text and author must be strings');
+  }
+
+  const review = store.addReview({
+    id: crypto.randomUUID(),
+    spotId: req.params.id,
+    author,
+    stars,
+    text,
+    createdAt: Date.now(),
+  });
+  return res.status(201).json(review);
 });
 
 module.exports = router;

@@ -1,19 +1,39 @@
 import SwiftUI
 
 struct SpotDetailView: View {
-    let spotId: String
+    @State private var viewModel: SpotDetailViewModel
+
+    init(spotId: String, api: ApiClient) {
+        _viewModel = State(initialValue: SpotDetailViewModel(spotId: spotId, api: api))
+    }
 
     var body: some View {
-        if let spot = sampleSpots.first(where: { $0.id == spotId }) {
-            SpotDetailContent(spot: spot)
-        } else {
-            ContentUnavailableView("Spot not found", systemImage: "fork.knife", description: Text(spotId))
+        Group {
+            if let spot = viewModel.spot {
+                SpotDetailContent(spot: spot, reviews: viewModel.reviews)
+            } else if let message = viewModel.errorMessage {
+                ContentUnavailableView {
+                    Label("Couldn't load this spot", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry") { Task { await viewModel.load() } }
+                        .buttonStyle(.borderedProminent)
+                }
+            } else {
+                ProgressView()
+            }
         }
+        .navigationTitle(viewModel.spot?.name ?? "")
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await viewModel.load() }
+        .refreshable { await viewModel.load() }
     }
 }
 
 private struct SpotDetailContent: View {
     let spot: Spot
+    let reviews: [Review]
 
     var body: some View {
         ScrollView {
@@ -44,12 +64,12 @@ private struct SpotDetailContent: View {
                     Text(spot.spotDescription)
                         .font(.body)
                         .foregroundStyle(.secondary)
+
+                    ReviewsSection(reviews: reviews)
                 }
                 .padding()
             }
         }
-        .navigationTitle(spot.name)
-        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var starRating: some View {

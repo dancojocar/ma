@@ -1,13 +1,13 @@
 # UniEats — Shared Contract (single source of truth for all stacks)
 
 Every implementation (server, android, ios, flutter, rn) MUST match this exactly so the
-same app behaves identically and the cross-stack Maestro/test suites pass against any of them.
+same app behaves identically and the cross-stack tests pass against any of them.
 
 ## Domain model
 
 ```
 Spot {
-  id: string (uuid)            // server-assigned; clients may use a temp "local:<uuid>" before sync
+  id: string                   // seed: "spot-1" … "spot-25"; server-created: uuid
   name: string
   category: "cafe" | "canteen" | "fastfood" | "bakery" | "bar"
   rating: number               // 0.0–5.0, one decimal
@@ -17,80 +17,72 @@ Spot {
   openNow: boolean
   photoUrl: string             // may be ""
   description: string
-  updatedAt: number            // epoch milliseconds — used for last-write-wins sync
+  updatedAt: number            // epoch milliseconds, set by the server on every write
 }
 
 Review {
   id: string
   spotId: string
   author: string
-  stars: 1..5
+  stars: 1..5                  // integer
   text: string
   createdAt: number            // epoch ms
 }
-
-User { id: string, email: string, displayName: string }
 ```
 
 ## REST API — base path `/api`, JSON only
 
-| Method | Path | Auth | Body / Query | Response |
-|---|---|---|---|---|
-| POST | `/auth/login` | no | `{ email, password }` | `{ token, user }` (200) |
-| GET | `/spots` | no | `?page=1&limit=20&q=&category=` | `{ spots: Spot[], page, hasNextPage }` |
-| GET | `/spots/:id` | no | — | `Spot` (200) / 404 |
-| POST | `/spots` | yes | `Spot` (no id) + header `Idempotency-Key` | `Spot` (201) |
-| PATCH | `/spots/:id` | yes | partial `Spot` + `Idempotency-Key` | `Spot` (200) |
-| DELETE | `/spots/:id` | yes | `Idempotency-Key` | 204 |
-| GET | `/spots/:id/reviews` | no | — | `Review[]` |
-| POST | `/spots/:id/reviews` | yes | `{ stars, text }` | `Review` (201) |
-| GET | `/health` | no | — | `{ ok: true }` |
+| Method | Path | Body / Query | Response |
+|---|---|---|---|
+| GET | `/health` | — | `{ ok: true }` |
+| GET | `/spots` | `?page=1&limit=20&q=&category=` | `{ spots: Spot[], page, hasNextPage }` |
+| GET | `/spots/:id` | — | `Spot` (200) / 404 |
+| POST | `/spots` | `Spot` without `id`/`updatedAt` (+ `Idempotency-Key`) | `Spot` (201) |
+| PATCH | `/spots/:id` | partial `Spot` (+ `Idempotency-Key`) | `Spot` (200) |
+| DELETE | `/spots/:id` | (+ `Idempotency-Key`) | 204 |
+| GET | `/spots/:id/reviews` | — | `Review[]` |
+| POST | `/spots/:id/reviews` | `{ stars, text }` (+ `Idempotency-Key`) | `Review` (201) |
 
-- **Pagination:** `page` is 1-based; `hasNextPage` is `false` when the last page is returned
-  (an empty `spots` array means no more results).
-- **Auth:** `Authorization: Bearer <jwt>`. Missing/invalid token on a protected route → 401
-  `{ error: { code: "unauthorized", message } }`.
-- **Idempotency:** mutating requests carry a client-generated `Idempotency-Key` (uuid). The
-  server records keys for 24h and returns the original response for a repeated key — this lets
-  the offline queue replay safely. Without the header, mutations still work (not idempotent).
-- **Errors:** always `{ error: { code, message } }` with the right HTTP status
-  (400 validation, 401 auth, 404 not found, 409 conflict, 500 server).
+- **Pagination:** `page` is 1-based, default `limit` is 20. `hasNextPage` is `false` on the last
+  page; a page past the end returns `spots: []`.
+- **Search:** `q` matches name or description, case-insensitive; `category` is an exact match;
+  both combine.
+- **Writes:** the server assigns `id` and `updatedAt`; unknown fields are ignored; invalid
+  values → 400. Deleting a spot deletes its reviews.
+- **Idempotency:** mutating requests may carry a client-generated `Idempotency-Key` (uuid). The
+  server keeps the response for 24h and replays it (same status and body, header
+  `Idempotent-Replayed: true`) for a repeated key. This is what makes outbox replay safe.
+  Without the header, mutations still work but are not idempotent.
+- **Errors:** always `{ error: { code, message } }` with the matching status:
+  400 `validation` (also for a body that is not valid JSON), 404 `not_found`, 500 `server_error`.
 
-## JWT
+## Chaos mode (L05 + the networking kata)
 
-HS256, secret from env `JWT_SECRET` (default `dev-secret-change-me`). Payload:
-`{ sub: userId, email, iss: "unieats", aud: "unieats-app", iat, exp }`, `exp` = 1h.
-Validation = verify signature AND check `iss`, `aud`, `exp` (not just decode).
-
-## Realtime
-
-`GET /live` (WebSocket). Server broadcasts `{ type: "spot.updated" | "spot.created" | "spot.deleted", spot|id }`
-whenever a spot changes. Clients use it for "live updates" (L06) but the app works without it.
-
-## Offline-first sync semantics (the lab's hardest requirement — identical in every stack)
-
-1. **Local DB is the single source of truth.** The UI only ever reads from the local store
-   (Room / SwiftData / Drift / expo-sqlite), observed reactively.
-2. **Reads:** show local data immediately; refresh from `/spots` in the background; upsert by
-   `id`; never delete-then-insert (breaks the reactive stream + loses local edits).
-3. **Writes while offline:** apply optimistically to the local DB, mark `pendingSync = true`,
-   and enqueue an operation `{ opId(uuid), type: create|update|delete, entityId, payload }`
-   in an `outbox` table that survives restarts.
-4. **On reconnect:** replay the outbox in order, each carrying its `opId` as `Idempotency-Key`;
-   on success clear `pendingSync`; on `409` resolve by **last-write-wins on `updatedAt`**.
-5. **Conflict:** if server `updatedAt` > local `updatedAt`, server wins; else client wins.
-
-## Chaos mode (for L05 + the networking kata)
-
-The server honours these request headers (and the chaos-proxy injects them) to simulate a
-hostile network — clients must degrade gracefully, never crash:
+The server honours these request headers on every route to simulate a hostile network; clients
+must degrade gracefully, never crash:
 - `X-Chaos-Delay: <ms>` — delay the response.
-- `X-Chaos-Status: 500` — return that status instead of the real one.
+- `X-Chaos-Status: <code>` — answer with that status (the request is still processed).
 - `X-Chaos-Malformed: 1` — return truncated/invalid JSON.
 - `X-Chaos-Drop: 1` — close the socket mid-response.
 
 ## Seed data
 
-8 spots around a campus (mix of categories, some `openNow:false`, varied ratings), 1 demo
-user `student@unieats.app` / `password`, a few reviews. Deterministic (fixed ids) so tests
-and screenshots are stable.
+Deterministic (fixed ids) so tests and screenshots are stable. Restarting the server resets it.
+- **25 spots**, ids `spot-1` … `spot-25`, all within ~1 km of the campus centre
+  (44.427 N, 26.103 E, Bucharest), every category represented, some `openNow: false`, varied
+  ratings, `photoUrl` = `https://picsum.photos/seed/<id>/400/300`. Page size 20 gives two pages.
+- The **first 8 are canonical**: the clients hard-code exactly these in l02–l04.
+
+| id | name | category | rating | priceLevel | openNow |
+|---|---|---|---|---|---|
+| spot-1 | Central Canteen | canteen | 3.8 | 1 | true |
+| spot-2 | Espresso Lab | cafe | 4.5 | 2 | true |
+| spot-3 | Pizza Stop | fastfood | 4.1 | 2 | true |
+| spot-4 | Bread & Butter | bakery | 4.7 | 1 | false |
+| spot-5 | The Pub Garden | bar | 4.2 | 3 | false |
+| spot-6 | Sushi Box | fastfood | 3.9 | 2 | true |
+| spot-7 | Campus Bistro | cafe | 4.3 | 2 | true |
+| spot-8 | Grandma's Kitchen | canteen | 4.6 | 1 | true |
+
+  Coordinates, descriptions and `updatedAt` are in `server/src/seed.js`.
+- 4 reviews (two on `spot-1`, one each on `spot-2` and `spot-3`).
