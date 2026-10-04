@@ -55,11 +55,28 @@ the models, the live-event types, `SyncConflictResolver` and the repository inte
 (`DriftSpotRepository`, `DriftReviewRepository`, `TokenAuthRepository`) and the providers expose only
 the interfaces. Check the package on its own: `cd packages/unieats_data && dart pub get && dart analyze`.
 
-This tag (`l13-ai`) adds **Describe this dish** on the detail screen: it POSTs the full spot
+Since `l13-ai` **Describe this dish** on the detail screen POSTs the full spot
 (including `openNow`) to `/api/ai/describe` and renders the Server-Sent Events stream as it arrives
 (dio `ResponseType.stream` + `lib/data/network/sse.dart`). Without `ANTHROPIC_API_KEY` the server
 streams a template in four chunks, so the demo works offline; with the key it streams Claude's text.
 If the server is down the card says "Server unreachable".
+
+This tag (`l14-tests`) adds tests:
+
+```bash
+flutter test                         # 26 tests
+maestro test maestro/flutter.yaml    # needs the server + a running emulator/simulator
+```
+
+- `test/models_test.dart` — JSON ↔ models (contract shape, round trip, bad data), live-event and SSE parsing.
+- `test/database_test.dart` — in-memory Drift: upsert by id, pending rows never clobbered,
+  `getPendingSync`/`markSynced`, filtering, outbox order, reviews, schema v1 → v2 migration.
+- `test/sync_conflict_test.dart` — `SyncConflictResolver` (server wins only when strictly newer; a tie keeps
+  the client edit) and outbox replay against a scripted API: 2xx, 409 server-wins, 409 tie → resend,
+  offline and 401 keep the op.
+- `maestro/flutter.yaml` — sign in → first spot (`id: spot-list-item`) → `Reviews (N)`
+  (`id: spot-detail-reviews`) → "Describe this dish" (`id: describe-dish-button`) → back. The ids are
+  `Semantics(identifier: …)` in the widgets. Validate with `maestro check-syntax maestro/flutter.yaml`.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
 Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
@@ -97,5 +114,7 @@ Android application id and iOS bundle id: `com.unieats.flutter`.
 
 ```bash
 flutter analyze
+flutter test
 flutter build apk --debug
+(cd packages/unieats_data && dart pub get && dart analyze)
 ```

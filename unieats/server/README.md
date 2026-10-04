@@ -120,6 +120,25 @@ curl -s -X PATCH http://localhost:3000/api/spots/spot-1 -H "Authorization: Beare
 curl -i http://localhost:3000/api/spots -H 'X-Chaos-Status: 503'
 ```
 
+## Tests
+
+`npm test` runs everything in-process (supertest; a real socket only for WebSocket and
+streaming checks), no running server or API key needed:
+
+| File | Covers |
+|---|---|
+| `tests/api.test.js` | spots list/search/pagination, CRUD, validation, reviews, idempotency, 409 rule, chaos |
+| `tests/auth.test.js` | login, JWT claims, every bad-token case, protected routes |
+| `tests/live.test.js` | `/live` broadcasts with a `ws` client |
+| `tests/config.test.js` | remote-config flag |
+| `tests/ai.test.js` | SSE framing of the offline template, rate limit |
+| `tests/ai-claude.test.js` | the Claude streaming path with the SDK mocked |
+| `tests/contract.test.js` | black-box conformance to [CONTRACT.md](CONTRACT.md) |
+
+```bash
+npx jest tests/contract.test.js      # just the contract suite
+```
+
 ## CI
 
 `ci/` holds the GitHub Actions workflows for the whole UniEats folder (`server.yml`,
