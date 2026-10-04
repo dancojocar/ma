@@ -79,7 +79,8 @@ maestro test maestro/flutter.yaml    # needs the server + a running emulator/sim
   `Semantics(identifier: …)` in the widgets. Validate with `maestro check-syntax maestro/flutter.yaml`.
 
 Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
-Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
+Get a token first: `TOKEN=$(curl -s -X POST localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).token')`.
+Conflict: edit offline, then `curl -X PATCH -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
 http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
 
 Edits now need a signed-in session. Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
@@ -88,7 +89,7 @@ Edits now need a signed-in session. Drift generates `lib/data/database/database.
 ## Run
 
 Requires Flutter 3.47.6 or newer. The Android shell uses the Gradle wrapper (9.8.0) and AGP 9.4.1 with
-built-in Kotlin, and builds with Android Studio 2026.1's bundled JDK 25 as is (JDK 21 works too), so there is
+built-in Kotlin, and builds with Android Studio 2026.2's bundled JDK 25 as is (JDK 21 works too), so there is
 no `flutter config --jdk-dir` step. iOS (tested with Xcode 27, deployment target 15.0) links plugins as Swift
 packages: no CocoaPods, no `pod install`.
 

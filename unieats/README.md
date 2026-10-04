@@ -38,7 +38,7 @@ four install side by side on one phone.
 | L12 Architecture | `l12-kmp` | Android: real Kotlin Multiplatform `shared/` module (models + `SyncConflictResolver`, `UniEatsShared` XCFramework) and an `EatsRepository` interface with a fake for tests. iOS links the local `UniEatsDomain` Swift package. Flutter: pure-Dart `packages/unieats_data`. RN: `@unieats/shared` workspace package. | unchanged |
 | L13 AI | `l13-ai` | "Describe this dish" streamed token by token over Server-Sent Events from the backend proxy. | `POST /api/ai/describe` (SSE; Claude when `ANTHROPIC_API_KEY` is set, template otherwise) |
 | L14 Testing/Interview | `l14-tests` | Unit tests in every stack + one Maestro flow per stack. | contract conformance suite (219 tests) |
-| — | branch tip | `unieats/maestro/run.sh` + `.github/workflows/{native,cross,server}.yml` at the repo root (`working-directory: unieats/<stack>`). | — |
+| — | branch tip | `unieats/maestro/run.sh`; `.github/workflows/{native,cross,server}.yml` live at the repo root at every tag and run on branch pushes only (`working-directory: unieats/<stack>`). | — |
 
 Each tag *adds*: nothing from an earlier tag is removed (favourites, search, live updates stay).
 
@@ -68,13 +68,13 @@ near 44.427 N, 26.103 E (Bucharest); set the emulator location there for the L09
 ## Verification (2026-10-04, every tag from a clean checkout)
 
 Toolchain: Android Studio 2026.2 (bundled JDK 25.0.3) and JDK 21, Flutter 3.47.6, Node 26, Xcode 27.
-Test gates run where tests exist: client unit tests arrive at `l14-tests` (the RN `test` script too);
-before that the gate is build + analyze.
+Test gates run where tests exist: Android unit tests from `l12-kmp`, Flutter/RN/iOS tests at `l14-tests`
+(the RN `test` script too); before that the gate is build + analyze.
 
 | Stack | Gate | Result |
 |---|---|---|
 | server | `npm ci && npm test` | pass at all 14 tags (21 → 219 tests) |
-| android | `:app:assembleDebug` on JDK 25 **and** JDK 21, `:app:testDebugUnitTest`, `:shared:allTests` (l12+), `lintDebug` at l14 | pass; 0 Kotlin warnings; 25 tests at l14 (22 app + 3 shared on 2 targets); lint 0 errors |
+| android | `:app:assembleDebug` on JDK 25 **and** JDK 21, `:app:testDebugUnitTest`, `:shared:allTests` (l12+), `lintDebug` at l14 | pass; 0 Kotlin warnings; 25 tests at l14 (22 app + 3 shared, run on 2 targets = 28 results); lint 0 errors |
 | flutter | `flutter analyze` (0 issues), `flutter test`, `flutter build apk --debug` on JDK 25 and JDK 21, iOS simulator build at l01/l07/l14 | pass; 26 tests at l14 |
 | rn | `npm ci && npx tsc --noEmit && npx expo-doctor && npm test && npx expo export`; `expo prebuild` + `assembleDebug` on JDK 25 at l01/l08/l14 | pass; 21 tests at l14 |
 | ios | `xcodebuild … build` (0 warnings), `UniEatsTests` at l14 | pass; 11 tests at l14 |
@@ -83,8 +83,11 @@ before that the gate is build + analyze.
 Known limits, stated honestly:
 - `https://unieats.app/...` links need a hosted assetlinks/AASA file to open the app directly; the
   custom scheme works everywhere. Flutter on iOS declares only the custom scheme (no associated domain).
-- At `l08` the Android/iOS READMEs and at `l08`–`l09` the Flutter README show a conflict-demo `curl -X PATCH`
-  without the Bearer token the server requires from `l08`; prefix it with the login snippet from `server/README.md`.
+- At `l08` the Android/iOS READMEs and at `l08`–`l14` the Flutter README show a conflict-demo `curl -X PATCH`
+  without the Bearer token the server requires from `l08`; prefix it with the login snippet from `server/README.md`
+  (the branch tip's Flutter README is corrected).
+- The iOS `UniEatsTests` at `l14-tests` read the simulator's real keychain; with a session left by the Maestro
+  flow, `OfflineUpsertTests` crash. The branch tip isolates the test keychain item.
 - RN at `l07`–`l09` resolves a 409 by re-sending a newer local edit on top of the server copy; from
   `l10` it follows the contract exactly (server copy wins, op dropped).
 - iOS `l07`–`l13`: a simulator that still has an app store from the pre-rebuild code crashes at

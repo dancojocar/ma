@@ -2,6 +2,7 @@ name: Cross-platform CI
 
 on:
   push:
+    branches: [master, unieats-2026]
     paths:
       - "unieats/flutter/**"
       - "unieats/rn/**"
@@ -21,7 +22,7 @@ on:
         default: false
 
 env:
-  FLUTTER_VERSION: "3.41.4"
+  FLUTTER_VERSION: "3.47.6"
   MAESTRO_VERSION: "2.0.10"
 
 jobs:
