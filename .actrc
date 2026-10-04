@@ -1,0 +1,8 @@
+# Defaults for `act` (local GitHub Actions). GitHub's runners are x86_64, so run the
+# Ubuntu jobs as amd64 under Rosetta (colima --vz-rosetta); the Android build tools are x86_64-only.
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest
+--container-architecture linux/amd64
+--artifact-server-path /tmp/act-artifacts
+--container-daemon-socket -
+--env PATH=/opt/acttoolcache/node/24.19.0/x64/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+--env RUNNER_ARCH=X64
