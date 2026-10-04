@@ -3,11 +3,17 @@ package com.unieats.app.data.remote
 import com.unieats.app.data.model.Category
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
+import com.unieats.app.data.model.SpotPatch
 import com.unieats.app.data.model.SpotsPage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.request.patch
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,4 +33,11 @@ class ApiClient @Inject constructor(private val http: HttpClient) {
     suspend fun getSpot(id: String): Spot = http.get("spots/$id").body()
 
     suspend fun getReviews(spotId: String): List<Review> = http.get("spots/$spotId/reviews").body()
+
+    suspend fun patchSpot(id: String, patch: SpotPatch, idempotencyKey: String): Spot =
+        http.patch("spots/$id") {
+            header("Idempotency-Key", idempotencyKey)
+            contentType(ContentType.Application.Json)
+            setBody(patch)
+        }.body()
 }

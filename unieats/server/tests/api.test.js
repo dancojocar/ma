@@ -422,3 +422,77 @@ describe('Chaos headers on mutations and reviews', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('PATCH conflict rule (updatedAt)', () => {
+  let spot;
+
+  beforeEach(async () => {
+    spot = (await createSpot({ name: 'Contested', openNow: false })).body;
+  });
+
+  it('applies a write based on the current version and returns a newer updatedAt', async () => {
+    const res = await request(app)
+      .patch(`/api/spots/${spot.id}`)
+      .send({ openNow: true, updatedAt: spot.updatedAt });
+    expect(res.status).toBe(200);
+    expect(res.body.openNow).toBe(true);
+    expect(res.body.updatedAt).toBeGreaterThan(spot.updatedAt);
+  });
+
+  it('applies a write whose updatedAt is newer than the server copy', async () => {
+    const res = await request(app)
+      .patch(`/api/spots/${spot.id}`)
+      .send({ name: 'Mine', updatedAt: spot.updatedAt + 60_000 });
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('Mine');
+  });
+
+  it('409 conflict with the server copy when the write is based on a stale version', async () => {
+    const fresh = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
+
+    const res = await request(app)
+      .patch(`/api/spots/${spot.id}`)
+      .send({ name: 'Mine', updatedAt: spot.updatedAt });
+    expect(res.status).toBe(409);
+    expect(res.body.error.code).toBe('conflict');
+    expect(typeof res.body.error.message).toBe('string');
+    expect(res.body.spot).toEqual(fresh.body);
+
+    const stored = await request(app).get(`/api/spots/${spot.id}`);
+    expect(stored.body.name).toBe('Theirs');
+  });
+
+  it('two writes from the same old version: the first wins, the second gets 409', async () => {
+    const first = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'A', updatedAt: spot.updatedAt });
+    const second = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'B', updatedAt: spot.updatedAt });
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(409);
+    expect(second.body.spot.name).toBe('A');
+  });
+
+  it('a PATCH without updatedAt is applied unconditionally', async () => {
+    await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
+    const res = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Blind write' });
+    expect(res.status).toBe(200);
+  });
+
+  it('400 validation when updatedAt is not a number', async () => {
+    const res = await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'x', updatedAt: 'yesterday' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
+
+  it('replaying a conflicted operation with the same Idempotency-Key returns the same 409', async () => {
+    await request(app).patch(`/api/spots/${spot.id}`).send({ name: 'Theirs' });
+    const send = () =>
+      request(app)
+        .patch(`/api/spots/${spot.id}`)
+        .set('Idempotency-Key', `conflict-${spot.id}`)
+        .send({ name: 'Mine', updatedAt: spot.updatedAt });
+    const first = await send();
+    const second = await send();
+    expect(first.status).toBe(409);
+    expect(second.status).toBe(409);
+    expect(second.body).toEqual(first.body);
+  });
+});

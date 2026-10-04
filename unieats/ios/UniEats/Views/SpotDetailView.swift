@@ -1,38 +1,60 @@
+import SwiftData
 import SwiftUI
 
 struct SpotDetailView: View {
     @State private var viewModel: SpotDetailViewModel
+    @State private var isEditing = false
+    @Query private var spots: [SpotEntity]
+    @Query private var reviewEntities: [ReviewEntity]
 
-    init(spotId: String, api: ApiClient) {
-        _viewModel = State(initialValue: SpotDetailViewModel(spotId: spotId, api: api))
+    init(spotId: String, repository: SpotRepository) {
+        _viewModel = State(initialValue: SpotDetailViewModel(spotId: spotId, repository: repository))
+        _spots = Query(filter: #Predicate<SpotEntity> { $0.id == spotId })
+        _reviewEntities = Query(
+            filter: #Predicate<ReviewEntity> { $0.spotId == spotId },
+            sort: \.createdAt, order: .reverse
+        )
     }
 
     var body: some View {
         Group {
-            if let spot = viewModel.spot {
-                SpotDetailContent(spot: spot, reviews: viewModel.reviews)
+            if let entity = spots.first {
+                SpotDetailContent(
+                    spot: entity.spot,
+                    isPending: entity.pendingSync,
+                    reviews: reviewEntities.map(Review.init(entity:))
+                )
             } else if let message = viewModel.errorMessage {
                 ContentUnavailableView {
                     Label("Couldn't load this spot", systemImage: "wifi.exclamationmark")
                 } description: {
                     Text(message)
                 } actions: {
-                    Button("Retry") { Task { await viewModel.load() } }
+                    Button("Retry") { Task { await viewModel.refresh() } }
                         .buttonStyle(.borderedProminent)
                 }
             } else {
                 ProgressView()
             }
         }
-        .navigationTitle(viewModel.spot?.name ?? "")
+        .navigationTitle(spots.first?.name ?? "")
         .navigationBarTitleDisplayMode(.inline)
-        .task { await viewModel.load() }
-        .refreshable { await viewModel.load() }
+        .toolbar {
+            if let entity = spots.first {
+                Button("Edit spot") { isEditing = true }
+                    .sheet(isPresented: $isEditing) {
+                        EditSpotView(spot: entity.spot, onSave: viewModel.save)
+                    }
+            }
+        }
+        .task { await viewModel.refresh() }
+        .refreshable { await viewModel.refresh() }
     }
 }
 
 private struct SpotDetailContent: View {
     let spot: Spot
+    let isPending: Bool
     let reviews: [Review]
 
     var body: some View {
@@ -59,6 +81,12 @@ private struct SpotDetailContent: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
+                    }
+
+                    if isPending {
+                        Label("Saved on this device, waiting to sync", systemImage: "clock.arrow.circlepath")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
                     }
 
                     Text(spot.spotDescription)

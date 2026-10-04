@@ -1,52 +1,48 @@
-# UniEats iOS — l06-async
+# UniEats iOS — l07-offline
 
-Live updates on top of the l05 REST list.
+Offline-first: SwiftData is the only thing the UI reads; the server feeds it, and edits made
+offline are queued in an outbox and replayed when the server is reachable again.
 
-- `Network/LiveUpdateService.swift` — `updates()` returns an `AsyncStream<LiveUpdate>` over a
-  `URLSessionWebSocketTask` to `ws://localhost:3000/live`. It pings to confirm the connection,
-  decodes `spot.created` / `spot.updated` / `spot.deleted`, reconnects with exponential backoff
-  (1, 2, 4 … 30 s) and closes the socket when the consuming task is cancelled.
-- `SpotListView` consumes it in `.task(id: scenePhase)`: SwiftUI cancels that task when the
-  screen disappears or the app leaves the foreground, which ends the stream and the socket.
-  `SpotListViewModel.apply(_:)` patches the visible list; the toolbar shows Live / Offline.
+## What this tag adds
 
-Demo: with the app open, change a spot from a terminal and watch the row update:
+- `Models/SpotEntity.swift`, `ReviewEntity.swift`, `OutboxEntry.swift` — SwiftData `@Model`s.
+  `SpotEntity.pendingSync` flags rows with unsynced edits; `OutboxEntry` stores
+  `{opId, type: "update", entityId, payload}` and survives restarts.
+- `Repository/SpotRepository.swift` (`@MainActor`, uses the container's main context)
+  - reads: `fetchPage` / `refreshSpot` / `refreshReviews` / live updates **upsert by id** and
+    never overwrite a row whose `pendingSync` is true;
+  - write: `editSpot(id:name:description:openNow:)` updates the row optimistically, sets
+    `pendingSync`, and enqueues a PATCH whose payload carries the `updatedAt` the user edited
+    (a second edit before sync merges into the same outbox entry);
+  - `sync()` replays the outbox in order with `Idempotency-Key = opId`; 2xx → `markSynced`;
+    409 → last-write-wins: the server's newer spot from the response replaces the row and the
+    op is dropped; transport errors stop the replay and retry with backoff (5 s … 60 s).
+- Replay triggers: app launch, `NWPathMonitor` reconnect (`Network/ConnectivityMonitor.swift`),
+  the live WebSocket reconnecting (server back up), "Sync now", and every edit.
+- UI: `@Query` in `SpotListView` / `SpotDetailView` (search + category become a SwiftData
+  `#Predicate`); "Edit spot" on the detail screen (name, description, open now); orange
+  "N changes pending" banner (`@Query` over the outbox) and a clock icon on pending rows.
+- Live updates (l06), search, category filter, favourites, deep links and pagination kept.
 
-```bash
-curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (new oven)"}' \
-  http://localhost:3000/api/spots/spot-3
-```
+## Demo (simulator)
 
-Stop the server → the badge turns Offline; start it again → it reconnects on its own.
+1. `cd ../server && npm start`, run the app, open Pizza Stop → **Edit spot** → Save: syncs at once.
+2. Stop the server (Ctrl+C). Edit again → "1 change pending", the row shows the clock icon.
+3. Start the server → within seconds the Live badge returns and the outbox replays
+   (`curl localhost:3000/api/spots/spot-3` shows the edit).
+4. Conflict: stop the server, edit Espresso Lab, start the server and immediately
+   `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Espresso SERVER"}' localhost:3000/api/spots/spot-2`
+   → the replay gets 409 and the app shows the server's name (server `updatedAt` is newer).
 
-## From l05 (unchanged)
+On a device, airplane mode exercises the `NWPathMonitor` path instead.
 
-- `Network/ApiClient.swift` — `URLSession` with 15 s request / 30 s resource timeouts;
-  `GET /api/spots?page&limit&q&category`, `GET /api/spots/:id`, `GET /api/spots/:id/reviews`.
-  Non-2xx responses become `ApiError.http`, transport failures `.noConnectivity` / `.timeout`,
-  bad JSON `.decodingFailed` (try the chaos headers: nothing crashes).
-- `SpotListViewModel` — manual pagination: `currentPage`, `isLoadingMore` (reset in `defer`),
-  stops when `hasNextPage == false`; search (debounced 300 ms) and category are sent to the
-  server as `q` / `category` and restart at page 1; `errorMessage` drives the error UI.
-- `SpotListView` — loading, error (with **Retry**), empty and list states; pull-to-refresh;
-  infinite scroll (the last row's `.task` loads the next page); `AsyncImage` from `photoUrl`.
-- `SpotDetailView` — loads the spot by id and its reviews (read-only "Reviews (N)" section).
-  Adding a review needs login and arrives at l08.
-
-## Run
-
-```bash
-cd ../server && npm ci && npm start      # http://localhost:3000, 25 seeded spots → 2 pages
-open UniEats.xcodeproj                   # pick an iPhone simulator, Cmd+R
-```
-
-The simulator shares the Mac's network, so `http://localhost:3000/api` reaches the server
-(`NSAllowsLocalNetworking` permits plain http to localhost). To point at another server set
-the scheme environment variable `UNIEATS_API_URL` (e.g. `http://192.168.1.20:3000/api`).
-
-Build from the command line:
+## Run / build
 
 ```bash
+open UniEats.xcodeproj    # pick an iPhone simulator, Cmd+R
 xcodebuild -project UniEats.xcodeproj -scheme UniEats \
   -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
 ```
+
+Base URL `http://localhost:3000/api`, WebSocket `ws://localhost:3000/live`; override both with
+the scheme environment variable `UNIEATS_API_URL`.
