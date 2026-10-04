@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -179,19 +181,81 @@ class _SpotList extends ConsumerWidget {
           );
         }
         final spot = spots[index];
-        return SpotCard(
+        return AnimatedEntrance(
           key: ValueKey(spot.id),
-          spot: spot,
-          isFavourite: favouriteIds.contains(spot.id),
-          isPending: pendingIds.contains(spot.id),
-          onFavouriteToggle:
-              () =>
-                  ref.read(spotListProvider.notifier).toggleFavourite(spot.id),
-          onTap: () => context.push('/spots/${spot.id}'),
+          index: index,
+          child: SpotCard(
+            spot: spot,
+            isFavourite: favouriteIds.contains(spot.id),
+            isPending: pendingIds.contains(spot.id),
+            onFavouriteToggle:
+                () => ref
+                    .read(spotListProvider.notifier)
+                    .toggleFavourite(spot.id),
+            onTap: () => context.push('/spots/${spot.id}'),
+          ),
         );
       },
     );
   }
+}
+
+/// Fades and slides a card in the first time it is built. The first ten
+/// cards start 40 ms apart (a stagger); cards built later while scrolling
+/// start at once. Skipped when the OS asks for reduced motion.
+class AnimatedEntrance extends StatefulWidget {
+  const AnimatedEntrance({super.key, required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<AnimatedEntrance> createState() => _AnimatedEntranceState();
+}
+
+class _AnimatedEntranceState extends State<AnimatedEntrance>
+    with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 350),
+  );
+  late final _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+  late final _slide = Tween(
+    begin: const Offset(0, 0.08),
+    end: Offset.zero,
+  ).animate(_curve);
+  Timer? _start;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_controller.isAnimating || _controller.isCompleted || _start != null) {
+      return;
+    }
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+      return;
+    }
+    final delay = widget.index < 10 ? widget.index * 40 : 0;
+    _start = Timer(Duration(milliseconds: delay), _controller.forward);
+  }
+
+  @override
+  void dispose() {
+    _start?.cancel();
+    _curve.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _curve,
+    child: SlideTransition(position: _slide, child: widget.child),
+  );
 }
 
 class _PageFooter extends StatelessWidget {
@@ -245,7 +309,10 @@ class SpotCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SpotPhoto(url: spot.photoUrl, height: 140),
+            Hero(
+              tag: 'spot-photo-${spot.id}',
+              child: SpotPhoto(url: spot.photoUrl, height: 140),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 4, 12),
               child: Column(

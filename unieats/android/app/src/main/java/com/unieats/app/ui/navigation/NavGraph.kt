@@ -1,5 +1,10 @@
 package com.unieats.app.ui.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -84,6 +89,18 @@ fun UniEatsNavDisplay(
             rememberViewModelStoreNavEntryDecorator()
         ),
         sceneStrategies = listOf(rememberListDetailSceneStrategy()),
+        transitionSpec = {
+            (slideInHorizontally(initialOffsetX = { it }) + fadeIn()) togetherWith
+                (slideOutHorizontally(targetOffsetX = { -it / 3 }) + fadeOut())
+        },
+        popTransitionSpec = {
+            (slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn()) togetherWith
+                (slideOutHorizontally(targetOffsetX = { it }) + fadeOut())
+        },
+        predictivePopTransitionSpec = { _ ->
+            (slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn()) togetherWith
+                (slideOutHorizontally(targetOffsetX = { it }) + fadeOut())
+        },
         entryProvider = entryProvider {
             entry<Login> { LoginScreen() }
 
