@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Review, Spot, SpotCategory } from "../domain/models";
+import type { Review, Spot, SpotCategory, SpotEdit } from "../domain/models";
 import { ReviewSchema, SpotPageSchema, SpotSchema, type SpotPage } from "../domain/schemas";
 import { API_URL } from "./config";
 import { ApiError } from "./errors";
@@ -7,21 +7,35 @@ import { ApiError } from "./errors";
 const TIMEOUT_MS = 10_000;
 export const PAGE_SIZE = 20;
 
-async function getJson<T>(path: string, schema: z.ZodType<T>, signal?: AbortSignal): Promise<T> {
+interface RequestOptions {
+  method?: "GET" | "PATCH";
+  body?: unknown;
+  idempotencyKey?: string;
+  signal?: AbortSignal;
+}
+
+async function request<T>(path: string, schema: z.ZodType<T>, options: RequestOptions = {}): Promise<T> {
+  const { method = "GET", body, idempotencyKey, signal } = options;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   const onCancel = () => controller.abort();
   signal?.addEventListener("abort", onCancel);
 
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
+
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
-      headers: { Accept: "application/json" },
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
   } catch (e) {
     if (controller.signal.aborted && !signal?.aborted) {
-      throw new ApiError("timeout", `GET ${path} timed out`);
+      throw new ApiError("timeout", `${method} ${path} timed out`);
     }
     throw new ApiError("network", e instanceof Error ? e.message : String(e));
   } finally {
@@ -29,19 +43,19 @@ async function getJson<T>(path: string, schema: z.ZodType<T>, signal?: AbortSign
     signal?.removeEventListener("abort", onCancel);
   }
 
-  let body: unknown;
+  let json: unknown;
   try {
-    body = await response.json();
+    json = await response.json();
   } catch {
-    throw new ApiError("parse", `GET ${path}: body is not JSON`, response.status);
+    throw new ApiError("parse", `${method} ${path}: body is not JSON`, response.status);
   }
 
   if (!response.ok) {
-    const code = (body as { error?: { code?: string } } | null)?.error?.code;
-    throw new ApiError("http", `GET ${path} → ${response.status}`, response.status, code);
+    const code = (json as { error?: { code?: string } } | null)?.error?.code;
+    throw new ApiError("http", `${method} ${path} → ${response.status}`, response.status, code, json);
   }
 
-  const parsed = schema.safeParse(body);
+  const parsed = schema.safeParse(json);
   if (!parsed.success) {
     throw new ApiError("parse", parsed.error.message, response.status);
   }
@@ -57,13 +71,32 @@ export function listSpots(params: {
   const search = new URLSearchParams({ page: String(params.page), limit: String(PAGE_SIZE) });
   if (params.q) search.set("q", params.q);
   if (params.category !== "all") search.set("category", params.category);
-  return getJson(`/spots?${search.toString()}`, SpotPageSchema, params.signal);
+  return request(`/spots?${search.toString()}`, SpotPageSchema, { signal: params.signal });
 }
 
 export function getSpot(id: string, signal?: AbortSignal): Promise<Spot> {
-  return getJson(`/spots/${encodeURIComponent(id)}`, SpotSchema, signal);
+  return request(`/spots/${encodeURIComponent(id)}`, SpotSchema, { signal });
 }
 
 export function getReviews(spotId: string, signal?: AbortSignal): Promise<Review[]> {
-  return getJson(`/spots/${encodeURIComponent(spotId)}/reviews`, z.array(ReviewSchema), signal);
+  return request(`/spots/${encodeURIComponent(spotId)}/reviews`, z.array(ReviewSchema), { signal });
+}
+
+/** `updatedAt` is the server version the edit was based on; the server answers 409 if its copy is newer. */
+export function patchSpot(
+  id: string,
+  edit: SpotEdit & { updatedAt: number },
+  idempotencyKey: string,
+): Promise<Spot> {
+  return request(`/spots/${encodeURIComponent(id)}`, SpotSchema, {
+    method: "PATCH",
+    body: edit,
+    idempotencyKey,
+  });
+}
+
+export function conflictServerCopy(error: unknown): Spot | null {
+  if (!(error instanceof ApiError) || error.status !== 409) return null;
+  const parsed = SpotSchema.safeParse((error.body as { spot?: unknown } | undefined)?.spot);
+  return parsed.success ? parsed.data : null;
 }

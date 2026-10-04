@@ -17,11 +17,16 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -42,7 +47,12 @@ fun SpotDetailScreen(
     viewModel: SpotDetailViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    SpotDetailContent(state = state, onBack = onBack, onRetry = viewModel::load)
+    SpotDetailContent(
+        state = state,
+        onBack = onBack,
+        onRetry = viewModel::refresh,
+        onSaveEdit = viewModel::saveEdit
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,9 +60,23 @@ fun SpotDetailScreen(
 fun SpotDetailContent(
     state: SpotDetailUiState,
     onBack: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onSaveEdit: (name: String, description: String, openNow: Boolean) -> Unit
 ) {
     val spot = state.spot
+    var editing by rememberSaveable { mutableStateOf(false) }
+
+    if (editing && spot != null) {
+        EditSpotDialog(
+            spot = spot,
+            onDismiss = { editing = false },
+            onSave = { name, description, openNow ->
+                onSaveEdit(name, description, openNow)
+                editing = false
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,11 +91,14 @@ fun SpotDetailContent(
     ) { innerPadding ->
         val contentModifier = Modifier.padding(innerPadding)
         when {
-            state.isLoading && spot == null -> LoadingView(contentModifier)
-            state.errorMessage != null -> ErrorView(state.errorMessage, onRetry, contentModifier)
+            spot == null && state.isLoading -> LoadingView(contentModifier)
+            spot == null && state.errorMessage != null -> ErrorView(state.errorMessage, onRetry, contentModifier)
             spot == null -> MessageView("Spot not found", contentModifier)
             else -> LazyColumn(modifier = contentModifier.fillMaxSize()) {
-                item { SpotHeader(spot) }
+                if (state.errorMessage != null) {
+                    item { StaleDataNotice(state.errorMessage, onRetry) }
+                }
+                item { SpotHeader(spot, state.isPendingSync, onEdit = { editing = true }) }
                 item { ReviewsHeader(state.reviews.size) }
                 items(state.reviews, key = { it.id }) { review -> ReviewRow(review) }
             }
@@ -80,7 +107,25 @@ fun SpotDetailContent(
 }
 
 @Composable
-private fun SpotHeader(spot: Spot) {
+private fun StaleDataNotice(message: String, onRetry: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "Showing saved data. $message",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.weight(1f)
+        )
+        TextButton(onClick = onRetry) { Text("Retry") }
+    }
+}
+
+@Composable
+private fun SpotHeader(spot: Spot, isPendingSync: Boolean, onEdit: () -> Unit) {
     Column {
         SpotPhoto(
             url = spot.photoUrl,
@@ -99,12 +144,14 @@ private fun SpotHeader(spot: Spot) {
             ) {
                 AssistChip(onClick = {}, label = { Text(spot.category.label) })
                 AssistChip(onClick = {}, label = { Text(if (spot.openNow) "Open now" else "Closed") })
+                if (isPendingSync) AssistChip(onClick = {}, label = { Text("Waiting to sync") })
             }
             Text(
                 "★ ${spot.ratingText()} / 5 · ${spot.priceText()}",
                 style = MaterialTheme.typography.bodyLarge
             )
             Text(spot.description, style = MaterialTheme.typography.bodyMedium)
+            OutlinedButton(onClick = onEdit) { Text("Edit spot") }
         }
     }
 }
