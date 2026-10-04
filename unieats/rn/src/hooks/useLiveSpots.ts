@@ -3,6 +3,7 @@ import { useFocusEffect } from "expo-router";
 import { useCallback, useRef, useState } from "react";
 import { LIVE_URL } from "../api/config";
 import { LiveEventSchema } from "../domain/schemas";
+import { notifySpotUpdated } from "../notifications/spotNotifications";
 import { applyLiveEvent } from "../repository/spotRepository";
 import { useAppActive } from "./useAppActive";
 
@@ -39,7 +40,9 @@ export function useLiveSpots(): LiveStatus {
         socket.onmessage = (message) => {
           try {
             const parsed = LiveEventSchema.safeParse(JSON.parse(String(message.data)));
-            if (parsed.success) applyLiveEvent(parsed.data);
+            if (!parsed.success) return;
+            const isNews = applyLiveEvent(parsed.data);
+            if (isNews && parsed.data.type === "spot.updated") void notifySpotUpdated(parsed.data.spot);
           } catch {
             // Ignore frames that are not JSON; the next valid event still applies.
           }

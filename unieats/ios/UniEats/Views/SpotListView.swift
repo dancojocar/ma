@@ -9,11 +9,11 @@ struct SpotListView: View {
     @State private var path: [String] = []
     @Environment(\.scenePhase) private var scenePhase
 
-    init(repository: SpotRepository, live: LiveUpdateService, session: SessionStore) {
+    init(repository: SpotRepository, live: LiveUpdateService, session: SessionStore, notifier: SpotChangeNotifier) {
         self.repository = repository
         self.live = live
         self.session = session
-        _viewModel = State(initialValue: SpotListViewModel(repository: repository))
+        _viewModel = State(initialValue: SpotListViewModel(repository: repository, notifier: notifier))
     }
 
     var body: some View {

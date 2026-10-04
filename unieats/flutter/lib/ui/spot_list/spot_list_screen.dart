@@ -61,6 +61,11 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
         title: const Text('UniEats'),
         actions: [
           IconButton(
+            tooltip: 'Spots near me',
+            icon: const Icon(Icons.near_me_outlined),
+            onPressed: () => context.push('/nearby'),
+          ),
+          IconButton(
             tooltip: 'Sign out',
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authProvider.notifier).logout(),
