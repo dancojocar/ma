@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -87,6 +88,7 @@ fun SpotListContent(
             TopAppBar(
                 title = { Text("UniEats") },
                 actions = {
+                    LiveBadge(isLive = state.isLive)
                     TextButton(onClick = { sortByRating = !sortByRating }) {
                         Text(if (sortByRating) "Sort: rating" else "Sort: default")
                     }
@@ -145,6 +147,15 @@ fun SpotListContent(
             }
         }
     }
+}
+
+@Composable
+private fun LiveBadge(isLive: Boolean) {
+    Text(
+        text = if (isLive) "● Live" else "○ Offline",
+        style = MaterialTheme.typography.labelMedium,
+        color = if (isLive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable

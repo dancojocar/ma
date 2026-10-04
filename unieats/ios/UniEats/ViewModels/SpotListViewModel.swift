@@ -12,6 +12,7 @@ final class SpotListViewModel {
     private(set) var errorMessage: String?
     private(set) var hasNextPage = true
     private(set) var currentPage = 0
+    private(set) var isLive = false
 
     private let api: ApiClient
     private var reloadTask: Task<Void, Never>?
@@ -80,6 +81,30 @@ final class SpotListViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func apply(_ update: LiveUpdate) {
+        switch update {
+        case .connected:
+            isLive = true
+        case .disconnected:
+            isLive = false
+        case .spotCreated(let spot):
+            if matchesFilters(spot), !spots.contains(where: { $0.id == spot.id }) {
+                spots.insert(spot, at: 0)
+            }
+        case .spotUpdated(let spot):
+            if let index = spots.firstIndex(where: { $0.id == spot.id }) {
+                spots[index] = spot
+            }
+        case .spotDeleted(let id):
+            spots.removeAll { $0.id == id }
+        }
+    }
+
+    private func matchesFilters(_ spot: Spot) -> Bool {
+        (searchQuery.isEmpty || spot.name.localizedCaseInsensitiveContains(searchQuery))
+            && (categoryFilter == nil || spot.category == categoryFilter)
     }
 
     private func scheduleReload(debounce: Duration) {

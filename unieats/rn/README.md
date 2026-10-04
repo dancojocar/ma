@@ -1,11 +1,12 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l05-rest`: list and detail come from the UniEats server. `src/api/client.ts` (fetch + 10 s
-timeout + Zod parsing into a typed `ApiError`), TanStack Query `useInfiniteQuery` keyed
-`["spots", q, category]` (`src/hooks/useSpots.ts`) with `retry: 2`, infinite scroll that stops on
-`hasNextPage: false`, pull-to-refresh, loading / error (Retry) / empty states and `photoUrl` images.
-Reviews are read-only (`GET /api/spots/:id/reviews`); writing reviews needs login (l08).
-Search, category filter and favourites (Zustand) are kept; search is debounced 300 ms.
+Tag `l06-async`: everything from l05 (server list with `useInfiniteQuery` keyed
+`["spots", q, category]`, Zod, loading/error/empty states, pull-to-refresh, photos, read-only reviews,
+search/filter/favourites) plus live updates: `src/hooks/useLiveSpots.ts` opens `ws://<host>:3000/live`
+while the list is focused and the app is in the foreground, reconnects with exponential backoff
+(1 s → 30 s), and on every `spot.created/updated/deleted` calls
+`queryClient.invalidateQueries({ queryKey: ["spots"] })`. The header shows "● Live".
+Demo: `curl -X PATCH localhost:3000/api/spots/spot-3 -H 'Content-Type: application/json' -d '{"rating":5}'`.
 
 Start the server first: `cd unieats/server && npm ci && npm start` (port 3000).
 
@@ -19,9 +20,10 @@ npx expo start        # scan the QR code with Expo Go (SDK 57), or press a (Andr
 
 The project `.npmrc` sets `legacy-peer-deps=false`, so `npm ci` installs the same complete tree on npm 10 and 11 even if your global `~/.npmrc` enables legacy peer deps.
 
-Expo Go works for this tag (it uses only modules that ship inside Expo Go for SDK 57); the `unieats://` and
-https deep links from l04 need a dev build: `npx expo run:android` (Android Studio's bundled Java 25 is fine: the `plugins/withPrefabNativeAccess.js` config
-plugin makes the generated `android/gradlew` pass the JDK 24+ native-access flag that AGP 8.12's Prefab step needs).
+Expo Go works for this tag (every module it uses ships inside Expo Go for SDK 57); the `unieats://` and https
+deep links from l04 need a dev build: `npx expo run:android` (Android Studio's bundled Java 25 is fine: the
+`plugins/withPrefabNativeAccess.js` config plugin makes the generated `android/gradlew` pass the JDK 24+
+native-access flag that AGP 8.12's Prefab step needs).
 
 Checks: `npx tsc --noEmit` and `npx expo-doctor`.
 

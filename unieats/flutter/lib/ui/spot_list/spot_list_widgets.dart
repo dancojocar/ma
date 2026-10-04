@@ -88,3 +88,30 @@ class EmptySpotsMessage extends StatelessWidget {
     );
   }
 }
+
+class LiveIndicator extends StatelessWidget {
+  const LiveIndicator({super.key, required this.connected});
+
+  final bool connected;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = connected ? Colors.green : Colors.grey;
+    return Tooltip(
+      message: connected ? 'Live updates on' : 'Reconnecting to live updates',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            Icon(Icons.circle, size: 10, color: color),
+            const SizedBox(width: 4),
+            Text(
+              connected ? 'Live' : 'Offline',
+              style: TextStyle(color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
