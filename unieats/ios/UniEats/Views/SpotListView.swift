@@ -2,10 +2,10 @@ import SwiftUI
 
 struct SpotListView: View {
     @State private var viewModel = SpotListViewModel()
-    @State private var selectedSpot: Spot?
+    @State private var path: [String] = []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 CategoryFilterView(
                     selectedCategory: viewModel.categoryFilter,
@@ -15,16 +15,13 @@ struct SpotListView: View {
                 .listRowSeparator(.hidden)
 
                 ForEach(viewModel.filteredSpots) { spot in
-                    Button {
-                        selectedSpot = spot
-                    } label: {
+                    NavigationLink(value: spot.id) {
                         SpotRow(
                             spot: spot,
                             isFavourite: viewModel.favouriteIds.contains(spot.id),
                             onToggleFavourite: { viewModel.toggleFavourite(spot.id) }
                         )
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .listStyle(.plain)
@@ -33,17 +30,17 @@ struct SpotListView: View {
                 text: Binding(get: { viewModel.searchQuery }, set: viewModel.onQueryChange),
                 prompt: "Search spots"
             )
-            .sheet(item: $selectedSpot) { spot in
-                NavigationStack {
-                    SpotDetailView(
-                        spot: spot,
-                        isFavourite: viewModel.favouriteIds.contains(spot.id),
-                        onToggleFavourite: { viewModel.toggleFavourite(spot.id) }
-                    )
-                    .toolbar {
-                            Button("Done") { selectedSpot = nil }
-                        }
-                }
+            .navigationDestination(for: String.self) { spotId in
+                SpotDetailView(
+                    spotId: spotId,
+                    isFavourite: viewModel.favouriteIds.contains(spotId),
+                    onToggleFavourite: { viewModel.toggleFavourite(spotId) }
+                )
+            }
+        }
+        .onOpenURL { url in
+            if let spotId = DeepLink.spotId(from: url) {
+                path = [spotId]
             }
         }
     }

@@ -65,3 +65,8 @@ class SpotListNotifier extends Notifier<SpotListUiState> {
 final spotListProvider = NotifierProvider<SpotListNotifier, SpotListUiState>(
   SpotListNotifier.new,
 );
+
+final spotByIdProvider = Provider.family<Spot?, String>((ref, id) {
+  final spots = ref.watch(spotListProvider.select((s) => s.spots));
+  return spots.where((spot) => spot.id == id).firstOrNull;
+});
