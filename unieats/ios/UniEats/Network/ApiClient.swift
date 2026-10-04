@@ -44,6 +44,10 @@ struct ApiClient: Sendable {
         try await get("spots/\(spotId)/reviews")
     }
 
+    func getConfig() async throws -> RemoteConfigResponse {
+        try await get("config")
+    }
+
     func login(email: String, password: String) async throws -> LoginResponse {
         try await send(jsonRequest("POST", "auth/login", body: LoginBody(email: email, password: password)))
     }

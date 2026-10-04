@@ -1,11 +1,38 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_router.dart';
 import 'providers/providers.dart';
+import 'services/crash_reporter.dart';
 
 void main() {
-  runApp(const ProviderScope(child: UniEatsApp()));
+  final crashReporter = ConsentGatedCrashReporter(const LoggingCrashReporter());
+
+  runZonedGuarded(() {
+    // Inside the zone, so the binding and runApp share the zone that
+    // catches uncaught async errors.
+    WidgetsFlutterBinding.ensureInitialized();
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      crashReporter.recordError(
+        details.exception,
+        details.stack ?? StackTrace.current,
+      );
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      crashReporter.recordError(error, stack, fatal: true);
+      return true;
+    };
+    runApp(
+      ProviderScope(
+        overrides: [crashReporterProvider.overrideWithValue(crashReporter)],
+        child: const UniEatsApp(),
+      ),
+    );
+  }, (error, stack) => crashReporter.recordError(error, stack, fatal: true));
 }
 
 class UniEatsApp extends ConsumerWidget {
