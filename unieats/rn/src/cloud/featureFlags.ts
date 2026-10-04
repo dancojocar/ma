@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { getRemoteConfig } from "../api/client";
-import type { RemoteConfig } from "../domain/schemas";
+import type { RemoteConfig } from "@unieats/shared";
 
 export type Flags = RemoteConfig["flags"];
 

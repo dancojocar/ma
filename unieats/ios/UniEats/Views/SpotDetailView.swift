@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UniEatsDomain
 
 struct SpotDetailView: View {
     @State private var viewModel: SpotDetailViewModel
@@ -104,7 +105,7 @@ private struct SpotDetailContent: View {
                             .foregroundStyle(.orange)
                     }
 
-                    Text(spot.spotDescription)
+                    Text(spot.description)
                         .font(.body)
                         .foregroundStyle(.secondary)
 

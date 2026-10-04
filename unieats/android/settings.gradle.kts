@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "UniEats"
 include(":app")
+include(":shared")

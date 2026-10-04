@@ -1,31 +1,27 @@
-# UniEats iOS — l11-cloud
+# UniEats iOS — l12-kmp
 
-A remote-config feature flag and a crash-reporting hook, without any Firebase dependency
-(the deck's legacy demos show the real Remote Config / Crashlytics SDKs).
+A shared domain module consumed by the app.
 
 ## What this tag adds
 
-- **Settings tab** (`Views/SettingsView.swift`).
-- **Remote config** (`Cloud/RemoteConfig.swift`): flag `show_new_rating_ui`, default `false`;
-  **Fetch & activate** calls `GET /api/config` and applies the value at once. When `true`, spot
-  rows show the new gradient rating badge (`NewRatingBadge` in `Views/SpotRow.swift`) instead of
-  the plain star.
-- **Crash reporting** (`Cloud/CrashReporter.swift`): `CrashReporter` protocol with a default
-  `LoggingCrashReporter` (os `Logger`), wrapped by `CrashReportingConsent` — an opt-in
-  "Share crash reports" toggle persisted in `UserDefaults`; nothing is recorded while it is off.
-  Debug builds show **Test crash**, which calls `recordError(TestCrash(), …)`.
-- **Log out** moved from the list toolbar into Settings › Account.
+- `UniEatsDomain/` — a local Swift package (`Package.swift`, swift-tools 6.0) **linked into the
+  UniEats target** (Xcode › project › Package Dependencies shows it; `project.pbxproj` has an
+  `XCLocalSwiftPackageReference` + product dependency). It holds the domain model `Spot` and
+  `SpotConflictResolver` (last-write-wins: server wins only if its `updatedAt` is strictly
+  newer; a tie goes to the client — CONTRACT §5).
+- The app imports it everywhere it uses `Spot` (`import UniEatsDomain`); JSON/SwiftData mapping
+  stays in the app (`Models/Spot.swift` `SpotDTO`, `Models/SpotEntity.swift`).
+- `SpotRepository.sync()` asks `SpotConflictResolver.winner(local:server:)` on a 409: server →
+  take the server row; client → rebase the queued PATCH on the server's `updatedAt` and resend.
+- The original hand-written duplicate `UniEats/Domain/DomainBridge.swift` is gone.
 
-Demo:
+Why a Swift package and not the Kotlin Multiplatform `UniEatsShared.xcframework`: the iOS build
+must not depend on a JDK + Gradle build of `../android/shared`. To try the KMP route, build the
+framework with `cd ../android && ./gradlew :shared:assembleUniEatsSharedXCFramework` and drag
+`shared/build/XCFrameworks/debug/UniEatsShared.xcframework` into the target's
+*Frameworks, Libraries, and Embedded Content*; the models then come from Kotlin instead.
 
-```bash
-# flip the flag on the server (token: see Run below)
-curl -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"flags":{"show_new_rating_ui":true}}' localhost:3000/api/config
-```
-
-Settings → **Fetch & activate** → `true` → Spots shows the "★ 4.7 NEW" badges. Test crash with
-the toggle off says "Not sent"; switch it on and the error appears in the Xcode console.
+Build the package on its own: `swift build --package-path UniEatsDomain`.
 
 ## Already in the app (earlier tags)
 
@@ -39,6 +35,7 @@ the toggle off says "Not sent"; switch it on and the error appears in the Xcode 
 | l08 | Login, JWT in Keychain, Bearer on mutations, 401 → login, add review, log out (Settings tab from l11) | `ViewModels/SessionStore.swift`, `Keychain/KeychainHelper.swift` |
 | l09 | Near Me tab (CoreLocation, 2 km), local notification from live `spot.updated` | `Views/NearMeView.swift`, `Notifications/SpotChangeNotifier.swift` |
 | l10 | Animated filtered list, row photo → detail zoom transition, `PERFORMANCE.md` | `Views/SpotListView.swift`, `Views/SpotRow.swift` |
+| l11 | Settings: `show_new_rating_ui` Fetch & activate, consent-gated `CrashReporter`, debug Test crash | `Cloud/`, `Views/SettingsView.swift` |
 
 ## Run
 

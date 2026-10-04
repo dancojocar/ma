@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 import '../database/database.dart';
 import '../network/api_client.dart';
 import '../network/app_error.dart';
-import '../network/live_updates.dart';
-import '../sync/sync_conflict_resolver.dart';
 
 abstract final class OutboxType {
   static const updateSpot = 'update';
@@ -20,8 +17,8 @@ abstract final class OutboxType {
 
 /// The UI only reads the local database; this class keeps it in step with the
 /// server and owns the outbox of local edits.
-class SpotRepository {
-  SpotRepository(
+class DriftSpotRepository implements SpotRepository {
+  DriftSpotRepository(
     this._db,
     this._api, {
     SyncConflictResolver resolver = const SyncConflictResolver(),
@@ -33,37 +30,42 @@ class SpotRepository {
   final _uuid = const Uuid();
   Future<void>? _syncInFlight;
 
+  @override
   Stream<List<Spot>> watchSpots({String query = '', SpotCategory? category}) =>
       _db.watchSpots(query: query, category: category);
 
+  @override
   Stream<Spot?> watchSpot(String id) => _db.watchSpot(id);
 
+  @override
   Stream<Set<String>> watchPendingIds() => _db.watchPendingEntityIds();
 
+  @override
   Stream<int> watchPendingCount() => _db.watchOutboxCount();
 
+  @override
   Future<SpotsPage> refreshPage({
     required int page,
     required int limit,
     String query = '',
     SpotCategory? category,
-    CancelToken? cancelToken,
   }) async {
     final result = await _api.fetchSpots(
       page: page,
       limit: limit,
       query: query,
       category: category?.name,
-      cancelToken: cancelToken,
     );
     await _db.upsertFromServer(result.spots);
     return result;
   }
 
+  @override
   Future<void> refreshSpot(String id) async {
     await _db.upsertFromServer([await _api.fetchSpot(id)]);
   }
 
+  @override
   Future<void> applyLiveEvent(LiveEvent event) async {
     switch (event) {
       case SpotChanged(:final spot):
@@ -80,6 +82,7 @@ class SpotRepository {
 
   /// Optimistic edit: the row changes and is marked `pendingSync` at once, and
   /// an `update` op carrying the edited version's `updatedAt` joins the outbox.
+  @override
   Future<void> editSpot(
     String id, {
     required String name,
@@ -109,6 +112,7 @@ class SpotRepository {
 
   /// Replays the outbox in order. Stops at the first network failure and
   /// leaves the remaining ops for the next trigger (reconnect, app start).
+  @override
   Future<void> syncOutbox() =>
       _syncInFlight ??= _replayAll().whenComplete(() => _syncInFlight = null);
 

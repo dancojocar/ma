@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import type { Review } from "../domain/models";
+import type { Review } from "@unieats/shared";
 import { detailStyles } from "./SpotDetail";
 import { starsLabel } from "./format";
 

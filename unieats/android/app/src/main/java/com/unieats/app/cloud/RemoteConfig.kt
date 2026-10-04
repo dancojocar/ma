@@ -1,6 +1,6 @@
 package com.unieats.app.cloud
 
-import com.unieats.app.data.model.RemoteFlags
+import com.unieats.shared.RemoteFlags
 import com.unieats.app.data.remote.ApiClient
 import com.unieats.app.data.remote.apiCall
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +15,10 @@ import javax.inject.Singleton
  * values stay active.
  */
 @Singleton
-class RemoteConfig @Inject constructor(private val api: ApiClient) {
+class RemoteConfig @Inject constructor(private val api: ApiClient) : FeatureFlags {
 
     private val _flags = MutableStateFlow(RemoteFlags())
-    val flags: StateFlow<RemoteFlags> = _flags.asStateFlow()
+    override val flags: StateFlow<RemoteFlags> = _flags.asStateFlow()
 
     suspend fun fetchAndActivate(): Result<RemoteFlags> = apiCall {
         api.getConfig().flags.also { _flags.value = it }

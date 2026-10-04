@@ -1,6 +1,7 @@
 import CoreLocation
 import SwiftData
 import SwiftUI
+import UniEatsDomain
 
 struct NearMeView: View {
     static let radiusMeters: CLLocationDistance = 2_000

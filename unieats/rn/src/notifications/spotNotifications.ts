@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
-import type { Spot } from "../domain/models";
+import type { Spot } from "@unieats/shared";
 
 const CHANNEL_ID = "spot-updates";
 

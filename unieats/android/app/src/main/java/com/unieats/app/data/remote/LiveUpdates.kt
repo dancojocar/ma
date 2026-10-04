@@ -1,7 +1,7 @@
 package com.unieats.app.data.remote
 
 import android.util.Log
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Spot
 import com.unieats.app.di.LiveUrl
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeoutConfig

@@ -1,15 +1,15 @@
 package com.unieats.app.data.remote
 
 import com.unieats.app.data.auth.AuthTokens
-import com.unieats.app.data.model.Category
-import com.unieats.app.data.model.ConfigResponse
-import com.unieats.app.data.model.LoginRequest
-import com.unieats.app.data.model.LoginResponse
-import com.unieats.app.data.model.NewReview
-import com.unieats.app.data.model.Review
-import com.unieats.app.data.model.Spot
-import com.unieats.app.data.model.SpotPatch
-import com.unieats.app.data.model.SpotsPage
+import com.unieats.shared.Category
+import com.unieats.shared.ConfigResponse
+import com.unieats.shared.LoginRequest
+import com.unieats.shared.LoginResponse
+import com.unieats.shared.NewReview
+import com.unieats.shared.Review
+import com.unieats.shared.Spot
+import com.unieats.shared.SpotPatch
+import com.unieats.shared.SpotsPage
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder

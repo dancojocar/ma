@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
-import '../../domain/models.dart';
+import 'package:unieats_data/unieats_data.dart';
 import 'tables.dart';
 
 part 'database.g.dart';

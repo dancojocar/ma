@@ -2,10 +2,10 @@ package com.unieats.app.ui.spotdetail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.unieats.app.data.model.Review
-import com.unieats.app.data.model.Spot
+import com.unieats.shared.Review
+import com.unieats.shared.Spot
 import com.unieats.app.data.remote.toUserMessage
-import com.unieats.app.data.repository.SpotRepository
+import com.unieats.app.data.repository.EatsRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -33,7 +33,7 @@ data class SpotDetailUiState(
 
 @HiltViewModel(assistedFactory = SpotDetailViewModel.Factory::class)
 class SpotDetailViewModel @AssistedInject constructor(
-    private val spotRepository: SpotRepository,
+    private val spotRepository: EatsRepository,
     @Assisted private val spotId: String
 ) : ViewModel() {
 

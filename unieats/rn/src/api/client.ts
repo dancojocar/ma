@@ -1,5 +1,3 @@
-import { z } from "zod";
-import type { Review, Spot, SpotCategory, SpotEdit } from "../domain/models";
 import {
   LoginResponseSchema,
   RemoteConfigSchema,
@@ -8,8 +6,13 @@ import {
   SpotSchema,
   type LoginResponse,
   type RemoteConfig,
+  type Review,
+  type Spot,
+  type SpotCategory,
+  type SpotEdit,
   type SpotPage,
-} from "../domain/schemas";
+} from "@unieats/shared";
+import { z } from "zod";
 import { API_URL } from "./config";
 import { ApiError } from "./errors";
 
