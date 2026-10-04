@@ -3,10 +3,12 @@ import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { describeError } from "../../../src/api/errors";
 import { CategoryChips } from "../../../src/components/CategoryChips";
+import { LiveBadge } from "../../../src/components/LiveBadge";
 import { SearchBar } from "../../../src/components/SearchBar";
 import { SpotCard } from "../../../src/components/SpotCard";
 import { EmptyView, ErrorView, LoadingView } from "../../../src/components/StatusViews";
 import { useDebouncedValue } from "../../../src/hooks/useDebouncedValue";
+import { useLiveSpots } from "../../../src/hooks/useLiveSpots";
 import { useSpotsInfinite } from "../../../src/hooks/useSpots";
 import { useSpotsStore } from "../../../src/store/spotsStore";
 
@@ -21,6 +23,7 @@ export default function SpotListScreen() {
 
   const q = useDebouncedValue(searchQuery.trim(), 300);
   const query = useSpotsInfinite(q, categoryFilter);
+  const liveStatus = useLiveSpots();
   const spots = useMemo(() => query.data?.pages.flatMap((p) => p.spots) ?? [], [query.data]);
 
   const [refreshing, setRefreshing] = useState(false);
@@ -78,6 +81,7 @@ export default function SpotListScreen() {
       <View style={styles.filters}>
         <SearchBar query={searchQuery} onQueryChange={setSearchQuery} />
         <CategoryChips value={categoryFilter} onChange={setCategoryFilter} />
+        <LiveBadge status={liveStatus} />
       </View>
       {body}
     </View>

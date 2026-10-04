@@ -11,6 +11,7 @@ import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import javax.inject.Qualifier
@@ -20,6 +21,10 @@ import javax.inject.Singleton
 @Retention(AnnotationRetention.BINARY)
 annotation class ApiBaseUrl
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class LiveUrl
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -27,6 +32,10 @@ object AppModule {
     @Provides
     @ApiBaseUrl
     fun provideApiBaseUrl(): String = BuildConfig.API_BASE_URL
+
+    @Provides
+    @LiveUrl
+    fun provideLiveUrl(): String = BuildConfig.LIVE_URL
 
     @Provides
     @Singleton
@@ -47,6 +56,9 @@ object AppModule {
             retryOnServerErrors(maxRetries = 2)
             retryOnException(maxRetries = 2, retryOnTimeout = true)
             exponentialDelay(baseDelayMs = 500)
+        }
+        install(WebSockets) {
+            pingIntervalMillis = 20_000
         }
     }
 }

@@ -1,6 +1,25 @@
-# UniEats iOS — l05-rest
+# UniEats iOS — l06-async
 
-The list and detail now come from the UniEats server over HTTP (URLSession + async/await).
+Live updates on top of the l05 REST list.
+
+- `Network/LiveUpdateService.swift` — `updates()` returns an `AsyncStream<LiveUpdate>` over a
+  `URLSessionWebSocketTask` to `ws://localhost:3000/live`. It pings to confirm the connection,
+  decodes `spot.created` / `spot.updated` / `spot.deleted`, reconnects with exponential backoff
+  (1, 2, 4 … 30 s) and closes the socket when the consuming task is cancelled.
+- `SpotListView` consumes it in `.task(id: scenePhase)`: SwiftUI cancels that task when the
+  screen disappears or the app leaves the foreground, which ends the stream and the socket.
+  `SpotListViewModel.apply(_:)` patches the visible list; the toolbar shows Live / Offline.
+
+Demo: with the app open, change a spot from a terminal and watch the row update:
+
+```bash
+curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (new oven)"}' \
+  http://localhost:3000/api/spots/spot-3
+```
+
+Stop the server → the badge turns Offline; start it again → it reconnects on its own.
+
+## From l05 (unchanged)
 
 - `Network/ApiClient.swift` — `URLSession` with 15 s request / 30 s resource timeouts;
   `GET /api/spots?page&limit&q&category`, `GET /api/spots/:id`, `GET /api/spots/:id/reviews`.

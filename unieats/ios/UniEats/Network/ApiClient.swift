@@ -2,6 +2,13 @@ import Foundation
 
 enum ApiConfig {
     static let baseURL = URL(string: ProcessInfo.processInfo.environment["UNIEATS_API_URL"] ?? "http://localhost:3000/api")!
+
+    static var liveURL: URL {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.scheme = components.scheme == "https" ? "wss" : "ws"
+        components.path = "/live"
+        return components.url!
+    }
 }
 
 struct ApiClient: Sendable {

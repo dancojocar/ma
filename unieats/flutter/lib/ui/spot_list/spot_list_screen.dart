@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../data/network/live_updates.dart';
 import '../../domain/models.dart';
 import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
@@ -49,7 +50,17 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
     final pages = ref.watch(spotPagesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('UniEats')),
+      appBar: AppBar(
+        title: const Text('UniEats'),
+        actions: [
+          LiveIndicator(
+            connected: switch (ref.watch(liveEventsProvider).valueOrNull) {
+              null || LiveDisconnected() => false,
+              _ => true,
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           SpotSearchBar(
