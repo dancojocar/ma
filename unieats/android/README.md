@@ -1,68 +1,54 @@
-# UniEats Android — tag `l04-nav`
+# UniEats Android — tag `l05-rest`
 
-Real navigation with **Navigation 3**: the back stack is a list you own (`rememberNavBackStack`),
-`NavDisplay` renders it, the detail screen receives only the spot **id**, two deep links open a spot
-directly, and on a wide window (tablet, foldable, landscape) the list and the detail show side by side
-through the Material `ListDetailSceneStrategy`. Search, category filter and favourites from l03 are
-still there.
+The list and the detail screen now come from the UniEats server over HTTP (Ktor + kotlinx
+serialization). Search, category filter and favourites still work; search and filter are sent to
+the server as `q` and `category`.
 
 ## Run
 
 ```bash
-./gradlew -p unieats/android :app:installDebug
+cd unieats/server && npm install && npm start      # http://localhost:3000
+./gradlew -p unieats/android :app:installDebug     # emulator reaches the laptop as 10.0.2.2
 ```
+
+On a physical phone: `adb reverse tcp:3000 tcp:3000` and install with
+`./gradlew -p unieats/android :app:installDebug -Punieats.serverHost=localhost:3000`.
 
 ## What to look at
 
-- `ui/navigation/NavGraph.kt` — `@Serializable` keys `SpotList` and `SpotDetail(spotId)` implement
-  `NavKey`; `rememberNavBackStack(...)` is the back stack; `backStack.add(SpotDetail(id))` pushes and
-  `backStack.removeLastOrNull()` pops; `NavDisplay(entryProvider = entryProvider { entry<SpotList> {…}
-  entry<SpotDetail> { key -> … } })` maps keys to screens; `rememberListDetailSceneStrategy()` plus the
-  `listPane()` / `detailPane()` metadata give the two-pane layout on wide windows.
-- `ui/spotdetail/SpotDetailViewModel.kt` — a Hilt assisted ViewModel: the entry hands it the
-  `spotId` from the key (`hiltViewModel<SpotDetailViewModel, Factory> { it.create(key.spotId) }`),
-  and `rememberViewModelStoreNavEntryDecorator()` scopes one ViewModel per back-stack entry. It looks
-  the spot up in the repository (it never gets the object itself, so a deep link and a tap take the
-  same path). It reads and toggles favourites itself, so the detail screen only takes `onBack`.
-- `data/repository/FavouritesRepository.kt` — the favourite ids live in a `@Singleton` repository
-  (in memory) instead of the list ViewModel. `SpotListViewModel` and `SpotDetailViewModel` both
-  observe `favouriteIds` and call `toggle(id)`, so each destination gets its own ViewModel from its
-  entry (`SpotListScreen` keeps its default `hiltViewModel()`) and a heart tapped on the detail
-  screen shows on the list.
-- `ui/navigation/DeepLinks.kt` — two `UriDeepLinkMatcher`s (`unieats://spots/{spotId}`,
-  `https://unieats.app/spots/{spotId}`) with `withBackStack { listOf(SpotList, it.key) }`;
-  `backStackFor(intent)` turns the launch Intent into the initial keys, so Back after a deep link
-  lands on the list. `MainActivity` is `singleTop` and handles `onNewIntent` for links that arrive
-  while the app is running.
-- `AndroidManifest.xml` — two `VIEW` + `BROWSABLE` intent-filters: `unieats://spots/…` and
-  `https://unieats.app/spots/…`.
-- Icons are Material Symbols vector drawables in `res/drawable` (search, close, favourite
-  filled/outlined, star, and an auto-mirrored back arrow), drawn with `painterResource`, so no icon
-  library is needed. The status labels on the detail screen are plain `Surface`s rather than chips,
-  so TalkBack does not call them buttons; the rating line and each review carry a spoken
-  description instead of reading "★".
+- `di/AppModule.kt` — one `HttpClient(OkHttp)` with `HttpTimeout` (connect 10 s, request 15 s),
+  `HttpRequestRetry` (3 tries, exponential back-off), JSON content negotiation and the base URL
+  `http://10.0.2.2:3000/api/` (`BuildConfig.API_BASE_URL`).
+- `data/remote/ApiClient.kt` — `GET /spots?page&limit&q&category`, `GET /spots/{id}`,
+  `GET /spots/{id}/reviews`. The list endpoint returns a wrapper (`SpotsPage`), not a bare array.
+- `data/remote/ApiResult.kt` + `data/repository/SpotRepository.kt` — every call returns a
+  `Result`; failures become a readable message (no swallowed exceptions).
+- `ui/spotlist/SpotListViewModel.kt` — explicit `isLoading` / `errorMessage` / empty states,
+  `refresh()` for pull-to-refresh, `loadNextPage()` with `currentPage` + `hasNextPage`. Favourites
+  still come from `FavouritesRepository`, shared with the detail screen.
+- `ui/spotlist/SpotListScreen.kt` — `PullToRefreshBox`, a full-screen error with **Retry**, a
+  snackbar with Retry when a refresh or next page fails, and infinite scroll that stops when the
+  server says `hasNextPage: false` (25 seeded spots = page 1 with 20, page 2 with 5). The loading,
+  error and empty states sit in a one-item `LazyColumn` so they can be pulled to refresh too. When
+  the snackbar is dismissed the screen calls `errorShown()`, which clears the message, so the same
+  error shows again next time and infinite scroll resumes.
+- Photos come from each spot's `photoUrl` (Coil, picsum.photos), so images need internet.
+- The detail screen loads the spot and its reviews (read-only — adding a review needs login,
+  which arrives at `l08-auth`), with the same loading / error + Retry / not-found states.
+- `AndroidManifest.xml` — `INTERNET`, plus `ACCESS_LOCAL_NETWORK`: from Android 17 (API 37)
+  apps targeting it need this permission to reach devices on the local network, which includes
+  the laptop at `10.0.2.2`. It is only declared here; on API 37 it is also a runtime permission,
+  and the request is added at `l09` next to the location prompt. Not verified on an API 37 device
+  yet (the API 37 emulator crashes on the course machine); on API 35/36 nothing changes. Loopback
+  is not "local network", so `adb reverse` + `localhost:3000` (above) is the fallback.
 
-The window theme has a `values-night` variant and `UniEatsTheme` uses dynamic colour on Android 12+,
-so the app follows the system light/dark setting from the first frame.
+Unchanged from l04: Navigation 3 with the two-pane layout, deep links, Material Symbols vector
+drawables via `painterResource`, the TalkBack descriptions on the rating and reviews, and the
+light/dark theme.
 
-Photos are loaded from `photoUrl` (picsum.photos) with Coil, so the emulator needs internet for
-images; everything else works offline.
+## Try the failure paths
 
-## Try the deep links (emulator or phone with USB debugging)
-
-```bash
-adb shell am start -W -a android.intent.action.VIEW -d "unieats://spots/spot-3" com.unieats.app
-adb shell am start -W -a android.intent.action.VIEW -d "https://unieats.app/spots/spot-3" com.unieats.app
-```
-
-Both open "Pizza Stop"; Back goes to the list (`withBackStack` put `SpotList` underneath). An unknown
-id shows "Spot not found". The https link is marked `autoVerify`, but without a
-`/.well-known/assetlinks.json` on unieats.app Android will not verify it, so a browser tap opens the
-browser; passing the package name as above (or
-`adb shell pm set-app-links-user-selection --user 0 --package com.unieats.app true unieats.app`)
-routes it to the app.
-
-## Try the two-pane layout
-
-Rotate the emulator to landscape, or run on a tablet / the resizable emulator: the list stays on the
-left and the selected spot opens on the right (`ListDetailSceneStrategy`). Back closes the detail pane.
+- Stop the server and pull to refresh / relaunch: after 3 tries you get the error state + Retry.
+- The server's chaos headers (`X-Chaos-Delay`, `X-Chaos-Status`, `X-Chaos-Malformed`,
+  `X-Chaos-Drop`) all end in a message, never a crash.
+- Use App Inspection → Network Inspector to watch the calls.

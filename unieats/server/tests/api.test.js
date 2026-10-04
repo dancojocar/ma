@@ -30,7 +30,7 @@ describe('GET /api/health', () => {
 });
 
 describe('GET /api/spots', () => {
-  it('returns the canonical seed with fixed ids spot-1..spot-8 on the first page', async () => {
+  it('starts with the canonical seed (fixed ids spot-1..spot-8)', async () => {
     const res = await request(app).get('/api/spots');
     expect(res.status).toBe(200);
     expect(res.body.page).toBe(1);
@@ -43,6 +43,16 @@ describe('GET /api/spots', () => {
   it('serves real photo URLs', async () => {
     const res = await request(app).get('/api/spots/spot-1');
     expect(res.body.photoUrl).toBe('https://picsum.photos/seed/spot-1/400/300');
+  });
+
+  it('serves 25 spots: page size 20 gives a second page of 5', async () => {
+    const first = await request(app).get('/api/spots');
+    expect(first.body.spots).toHaveLength(20);
+    expect(first.body.hasNextPage).toBe(true);
+    const second = await request(app).get('/api/spots?page=2');
+    expect(second.body.spots).toHaveLength(5);
+    expect(second.body.spots[4].id).toBe('spot-25');
+    expect(second.body.hasNextPage).toBe(false);
   });
 
   it('mixes open and closed spots', async () => {
@@ -161,5 +171,254 @@ describe('Chaos headers', () => {
 
   it('X-Chaos-Drop closes the socket', async () => {
     await expect(request(app).get('/api/spots').set('X-Chaos-Drop', '1')).rejects.toThrow();
+  });
+});
+
+const NEW_SPOT = {
+  name: 'Test Spot',
+  category: 'cafe',
+  rating: 4.0,
+  priceLevel: 2,
+  lat: 44.43,
+  lng: 26.1,
+  openNow: true,
+  photoUrl: '',
+  description: 'A test spot',
+};
+
+function createSpot(overrides = {}) {
+  return request(app).post('/api/spots').send({ ...NEW_SPOT, ...overrides });
+}
+
+describe('POST /api/spots', () => {
+  it('201 with the full spot, a server-assigned id and updatedAt', async () => {
+    const before = Date.now();
+    const res = await createSpot();
+    expect(res.status).toBe(201);
+    expectSpotShape(res.body);
+    expect(res.body).toMatchObject(NEW_SPOT);
+    expect(res.body.id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(res.body.updatedAt).toBeGreaterThanOrEqual(before);
+
+    const fetched = await request(app).get(`/api/spots/${res.body.id}`);
+    expect(fetched.body).toEqual(res.body);
+  });
+
+  it('fills defaults for optional fields', async () => {
+    const res = await request(app).post('/api/spots').send({ name: 'Minimal', category: 'bar' });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ rating: 0, priceLevel: 1, openNow: false, photoUrl: '', description: '' });
+  });
+
+  it('ignores a client-supplied id and unknown fields', async () => {
+    const res = await createSpot({ id: 'spot-1', secret: 'x' });
+    expect(res.status).toBe(201);
+    expect(res.body.id).not.toBe('spot-1');
+    expect(res.body.secret).toBeUndefined();
+  });
+
+  it.each([
+    ['name missing', { name: undefined }],
+    ['category missing', { category: undefined }],
+    ['unknown category', { category: 'restaurant' }],
+    ['rating out of range', { rating: 7 }],
+    ['priceLevel out of range', { priceLevel: 4 }],
+    ['openNow not boolean', { openNow: 'yes' }],
+  ])('400 validation when %s', async (_, overrides) => {
+    const res = await createSpot(overrides);
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+    expect(typeof res.body.error.message).toBe('string');
+  });
+
+  it('400 validation on a malformed JSON body', async () => {
+    const res = await request(app)
+      .post('/api/spots')
+      .set('Content-Type', 'application/json')
+      .send('{"name": "broken"');
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
+});
+
+describe('PATCH /api/spots/:id', () => {
+  let id;
+
+  beforeAll(async () => {
+    id = (await createSpot({ name: 'Patchable', openNow: false })).body.id;
+  });
+
+  it('applies the partial update and bumps updatedAt', async () => {
+    const before = (await request(app).get(`/api/spots/${id}`)).body;
+    const res = await request(app).patch(`/api/spots/${id}`).send({ openNow: true, name: 'Patched' });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id, openNow: true, name: 'Patched', category: before.category });
+    expect(res.body.updatedAt).toBeGreaterThanOrEqual(before.updatedAt);
+  });
+
+  it('cannot change the id', async () => {
+    const res = await request(app).patch(`/api/spots/${id}`).send({ id: 'hijack' });
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(id);
+  });
+
+  it('400 validation on an invalid field', async () => {
+    const res = await request(app).patch(`/api/spots/${id}`).send({ category: 'restaurant' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
+
+  it('404 for an unknown spot', async () => {
+    const res = await request(app).patch('/api/spots/ghost').send({ name: 'ghost' });
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('not_found');
+  });
+});
+
+describe('DELETE /api/spots/:id', () => {
+  it('204, then the spot and its reviews are gone', async () => {
+    const { id } = (await createSpot({ name: 'Deletable' })).body;
+    await request(app).post(`/api/spots/${id}/reviews`).send({ stars: 3 });
+
+    const res = await request(app).delete(`/api/spots/${id}`);
+    expect(res.status).toBe(204);
+    expect(res.text).toBe('');
+    expect((await request(app).get(`/api/spots/${id}`)).status).toBe(404);
+    expect((await request(app).get(`/api/spots/${id}/reviews`)).status).toBe(404);
+  });
+
+  it('404 for an unknown spot', async () => {
+    const res = await request(app).delete('/api/spots/ghost');
+    expect(res.status).toBe(404);
+    expect(res.body.error.code).toBe('not_found');
+  });
+});
+
+describe('GET /api/spots/:id/reviews', () => {
+  it('returns the seeded reviews with the Review shape', async () => {
+    const res = await request(app).get('/api/spots/spot-1/reviews');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    res.body.forEach((r) => {
+      expect(r.spotId).toBe('spot-1');
+      expect(typeof r.id).toBe('string');
+      expect(typeof r.author).toBe('string');
+      expect(Number.isInteger(r.stars)).toBe(true);
+      expect(typeof r.text).toBe('string');
+      expect(typeof r.createdAt).toBe('number');
+    });
+  });
+
+  it('returns an empty array for a spot without reviews', async () => {
+    const res = await request(app).get('/api/spots/spot-25/reviews');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it('404 for an unknown spot', async () => {
+    const res = await request(app).get('/api/spots/ghost/reviews');
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /api/spots/:id/reviews', () => {
+  it('201 with the new review, which then appears in the list', async () => {
+    const res = await request(app)
+      .post('/api/spots/spot-4/reviews')
+      .send({ stars: 5, text: 'Warm bread at 8 am' });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ spotId: 'spot-4', stars: 5, text: 'Warm bread at 8 am' });
+    expect(typeof res.body.author).toBe('string');
+    expect(typeof res.body.createdAt).toBe('number');
+
+    const list = await request(app).get('/api/spots/spot-4/reviews');
+    expect(list.body.map((r) => r.id)).toContain(res.body.id);
+  });
+
+  it.each([0, 6, 3.5, '4', undefined])('400 validation for stars=%p', async (stars) => {
+    const res = await request(app).post('/api/spots/spot-4/reviews').send({ stars, text: 'x' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.code).toBe('validation');
+  });
+
+  it('404 for an unknown spot', async () => {
+    const res = await request(app).post('/api/spots/ghost/reviews').send({ stars: 3 });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('Idempotency-Key', () => {
+  const key = () => `idem-${Math.random().toString(36).slice(2)}`;
+
+  it('POST /spots replays the original response and creates only one spot', async () => {
+    const k = key();
+    const total = async () => (await request(app).get('/api/spots?limit=1000')).body.spots.length;
+    const countBefore = await total();
+
+    const first = await createSpot({ name: 'Once' }).set('Idempotency-Key', k);
+    const second = await createSpot({ name: 'Ignored' }).set('Idempotency-Key', k);
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    expect(second.body).toEqual(first.body);
+    expect(second.headers['idempotent-replayed']).toBe('true');
+    expect(await total()).toBe(countBefore + 1);
+  });
+
+  it('PATCH replays the original response', async () => {
+    const k = key();
+    const first = await request(app).patch('/api/spots/spot-7').set('Idempotency-Key', k).send({ description: 'first' });
+    const second = await request(app).patch('/api/spots/spot-7').set('Idempotency-Key', k).send({ description: 'second' });
+    expect(second.status).toBe(200);
+    expect(second.body.description).toBe('first');
+    expect((await request(app).get('/api/spots/spot-7')).body.description).toBe('first');
+    expect(first.body.updatedAt).toBe(second.body.updatedAt);
+  });
+
+  it('DELETE replays 204 instead of 404', async () => {
+    const k = key();
+    const { id } = (await createSpot()).body;
+    expect((await request(app).delete(`/api/spots/${id}`).set('Idempotency-Key', k)).status).toBe(204);
+    expect((await request(app).delete(`/api/spots/${id}`).set('Idempotency-Key', k)).status).toBe(204);
+  });
+
+  it('review POST replays without creating a duplicate', async () => {
+    const k = key();
+    const first = await request(app).post('/api/spots/spot-5/reviews').set('Idempotency-Key', k).send({ stars: 4 });
+    const second = await request(app).post('/api/spots/spot-5/reviews').set('Idempotency-Key', k).send({ stars: 4 });
+    expect(second.body.id).toBe(first.body.id);
+    const list = await request(app).get('/api/spots/spot-5/reviews');
+    expect(list.body.filter((r) => r.id === first.body.id)).toHaveLength(1);
+  });
+
+  it('different keys produce independent results', async () => {
+    const a = await createSpot().set('Idempotency-Key', key());
+    const b = await createSpot().set('Idempotency-Key', key());
+    expect(a.body.id).not.toBe(b.body.id);
+  });
+
+  it('a request without the header is not idempotent', async () => {
+    const a = await createSpot();
+    const b = await createSpot();
+    expect(a.body.id).not.toBe(b.body.id);
+  });
+});
+
+describe('Chaos headers on mutations and reviews', () => {
+  it('X-Chaos-Status applies to POST /spots', async () => {
+    const res = await createSpot().set('X-Chaos-Status', '500');
+    expect(res.status).toBe(500);
+  });
+
+  it('X-Chaos-Delay applies to GET reviews', async () => {
+    const start = Date.now();
+    const res = await request(app).get('/api/spots/spot-1/reviews').set('X-Chaos-Delay', '150');
+    expect(res.status).toBe(200);
+    expect(Date.now() - start).toBeGreaterThanOrEqual(130);
+  });
+
+  it('X-Chaos-Drop applies to PATCH', async () => {
+    await expect(
+      request(app).patch('/api/spots/spot-1').set('X-Chaos-Drop', '1').send({ name: 'x' })
+    ).rejects.toThrow();
   });
 });

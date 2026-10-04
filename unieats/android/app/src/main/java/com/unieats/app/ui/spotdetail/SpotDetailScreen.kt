@@ -1,7 +1,6 @@
 package com.unieats.app.ui.spotdetail
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +31,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.unieats.app.R
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
+import com.unieats.app.ui.components.ErrorView
+import com.unieats.app.ui.components.LoadingView
+import com.unieats.app.ui.components.MessageView
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
 import com.unieats.app.ui.components.ratingText
@@ -46,7 +48,8 @@ fun SpotDetailScreen(
         state = state,
         isFavourite = state.isFavourite,
         onToggleFavourite = viewModel::toggleFavourite,
-        onBack = onBack
+        onBack = onBack,
+        onRetry = viewModel::load
     )
 }
 
@@ -56,7 +59,8 @@ fun SpotDetailContent(
     state: SpotDetailUiState,
     isFavourite: Boolean,
     onToggleFavourite: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onRetry: () -> Unit
 ) {
     val spot = state.spot
     Scaffold(
@@ -80,21 +84,12 @@ fun SpotDetailContent(
             )
         }
     ) { innerPadding ->
-        if (spot == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Spot not found")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
+        val contentModifier = Modifier.padding(innerPadding)
+        when {
+            state.isLoading && spot == null -> LoadingView(contentModifier)
+            state.errorMessage != null -> ErrorView(state.errorMessage, onRetry, contentModifier)
+            spot == null -> MessageView("Spot not found", contentModifier)
+            else -> LazyColumn(modifier = contentModifier.fillMaxSize()) {
                 item { SpotHeader(spot) }
                 item { ReviewsHeader(state.reviews.size) }
                 items(state.reviews, key = { it.id }) { review -> ReviewRow(review) }

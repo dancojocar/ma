@@ -1,38 +1,34 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/seed_data.dart';
+import '../data/network/api_client.dart';
+import '../data/network/api_config.dart';
 import '../domain/models.dart';
+
+final dioProvider = Provider<Dio>((ref) {
+  final dio = createDio(apiBaseUrl);
+  ref.onDispose(dio.close);
+  return dio;
+});
+
+final apiClientProvider = Provider<ApiClient>(
+  (ref) => ApiClient(ref.watch(dioProvider)),
+);
 
 class SpotListUiState {
   const SpotListUiState({
-    required this.spots,
     this.searchQuery = '',
     this.categoryFilter,
     this.favouriteIds = const {},
   });
 
-  final List<Spot> spots;
   final String searchQuery;
   final SpotCategory? categoryFilter;
   final Set<String> favouriteIds;
 
-  List<Spot> get visibleSpots {
-    final query = searchQuery.trim().toLowerCase();
-    return spots.where((spot) {
-      final matchesCategory =
-          categoryFilter == null || spot.category == categoryFilter;
-      final matchesQuery =
-          query.isEmpty ||
-          spot.name.toLowerCase().contains(query) ||
-          spot.description.toLowerCase().contains(query);
-      return matchesCategory && matchesQuery;
-    }).toList();
-  }
-
   SpotListUiState copyWith({String? searchQuery, Set<String>? favouriteIds}) =>
       SpotListUiState(
-        spots: spots,
         searchQuery: searchQuery ?? this.searchQuery,
         categoryFilter: categoryFilter,
         favouriteIds: favouriteIds ?? this.favouriteIds,
@@ -41,14 +37,12 @@ class SpotListUiState {
   @override
   bool operator ==(Object other) =>
       other is SpotListUiState &&
-      listEquals(other.spots, spots) &&
       other.searchQuery == searchQuery &&
       other.categoryFilter == categoryFilter &&
       setEquals(other.favouriteIds, favouriteIds);
 
   @override
   int get hashCode => Object.hash(
-    Object.hashAll(spots),
     searchQuery,
     categoryFilter,
     Object.hashAllUnordered(favouriteIds),
@@ -57,13 +51,12 @@ class SpotListUiState {
 
 class SpotListNotifier extends Notifier<SpotListUiState> {
   @override
-  SpotListUiState build() => const SpotListUiState(spots: kSeedSpots);
+  SpotListUiState build() => const SpotListUiState();
 
   void setSearchQuery(String query) =>
       state = state.copyWith(searchQuery: query);
 
   void setCategoryFilter(SpotCategory? category) => state = SpotListUiState(
-    spots: state.spots,
     searchQuery: state.searchQuery,
     categoryFilter: category,
     favouriteIds: state.favouriteIds,
@@ -83,7 +76,121 @@ final spotListProvider = NotifierProvider<SpotListNotifier, SpotListUiState>(
   SpotListNotifier.new,
 );
 
-final spotByIdProvider = Provider.family<Spot?, String>((ref, id) {
-  final spots = ref.watch(spotListProvider.select((s) => s.spots));
-  return spots.where((spot) => spot.id == id).firstOrNull;
-});
+class SpotPages {
+  const SpotPages({
+    required this.query,
+    required this.category,
+    required this.spots,
+    required this.page,
+    required this.hasNextPage,
+    this.isLoadingMore = false,
+    this.loadMoreError,
+  });
+
+  final String query;
+  final SpotCategory? category;
+  final List<Spot> spots;
+  final int page;
+  final bool hasNextPage;
+  final bool isLoadingMore;
+  final Object? loadMoreError;
+}
+
+/// Page-by-page `GET /spots` for the current search query and category.
+/// Changing either filter rebuilds it from page 1.
+class SpotPagesNotifier extends AsyncNotifier<SpotPages> {
+  static const pageSize = 20;
+
+  int _generation = 0;
+
+  @override
+  Future<SpotPages> build() async {
+    _generation++;
+    final (query, category) = ref.watch(
+      spotListProvider.select((s) => (s.searchQuery.trim(), s.categoryFilter)),
+    );
+    final cancelToken = CancelToken();
+    ref.onDispose(cancelToken.cancel);
+
+    if (query.isNotEmpty) {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+    }
+    final first = await ref
+        .read(apiClientProvider)
+        .fetchSpots(
+          limit: pageSize,
+          query: query,
+          category: category?.name,
+          cancelToken: cancelToken,
+        );
+    return SpotPages(
+      query: query,
+      category: category,
+      spots: first.spots,
+      page: first.page,
+      hasNextPage: first.hasNextPage,
+    );
+  }
+
+  Future<void> loadNextPage() async {
+    final current = state.value;
+    if (current == null ||
+        state.isLoading ||
+        !current.hasNextPage ||
+        current.isLoadingMore) {
+      return;
+    }
+    final generation = _generation;
+    state = AsyncData(_copy(current, isLoadingMore: true));
+
+    try {
+      final next = await ref
+          .read(apiClientProvider)
+          .fetchSpots(
+            page: current.page + 1,
+            limit: pageSize,
+            query: current.query,
+            category: current.category?.name,
+          );
+      if (!ref.mounted || generation != _generation) return;
+      state = AsyncData(
+        SpotPages(
+          query: current.query,
+          category: current.category,
+          spots: [...current.spots, ...next.spots],
+          page: next.page,
+          hasNextPage: next.hasNextPage,
+        ),
+      );
+    } on Exception catch (e) {
+      if (!ref.mounted || generation != _generation) return;
+      state = AsyncData(_copy(current, loadMoreError: e));
+    }
+  }
+
+  SpotPages _copy(
+    SpotPages s, {
+    bool isLoadingMore = false,
+    Object? loadMoreError,
+  }) => SpotPages(
+    query: s.query,
+    category: s.category,
+    spots: s.spots,
+    page: s.page,
+    hasNextPage: s.hasNextPage,
+    isLoadingMore: isLoadingMore,
+    loadMoreError: loadMoreError,
+  );
+}
+
+final spotPagesProvider = AsyncNotifierProvider<SpotPagesNotifier, SpotPages>(
+  SpotPagesNotifier.new,
+);
+
+final spotDetailProvider = FutureProvider.autoDispose.family<Spot, String>(
+  (ref, id) => ref.watch(apiClientProvider).fetchSpot(id),
+);
+
+final reviewsProvider = FutureProvider.autoDispose.family<List<Review>, String>(
+  (ref, spotId) => ref.watch(apiClientProvider).fetchReviews(spotId),
+);
