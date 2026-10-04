@@ -68,9 +68,9 @@ class _SpotListScreenState extends ConsumerState<SpotListScreen> {
             onPressed: () => context.push('/nearby'),
           ),
           IconButton(
-            tooltip: 'Sign out',
-            icon: const Icon(Icons.logout),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
+            tooltip: 'Settings',
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/settings'),
           ),
           LiveIndicator(
             connected: switch (ref.watch(liveEventsProvider).valueOrNull) {

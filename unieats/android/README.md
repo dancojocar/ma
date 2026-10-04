@@ -1,4 +1,4 @@
-# UniEats Android — tag `l10-polish`
+# UniEats Android — tag `l11-cloud`
 
 Offline-first: Room is the only thing the screens read. The network refreshes Room, the
 WebSocket writes into Room, and your edits go to Room first and to an outbox second, which a
@@ -69,6 +69,22 @@ cd unieats/server && npm install && npm start      # http://localhost:3000
 - Screen changes slide and fade (`NavHost` enter/exit/popEnter/popExit transitions).
 - `PERFORMANCE.md` — the profiling steps from the lecture (HWUI bars, Layout Inspector
   recomposition counts, Perfetto, Memory Profiler).
+
+## Remote config + crash reporting (new in l11)
+
+No Firebase dependency: the same ideas against the course server.
+
+- `cloud/RemoteConfig.kt` — flags from `GET /api/config` with in-app defaults
+  (`show_new_rating_ui = false`). ⋮ → **Settings** → **Fetch & activate** applies the server value at
+  once; when the flag is true the list shows the new pill-shaped rating badge (`RatingBadge`).
+  Flip it for the class (needs a token, see `$TOKEN` below):
+  `curl -X POST localhost:3000/api/config -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}'`
+- `cloud/CrashReporter.kt` — the app talks to a `CrashReporter` interface; `LogcatCrashReporter`
+  logs, `ConsentGatedCrashReporter` drops everything until the user turns on **Share crash
+  reports** (persisted, off by default). Uncaught exceptions go through it too
+  (`UniEatsApplication`). Debug builds have a **Test crash** button that calls
+  `crashReporter.recordError()` — watch Logcat tag `CrashReporter`. Swapping in Crashlytics is a
+  new implementation bound in `di/CloudModule.kt`.
 
 ## Demo: offline edit → reconnect → sync
 

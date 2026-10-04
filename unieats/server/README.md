@@ -31,6 +31,8 @@ outside the classroom).
 | DELETE | `/api/spots/:id` | Bearer | 204 |
 | GET | `/api/spots/:id/reviews` | – | `Review[]` |
 | POST | `/api/spots/:id/reviews` | Bearer | `{ stars, text }`, 201 |
+| GET | `/api/config` | – | `{ flags: { show_new_rating_ui } }` (remote config, default `false`) |
+| POST | `/api/config` | Bearer | `{ flags: { show_new_rating_ui: true } }` flips it for the demo |
 
 Errors are always `{ error: { code, message } }`. Mutations honour `Idempotency-Key`.
 
@@ -55,6 +57,16 @@ curl -s -X POST http://localhost:3000/api/spots/spot-1/reviews -H "Authorization
   -H 'Content-Type: application/json' -d '{"stars":5,"text":"Great soup"}' | jq .
 ```
 
+## Remote config demo (L11)
+
+```bash
+curl -s http://localhost:3000/api/config | jq .        # show_new_rating_ui: false
+curl -s -X POST http://localhost:3000/api/config -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"flags":{"show_new_rating_ui":true}}' | jq .
+```
+
+Then tap "Fetch & activate" in any client: the new rating badge appears without a rebuild.
+
 ## Live updates (WebSocket)
 
 `ws://localhost:3000/live` (not `/api/live`) receives one JSON message per change:
@@ -78,3 +90,10 @@ curl -s -X PATCH http://localhost:3000/api/spots/spot-1 -H "Authorization: Beare
 ```bash
 curl -i http://localhost:3000/api/spots -H 'X-Chaos-Status: 503'
 ```
+
+## CI
+
+`ci/` holds the GitHub Actions workflows for the whole UniEats folder (`server.yml`,
+`native.yml`, `cross.yml`). They belong in `.github/workflows/` at the root of the course
+repo, where UniEats lives under `unieats/`. Maestro jobs run only on a manual
+`workflow_dispatch` with `run_maestro` ticked.

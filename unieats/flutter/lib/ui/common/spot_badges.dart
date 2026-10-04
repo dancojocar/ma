@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../domain/models.dart';
+import '../../providers/providers.dart';
 
 class OpenBadge extends StatelessWidget {
   const OpenBadge({super.key, required this.openNow});
@@ -30,30 +33,36 @@ class OpenBadge extends StatelessWidget {
   }
 }
 
-class SpotMetaRow extends StatelessWidget {
+class SpotMetaRow extends ConsumerWidget {
   const SpotMetaRow({super.key, required this.spot});
 
   final Spot spot;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final newRatingUi = ref.watch(
+      remoteConfigProvider.select((f) => f.showNewRatingUi),
+    );
     return Wrap(
       spacing: 12,
       runSpacing: 4,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.star_rounded, size: 16, color: Colors.amber[700]),
-            const SizedBox(width: 4),
-            Text(
-              spot.rating.toStringAsFixed(1),
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-        ),
+        if (newRatingUi)
+          NewRatingBadge(rating: spot.rating)
+        else
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.star_rounded, size: 16, color: Colors.amber[700]),
+              const SizedBox(width: 4),
+              Text(
+                spot.rating.toStringAsFixed(1),
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
         Text(
           r'$' * spot.priceLevel,
           style: theme.textTheme.bodySmall?.copyWith(
@@ -88,6 +97,33 @@ class FavouriteButton extends StatelessWidget {
       icon: Icon(isFavourite ? Icons.favorite : Icons.favorite_border),
       color: isFavourite ? Colors.red : null,
       onPressed: onToggle,
+    );
+  }
+}
+
+/// The redesigned rating shown when the `show_new_rating_ui` flag is on.
+class NewRatingBadge extends StatelessWidget {
+  const NewRatingBadge({super.key, required this.rating});
+
+  final double rating;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [scheme.primary, scheme.tertiary]),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        '★ ${rating.toStringAsFixed(1)} / 5',
+        style: TextStyle(
+          color: scheme.onPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 }

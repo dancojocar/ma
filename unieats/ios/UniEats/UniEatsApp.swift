@@ -8,6 +8,8 @@ struct UniEatsApp: App {
     private let live = LiveUpdateService()
     private let notifier = SpotChangeNotifier()
     @State private var session: SessionStore
+    @State private var remoteConfig: RemoteConfig
+    @State private var crashConsent = CrashReportingConsent()
     @State private var connectivity = ConnectivityMonitor()
 
     init() {
@@ -19,6 +21,7 @@ struct UniEatsApp: App {
         let api = ApiClient()
         let session = SessionStore(api: api)
         _session = State(initialValue: session)
+        _remoteConfig = State(initialValue: RemoteConfig(api: api))
         repository = SpotRepository(context: container.mainContext, api: api, session: session)
     }
 
@@ -28,12 +31,16 @@ struct UniEatsApp: App {
                 if session.isLoggedIn {
                     TabView {
                         Tab("Spots", systemImage: "fork.knife") {
-                            SpotListView(repository: repository, live: live, session: session, notifier: notifier)
+                            SpotListView(repository: repository, live: live, notifier: notifier)
                         }
                         Tab("Near Me", systemImage: "location") {
                             NearMeView(repository: repository)
                         }
+                        Tab("Settings", systemImage: "gearshape") {
+                            SettingsView(session: session, remoteConfig: remoteConfig, crashConsent: crashConsent)
+                        }
                     }
+                    .environment(remoteConfig)
                     .task { await notifier.requestPermission() }
                 } else {
                     LoginView(session: session)

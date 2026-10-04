@@ -80,6 +80,11 @@ class ApiClient {
     Review.fromJson,
   );
 
+  Future<Map<String, bool>> fetchConfig() => _send(
+    () => _dio.get<Map<String, dynamic>>('/config'),
+    (json) => (json['flags'] as Map<String, dynamic>).cast<String, bool>(),
+  );
+
   /// [idempotencyKey] makes a replayed request safe: the server answers a
   /// repeated key with the original response instead of applying it twice.
   Future<Spot> patchSpot(
