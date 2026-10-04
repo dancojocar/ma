@@ -1,6 +1,7 @@
 package com.unieats.app.ui.spotdetail
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,26 +22,38 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
 import com.unieats.app.ui.components.ratingText
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SpotDetailScreen(
-    spot: Spot,
-    reviews: List<Review>,
+    onBack: () -> Unit,
+    viewModel: SpotDetailViewModel = hiltViewModel()
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    SpotDetailContent(state = state, onBack = onBack)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SpotDetailContent(
+    state: SpotDetailUiState,
     onBack: () -> Unit
 ) {
+    val spot = state.spot
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(spot.name) },
+                title = { Text(spot?.name ?: "Spot") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -49,14 +62,25 @@ fun SpotDetailScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            item { SpotHeader(spot) }
-            item { ReviewsHeader(reviews.size) }
-            items(reviews, key = { it.id }) { review -> ReviewRow(review) }
+        if (spot == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Spot not found")
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                item { SpotHeader(spot) }
+                item { ReviewsHeader(state.reviews.size) }
+                items(state.reviews, key = { it.id }) { review -> ReviewRow(review) }
+            }
         }
     }
 }

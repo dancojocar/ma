@@ -1,6 +1,18 @@
 import SwiftUI
 
 struct SpotDetailView: View {
+    let spotId: String
+
+    var body: some View {
+        if let spot = sampleSpots.first(where: { $0.id == spotId }) {
+            SpotDetailContent(spot: spot)
+        } else {
+            ContentUnavailableView("Spot not found", systemImage: "fork.knife", description: Text(spotId))
+        }
+    }
+}
+
+private struct SpotDetailContent: View {
     let spot: Spot
 
     var body: some View {
