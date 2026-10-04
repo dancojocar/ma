@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'ui/hello_screen.dart';
+import 'ui/spot_list/spot_list_screen.dart';
 
 void main() {
   runApp(const UniEatsApp());
@@ -27,7 +27,7 @@ class UniEatsApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HelloScreen(),
+      home: const SpotListScreen(),
     );
   }
 }

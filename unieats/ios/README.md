@@ -1,18 +1,21 @@
-# UniEats iOS — l01-hello
+# UniEats iOS — l02-ui
 
-A single SwiftUI screen: "UniEats / Find your next campus meal."
+Static list + detail from hard-coded data (no network yet).
+
+- `UniEats/Models/Spot.swift` — `Spot` and `sampleSpots`, the 8 canonical campus spots
+  (`spot-1` … `spot-8`, same data as the server seed and the other three stacks).
+- `UniEats/Views/SpotListView.swift` — `List(sampleSpots) { … }` (the SwiftUI counterpart of
+  `LazyColumn` / `ListView.builder` / `FlatList`; `Spot: Identifiable` is the key) and a
+  `@State selectedSpot` that presents `SpotDetailView` as a sheet.
+- `SpotRow` / `SpotDetailView` load the photo with `AsyncImage` from `photoUrl`.
 
 ## Run
 
-1. `open UniEats.xcodeproj` (Xcode 16 or later).
-2. Pick an iPhone simulator and press Run (Cmd+R).
-
-From the command line:
+`open UniEats.xcodeproj`, pick an iPhone simulator, Cmd+R. Or:
 
 ```bash
 xcodebuild -project UniEats.xcodeproj -scheme UniEats \
   -destination 'generic/platform=iOS Simulator' build CODE_SIGNING_ALLOWED=NO
 ```
 
-The `UniEats/` folder is a synchronized group: any Swift file added to it is compiled
-without editing the project file. Bundle id: `com.unieats.app`.
+The `UniEats/` folder is a synchronized group: new Swift files are compiled automatically.
