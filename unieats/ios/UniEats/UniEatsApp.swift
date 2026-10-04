@@ -4,7 +4,7 @@ import SwiftUI
 struct UniEatsApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            SpotListView()
         }
     }
 }

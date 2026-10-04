@@ -1,6 +1,8 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l01-hello`: a single "UniEats / Find your next campus meal." screen.
+Tag `l02-ui`: a static list of the 8 canonical campus spots (hard-coded in `src/data/seeds.ts`)
+with a detail view. Selection is local `useState` in `app/(tabs)/spots/index.tsx`; the list is a
+`FlatList` with `keyExtractor` and every style goes through `StyleSheet.create`. No network yet.
 
 ## Run
 
