@@ -10,16 +10,22 @@ pull-to-refresh on both screens; favourites (in memory) are kept.
   `RetryInterceptor` (3 retries, exponential backoff) for GETs; failures become a sealed `AppError`.
 - `lib/providers/providers.dart` — `SpotPagesNotifier` (`AsyncNotifier`) does the manual pagination.
 
-This tag (`l06-async`) adds live updates: `liveEventsProvider` (a `StreamProvider.autoDispose`) listens to
-`ws://<host>:3000/live` (`lib/data/network/live_updates.dart`), and `spot.created/updated/deleted`
-events patch the visible list in place. A "Live/Offline" dot in the app bar shows the connection; on a
-drop it reconnects with backoff (1 s doubling to 30 s). The socket closes when the list screen is
-disposed or the app goes to the background, and reopens on resume. Try it:
+Since `l06-async` a WebSocket (`ws://<host>:3000/live`) streams spot changes into the app
+(`lib/data/network/live_updates.dart`), reconnecting with backoff; a "Live/Offline" dot shows it.
 
-```bash
-curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Pizza Stop (live)"}' \
-  http://localhost:3000/api/spots/spot-3
-```
+This tag (`l07-offline`) makes a local Drift database the single source of truth
+(`lib/data/database/`): screens only watch Drift; network refreshes and live events upsert into it
+without touching rows that have unsynced edits. "Edit spot" on the detail screen changes the row at
+once and queues an outbox op; `SpotRepository.syncOutbox()` replays it with `Idempotency-Key` when the
+device reconnects (`connectivity_plus`), the WebSocket reconnects, the app starts, or you tap
+"Sync now". A 409 resolves last-write-wins on `updatedAt` (`lib/data/sync/sync_conflict_resolver.dart`).
+
+Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
+Conflict: edit offline, then `curl -X PATCH -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
+http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
+
+Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
+`database.dart` run `dart run build_runner build --delete-conflicting-outputs`.
 
 ## Run
 

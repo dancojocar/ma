@@ -1,11 +1,23 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/database/database.dart';
 import '../data/network/api_client.dart';
 import '../data/network/api_config.dart';
 import '../data/network/live_updates.dart';
+import '../data/repository/review_repository.dart';
+import '../data/repository/spot_repository.dart';
 import '../domain/models.dart';
+
+final databaseProvider = Provider<AppDatabase>((ref) {
+  final db = AppDatabase();
+  ref.onDispose(db.close);
+  return db;
+});
 
 final dioProvider = Provider<Dio>((ref) {
   final dio = createDio(apiBaseUrl);
@@ -16,6 +28,31 @@ final dioProvider = Provider<Dio>((ref) {
 final apiClientProvider = Provider<ApiClient>(
   (ref) => ApiClient(ref.watch(dioProvider)),
 );
+
+final spotRepositoryProvider = Provider<SpotRepository>(
+  (ref) =>
+      SpotRepository(ref.watch(databaseProvider), ref.watch(apiClientProvider)),
+);
+
+final reviewRepositoryProvider = Provider<ReviewRepository>(
+  (ref) => ReviewRepository(
+    ref.watch(databaseProvider),
+    ref.watch(apiClientProvider),
+  ),
+);
+
+/// Replays the outbox at start-up and whenever the device regains a network
+/// connection. Kept alive by the app root.
+final outboxSyncProvider = Provider<void>((ref) {
+  final repo = ref.watch(spotRepositoryProvider);
+  unawaited(repo.syncOutbox());
+  final sub = Connectivity().onConnectivityChanged.listen((results) {
+    if (results.any((r) => r != ConnectivityResult.none)) {
+      unawaited(repo.syncOutbox());
+    }
+  });
+  ref.onDispose(sub.cancel);
+});
 
 class AppLifecycleNotifier extends Notifier<AppLifecycleState> {
   @override
@@ -89,64 +126,50 @@ final spotListProvider = NotifierProvider<SpotListNotifier, SpotListUiState>(
   SpotListNotifier.new,
 );
 
-class SpotPages {
-  const SpotPages({
-    required this.query,
-    required this.category,
-    required this.spots,
+class SpotPaging {
+  const SpotPaging({
     required this.page,
     required this.hasNextPage,
     this.isLoadingMore = false,
     this.loadMoreError,
   });
 
-  final String query;
-  final SpotCategory? category;
-  final List<Spot> spots;
   final int page;
   final bool hasNextPage;
   final bool isLoadingMore;
   final Object? loadMoreError;
 }
 
-/// Page-by-page `GET /spots` for the current search query and category.
-/// Changing either filter rebuilds it from page 1. Live WebSocket events patch
-/// the loaded pages in place.
-class SpotPagesNotifier extends AutoDisposeAsyncNotifier<SpotPages> {
+/// Page-by-page `GET /spots` for the current search query and category; every
+/// page is upserted into the local database, which is what the list shows.
+/// Changing either filter starts again from page 1.
+class SpotPagingNotifier extends AutoDisposeAsyncNotifier<SpotPaging> {
   static const pageSize = 20;
 
   int _generation = 0;
 
   @override
-  Future<SpotPages> build() async {
+  Future<SpotPaging> build() async {
     _generation++;
     final (query, category) = ref.watch(
       spotListProvider.select((s) => (s.searchQuery.trim(), s.categoryFilter)),
     );
     final cancelToken = CancelToken();
     ref.onDispose(cancelToken.cancel);
-    ref.listen(liveEventsProvider, (_, next) {
-      if (next.valueOrNull case final event?) _applyLiveEvent(event);
-    });
 
     if (query.isNotEmpty) {
       await Future<void>.delayed(const Duration(milliseconds: 300));
     }
     final first = await ref
-        .read(apiClientProvider)
-        .fetchSpots(
+        .read(spotRepositoryProvider)
+        .refreshPage(
+          page: 1,
           limit: pageSize,
           query: query,
-          category: category?.name,
+          category: category,
           cancelToken: cancelToken,
         );
-    return SpotPages(
-      query: query,
-      category: category,
-      spots: first.spots,
-      page: first.page,
-      hasNextPage: first.hasNextPage,
-    );
+    return SpotPaging(page: first.page, hasNextPage: first.hasNextPage);
   }
 
   Future<void> loadNextPage() async {
@@ -158,94 +181,84 @@ class SpotPagesNotifier extends AutoDisposeAsyncNotifier<SpotPages> {
       return;
     }
     final generation = _generation;
-    state = AsyncData(_copy(current, isLoadingMore: true));
-
+    final filter = ref.read(spotListProvider);
+    state = AsyncData(
+      SpotPaging(page: current.page, hasNextPage: true, isLoadingMore: true),
+    );
     try {
       final next = await ref
-          .read(apiClientProvider)
-          .fetchSpots(
+          .read(spotRepositoryProvider)
+          .refreshPage(
             page: current.page + 1,
             limit: pageSize,
-            query: current.query,
-            category: current.category?.name,
+            query: filter.searchQuery.trim(),
+            category: filter.categoryFilter,
           );
       if (generation != _generation) return;
       state = AsyncData(
-        SpotPages(
-          query: current.query,
-          category: current.category,
-          spots: [...current.spots, ...next.spots],
-          page: next.page,
-          hasNextPage: next.hasNextPage,
-        ),
+        SpotPaging(page: next.page, hasNextPage: next.hasNextPage),
       );
     } on Exception catch (e) {
       if (generation != _generation) return;
-      state = AsyncData(_copy(current, loadMoreError: e));
+      state = AsyncData(
+        SpotPaging(page: current.page, hasNextPage: true, loadMoreError: e),
+      );
     }
   }
-
-  void _applyLiveEvent(LiveEvent event) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final spots = switch (event) {
-      SpotChanged(:final spot) when current.spots.any((s) => s.id == spot.id) =>
-        [for (final s in current.spots) s.id == spot.id ? spot : s],
-      SpotChanged(:final spot)
-          when !current.hasNextPage && _matches(current, spot) =>
-        [...current.spots, spot],
-      SpotDeleted(:final id) => [
-        for (final s in current.spots)
-          if (s.id != id) s,
-      ],
-      _ => null,
-    };
-    if (spots == null) return;
-    state = AsyncData(
-      SpotPages(
-        query: current.query,
-        category: current.category,
-        spots: spots,
-        page: current.page,
-        hasNextPage: current.hasNextPage,
-        isLoadingMore: current.isLoadingMore,
-        loadMoreError: current.loadMoreError,
-      ),
-    );
-  }
-
-  bool _matches(SpotPages pages, Spot spot) {
-    final query = pages.query.toLowerCase();
-    return (pages.category == null || spot.category == pages.category) &&
-        (query.isEmpty ||
-            spot.name.toLowerCase().contains(query) ||
-            spot.description.toLowerCase().contains(query));
-  }
-
-  SpotPages _copy(
-    SpotPages s, {
-    bool isLoadingMore = false,
-    Object? loadMoreError,
-  }) => SpotPages(
-    query: s.query,
-    category: s.category,
-    spots: s.spots,
-    page: s.page,
-    hasNextPage: s.hasNextPage,
-    isLoadingMore: isLoadingMore,
-    loadMoreError: loadMoreError,
-  );
 }
 
-final spotPagesProvider =
-    AsyncNotifierProvider.autoDispose<SpotPagesNotifier, SpotPages>(
-      SpotPagesNotifier.new,
+final spotPagingProvider =
+    AsyncNotifierProvider.autoDispose<SpotPagingNotifier, SpotPaging>(
+      SpotPagingNotifier.new,
     );
 
-final spotDetailProvider = FutureProvider.autoDispose.family<Spot, String>(
-  (ref, id) => ref.watch(apiClientProvider).fetchSpot(id),
+/// What the list renders: local rows matching the current filters.
+final visibleSpotsProvider = StreamProvider.autoDispose<List<Spot>>((ref) {
+  final (query, category) = ref.watch(
+    spotListProvider.select((s) => (s.searchQuery.trim(), s.categoryFilter)),
+  );
+  return ref
+      .watch(spotRepositoryProvider)
+      .watchSpots(query: query, category: category);
+});
+
+/// Writes live WebSocket events into the database (the list and detail
+/// screens update from there) and replays the outbox whenever the socket
+/// (re)connects, because then the server is reachable.
+final liveSyncProvider = Provider.autoDispose<void>((ref) {
+  final repo = ref.watch(spotRepositoryProvider);
+  ref.listen(liveEventsProvider, (_, next) {
+    switch (next.valueOrNull) {
+      case LiveConnected():
+        unawaited(repo.syncOutbox());
+      case final event?:
+        unawaited(repo.applyLiveEvent(event));
+      case null:
+        break;
+    }
+  });
+});
+
+final pendingSpotIdsProvider = StreamProvider.autoDispose<Set<String>>(
+  (ref) => ref.watch(spotRepositoryProvider).watchPendingIds(),
 );
 
-final reviewsProvider = FutureProvider.autoDispose.family<List<Review>, String>(
-  (ref, spotId) => ref.watch(apiClientProvider).fetchReviews(spotId),
+final pendingChangesCountProvider = StreamProvider.autoDispose<int>(
+  (ref) => ref.watch(spotRepositoryProvider).watchPendingCount(),
+);
+
+final spotDetailProvider = StreamProvider.autoDispose.family<Spot?, String>(
+  (ref, id) => ref.watch(spotRepositoryProvider).watchSpot(id),
+);
+
+final spotRefreshProvider = FutureProvider.autoDispose.family<void, String>(
+  (ref, id) => ref.watch(spotRepositoryProvider).refreshSpot(id),
+);
+
+final reviewsProvider = StreamProvider.autoDispose.family<List<Review>, String>(
+  (ref, spotId) => ref.watch(reviewRepositoryProvider).watchReviews(spotId),
+);
+
+final reviewsRefreshProvider = FutureProvider.autoDispose.family<void, String>(
+  (ref, spotId) => ref.watch(reviewRepositoryProvider).refreshReviews(spotId),
 );

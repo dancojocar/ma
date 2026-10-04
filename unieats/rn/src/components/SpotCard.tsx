@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import type { Spot } from "../domain/models";
+import type { LocalSpot } from "../domain/models";
 import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel } from "./format";
 
@@ -9,7 +9,7 @@ export function SpotCard({
   onPress,
   onToggleFavourite,
 }: {
-  spot: Spot;
+  spot: LocalSpot;
   isFavourite: boolean;
   onPress: () => void;
   onToggleFavourite: () => void;
@@ -34,6 +34,7 @@ export function SpotCard({
           <Text style={[styles.badge, spot.openNow ? styles.open : styles.closed]}>
             {spot.openNow ? "Open" : "Closed"}
           </Text>
+          {spot.pendingSync && <Text style={[styles.badge, styles.pending]}>Pending sync</Text>}
         </View>
       </View>
       <View style={styles.meta}>
@@ -77,6 +78,7 @@ const styles = StyleSheet.create({
   },
   open: { backgroundColor: "#e6f4ea" },
   closed: { backgroundColor: "#fce8e6" },
+  pending: { backgroundColor: "#fff4e5", color: "#8a4b00", textTransform: "none" },
   meta: { alignItems: "flex-end", gap: 4 },
   rating: { fontSize: 14, color: "#f0a500", fontWeight: "600" },
   price: { fontSize: 13, color: "#777" },

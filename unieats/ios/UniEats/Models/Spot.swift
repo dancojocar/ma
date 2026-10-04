@@ -38,6 +38,16 @@ extension Spot {
     }
 }
 
+extension Spot {
+    var dto: SpotDTO {
+        SpotDTO(
+            id: id, name: name, category: category, rating: rating, priceLevel: priceLevel,
+            lat: lat, lng: lng, openNow: openNow, photoUrl: photoUrl,
+            description: spotDescription, updatedAt: updatedAt
+        )
+    }
+}
+
 struct SpotsPage: Decodable, Sendable {
     let spots: [SpotDTO]
     let page: Int

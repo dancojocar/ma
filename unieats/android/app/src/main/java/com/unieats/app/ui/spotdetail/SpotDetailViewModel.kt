@@ -12,8 +12,10 @@ import com.unieats.app.ui.navigation.SpotDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -21,8 +23,10 @@ import javax.inject.Inject
 data class SpotDetailUiState(
     val spot: Spot? = null,
     val reviews: List<Review> = emptyList(),
+    val isPendingSync: Boolean = false,
     val isLoading: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isLive: Boolean = false
 )
 
 @HiltViewModel
@@ -34,28 +38,34 @@ class SpotDetailViewModel @Inject constructor(
     private val spotId: String = savedStateHandle.toRoute<SpotDetail>().spotId
 
     private val _uiState = MutableStateFlow(SpotDetailUiState())
-    val uiState: StateFlow<SpotDetailUiState> = _uiState.asStateFlow()
+
+    val uiState: StateFlow<SpotDetailUiState> = combine(
+        _uiState,
+        spotRepository.observeSpot(spotId),
+        spotRepository.observeReviews(spotId),
+        spotRepository.observePendingSpotIds(),
+        spotRepository.liveConnection
+    ) { state, spot, reviews, pendingIds, live ->
+        state.copy(spot = spot, reviews = reviews, isPendingSync = spotId in pendingIds, isLive = live)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), _uiState.value)
 
     init {
-        load()
+        refresh()
     }
 
-    fun load() {
+    fun refresh() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val spot = async { spotRepository.fetchSpot(spotId) }
-            val reviews = async { spotRepository.fetchReviews(spotId) }
-            val spotResult = spot.await()
-            val reviewsResult = reviews.await()
-            val error = spotResult.exceptionOrNull() ?: reviewsResult.exceptionOrNull()
-            _uiState.update {
-                it.copy(
-                    spot = spotResult.getOrNull() ?: it.spot,
-                    reviews = reviewsResult.getOrNull() ?: it.reviews,
-                    isLoading = false,
-                    errorMessage = error?.toUserMessage()
-                )
-            }
+            val spot = async { spotRepository.refreshSpot(spotId) }
+            val reviews = async { spotRepository.refreshReviews(spotId) }
+            val error = spot.await().exceptionOrNull() ?: reviews.await().exceptionOrNull()
+            _uiState.update { it.copy(isLoading = false, errorMessage = error?.toUserMessage()) }
+        }
+    }
+
+    fun saveEdit(name: String, description: String, openNow: Boolean) {
+        viewModelScope.launch {
+            spotRepository.editSpot(spotId, name.trim(), description.trim(), openNow)
         }
     }
 }

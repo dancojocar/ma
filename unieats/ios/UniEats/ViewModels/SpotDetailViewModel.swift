@@ -4,28 +4,32 @@ import Foundation
 @Observable
 final class SpotDetailViewModel {
     let spotId: String
-    private(set) var spot: Spot?
-    private(set) var reviews: [Review] = []
     private(set) var isLoading = false
     private(set) var errorMessage: String?
 
-    private let api: ApiClient
+    private let repository: SpotRepository
 
-    init(spotId: String, api: ApiClient) {
+    init(spotId: String, repository: SpotRepository) {
         self.spotId = spotId
-        self.api = api
+        self.repository = repository
     }
 
-    func load() async {
+    func refresh() async {
         isLoading = true
         defer { isLoading = false }
         errorMessage = nil
         do {
-            async let spotDTO = api.getSpot(id: spotId)
-            async let fetchedReviews = api.getReviews(spotId: spotId)
-            spot = Spot(dto: try await spotDTO)
-            reviews = try await fetchedReviews.sorted { $0.createdAt > $1.createdAt }
+            try await repository.refreshSpot(id: spotId)
+            try await repository.refreshReviews(spotId: spotId)
         } catch is CancellationError {
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func save(name: String, description: String, openNow: Bool) {
+        do {
+            try repository.editSpot(id: spotId, name: name, description: description, openNow: openNow)
         } catch {
             errorMessage = error.localizedDescription
         }

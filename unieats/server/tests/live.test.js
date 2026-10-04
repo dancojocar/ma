@@ -86,6 +86,14 @@ describe('WebSocket /live', () => {
     expect(received).toHaveLength(1);
   });
 
+  it('does not broadcast a rejected (409) write', async () => {
+    const received = [];
+    socket.on('message', (data) => received.push(JSON.parse(data.toString())));
+    await request(server).patch('/api/spots/spot-6').send({ name: 'Stale', updatedAt: 0 }).expect(409);
+    await new Promise((r) => setTimeout(r, 100));
+    expect(received).toEqual([]);
+  });
+
   it('only accepts upgrades on /live (not /api/live)', async () => {
     await expect(connect('/api/live')).rejects.toThrow(/400/);
   });

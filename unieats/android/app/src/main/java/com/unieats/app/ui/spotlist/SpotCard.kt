@@ -31,6 +31,7 @@ import com.unieats.app.ui.components.ratingText
 fun SpotCard(
     spot: Spot,
     isFavourite: Boolean,
+    isPending: Boolean,
     onClick: () -> Unit,
     onToggleFavourite: () -> Unit,
     modifier: Modifier = Modifier
@@ -79,6 +80,13 @@ fun SpotCard(
                         text = if (spot.openNow) "Open" else "Closed",
                         style = MaterialTheme.typography.bodySmall,
                         color = if (spot.openNow) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error
+                    )
+                }
+                if (isPending) {
+                    Text(
+                        "Waiting to sync",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary
                     )
                 }
             }
