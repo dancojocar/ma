@@ -11,33 +11,13 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.unieats.rn",
-      "associatedDomains": [
-        "applinks:unieats.app"
-      ]
+      "bundleIdentifier": "com.unieats.rn"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.unieats.rn",
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "unieats.app",
-              "pathPrefix": "/spots"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        }
-      ]
+      "package": "com.unieats.rn"
     },
     "experiments": {
       "typedRoutes": true
@@ -45,20 +25,6 @@
     "plugins": [
       "expo-router",
       "expo-status-bar",
-      "expo-sqlite",
-      "expo-secure-store",
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "UniEats uses your location to show food spots within 2 km of you."
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "color": "#e87c2a"
-        }
-      ],
       "./plugins/withPrefabNativeAccess"
     ]
   }

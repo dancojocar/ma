@@ -83,11 +83,8 @@ Test gates run where tests exist: Android unit tests from `l12-kmp`, Flutter/RN/
 Known limits, stated honestly:
 - `https://unieats.app/...` links need a hosted assetlinks/AASA file to open the app directly; the
   custom scheme works everywhere. Flutter on iOS declares only the custom scheme (no associated domain).
-- At `l08` the Android/iOS READMEs and at `l08`–`l14` the Flutter README show a conflict-demo `curl -X PATCH`
-  without the Bearer token the server requires from `l08`; prefix it with the login snippet from `server/README.md`
-  (the branch tip's Flutter README is corrected).
-- The iOS `UniEatsTests` at `l14-tests` read the simulator's real keychain; with a session left by the Maestro
-  flow, `OfflineUpsertTests` crash. The branch tip isolates the test keychain item.
+- At `l08` the Android/iOS READMEs and at `l08`–`l13` the Flutter README show a conflict-demo `curl -X PATCH`
+  without the Bearer token the server requires from `l08`; prefix it with the login snippet from `server/README.md`.
 - RN at `l07`–`l09` resolves a 409 by re-sending a newer local edit on top of the server copy; from
   `l10` it follows the contract exactly (server copy wins, op dropped).
 - iOS `l07`–`l13`: a simulator that still has an app store from the pre-rebuild code crashes at

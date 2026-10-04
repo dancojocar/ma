@@ -1,113 +1,19 @@
 # UniEats — Flutter
 
-Discover campus food spots. Since `l05-rest` the app loads everything from the UniEats server:
-the list pages through `GET /api/spots` (20 per page, infinite scroll until `hasNextPage` is false,
-server-side search and category filter), the detail screen fetches `GET /api/spots/:id` and shows its
-reviews read-only from `GET /api/spots/:id/reviews`. Loading, error (with Retry), empty states and
-pull-to-refresh on both screens; favourites (in memory) are kept.
-
-- `lib/data/network/api_client.dart` — dio with 10 s connect / 15 s receive timeouts and a
-  `RetryInterceptor` (3 retries, exponential backoff) for GETs; failures become a sealed `AppError`.
-- `lib/providers/providers.dart` — `SpotPagesNotifier` (`AsyncNotifier`) does the manual pagination.
-
-Since `l06-async` a WebSocket (`ws://<host>:3000/live`) streams spot changes into the app
-(`lib/data/network/live_updates.dart`), reconnecting with backoff; a "Live/Offline" dot shows it.
-
-Since `l07-offline` a local Drift database is the single source of truth (`lib/data/database/`):
-screens only watch Drift, refreshes and live events upsert into it without touching rows with unsynced
-edits, and "Edit spot" queues an outbox op that `SpotRepository.syncOutbox()` replays with
-`Idempotency-Key` on reconnect (409 → last-write-wins, `lib/data/sync/sync_conflict_resolver.dart`).
-
-Since `l08-auth` every screen sits behind `/login` (demo user `student@unieats.app` / `password`);
-the JWT is kept in `flutter_secure_storage`, sent as `Authorization: Bearer` on every mutation and
-outbox replay, a 401 ends the session, "Sign out" is in Settings and "Add review" posts
-through the outbox. Drift schema v2 renamed the reviews column `body` → `text` with a migration.
-
-Since `l09-push-location`:
-- **Spots near me** (`/nearby`, the arrow in the list's app bar): spots within 2 km, nearest first,
-  from `geolocator`. The screen explains why before the system permission prompt, offers "Open
-  settings" when access is blocked, and position updates stop as soon as the screen closes
-  (`positionProvider` is autoDispose). On the emulator set a campus location first:
-  `adb emu geo fix 26.103 44.427` (longitude first), or Simulator → Features → Location → Custom.
-- **Local notifications** "<spot> was updated" (`flutter_local_notifications`) fired by the live
-  WebSocket's `spot.updated` event — no FCM/APNs. Android 13+ asks for `POST_NOTIFICATIONS` when the
-  list first opens. Try: `curl -X PATCH …/api/spots/spot-3` with a Bearer token (see the server README).
-
-Since `l10-polish`: the spot photo flies from the list card to the detail header
-(`Hero(tag: 'spot-photo-<id>')`) and cards fade/slide in with a 40 ms stagger (`AnimatedEntrance` in
-`lib/ui/spot_list/spot_list_screen.dart`, an `AnimationController` per card, disposed with it, skipped
-under "reduce motion"). Profiling steps: [PERFORMANCE.md](PERFORMANCE.md).
-
-Since `l11-cloud` a Settings screen (gear in the list's app bar) holds:
-- **Remote config** — one flag, `show_new_rating_ui` (default `false`). "Fetch & activate" calls
-  `GET /api/config` and applies it at once: the rating turns into the gradient "★ 4.5 / 5" badge.
-  Flip it on the server with `POST /api/config` (Bearer token) `{"flags":{"show_new_rating_ui":true}}`.
-- **Crash reporting** — `CrashReporter` interface (`lib/services/crash_reporter.dart`); the default
-  logs to the `crash` log channel, behind a consent gate (opt-in switch, stored with
-  `shared_preferences`). `main` wires `FlutterError.onError`, `PlatformDispatcher.instance.onError`
-  and a `runZonedGuarded` zone (with `ensureInitialized` inside it). Debug builds show a "Test crash"
-  button that calls `recordError()`; nothing is reported until you opt in. No Firebase dependency.
-
-Since `l12-kmp` there is a shared domain layer, the Dart counterpart of the Kotlin
-Multiplatform module: `packages/unieats_data` is **pure Dart** (no Flutter, Drift or dio) and holds
-the models, the live-event types, `SyncConflictResolver` and the repository interfaces
-(`SpotRepository`, `ReviewRepository`, `AuthRepository`). The app implements them
-(`DriftSpotRepository`, `DriftReviewRepository`, `TokenAuthRepository`) and the providers expose only
-the interfaces. Check the package on its own: `cd packages/unieats_data && dart pub get && dart analyze`.
-
-Since `l13-ai` **Describe this dish** on the detail screen POSTs the full spot
-(including `openNow`) to `/api/ai/describe` and renders the Server-Sent Events stream as it arrives
-(dio `ResponseType.stream` + `lib/data/network/sse.dart`). Without `ANTHROPIC_API_KEY` the server
-streams a template in four chunks, so the demo works offline; with the key it streams Claude's text.
-If the server is down the card says "Server unreachable".
-
-This tag (`l14-tests`) adds tests:
-
-```bash
-flutter test                         # 26 tests
-maestro test maestro/flutter.yaml    # needs the server + a running emulator/simulator
-```
-
-- `test/models_test.dart` — JSON ↔ models (contract shape, round trip, bad data), live-event and SSE parsing.
-- `test/database_test.dart` — in-memory Drift: upsert by id, pending rows never clobbered,
-  `getPendingSync`/`markSynced`, filtering, outbox order, reviews, schema v1 → v2 migration.
-- `test/sync_conflict_test.dart` — `SyncConflictResolver` (server wins only when strictly newer; a tie keeps
-  the client edit) and outbox replay against a scripted API: 2xx, 409 server-wins, 409 tie → resend,
-  offline and 401 keep the op.
-- `maestro/flutter.yaml` — sign in → first spot (`id: spot-list-item`) → `Reviews (N)`
-  (`id: spot-detail-reviews`) → "Describe this dish" (`id: describe-dish-button`) → back. The ids are
-  `Semantics(identifier: …)` in the widgets. Validate with `maestro check-syntax maestro/flutter.yaml`.
-
-Demo: turn on airplane mode, edit a spot (see "1 change pending"), turn it off and watch it sync.
-Get a token first: `TOKEN=$(curl -s -X POST localhost:3000/api/auth/login -H 'Content-Type: application/json' -d '{"email":"student@unieats.app","password":"password"}' | node -pe 'JSON.parse(require("fs").readFileSync(0)).token')`.
-Conflict: edit offline, then `curl -X PATCH -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"name":"Server wins"}'
-http://localhost:3000/api/spots/spot-3`, reconnect: the server copy wins.
-
-Edits now need a signed-in session. Drift generates `lib/data/database/database.g.dart` (committed). After changing `tables.dart` or
-`database.dart` run `dart run build_runner build --delete-conflicting-outputs`.
+Discover campus food spots. This tag (`l01-hello`) is the bare shell: one screen,
+"UniEats / Find your next campus meal."
 
 ## Run
 
 Requires Flutter 3.47.6 or newer. The Android shell uses the Gradle wrapper (9.8.0) and AGP 9.4.1 with
-built-in Kotlin, and builds with Android Studio 2026.2's bundled JDK 25 as is (JDK 21 works too), so there is
+built-in Kotlin, and builds with Android Studio 2026.1's bundled JDK 25 as is (JDK 21 works too), so there is
 no `flutter config --jdk-dir` step. iOS (tested with Xcode 27, deployment target 15.0) links plugins as Swift
 packages: no CocoaPods, no `pod install`.
 
 ```bash
-cd ../server && npm ci && npm start        # http://localhost:3000
 flutter pub get
-flutter run
+flutter run            # pick an Android emulator or iOS simulator
 ```
-
-The app picks `http://10.0.2.2:3000/api` on the Android emulator and `http://localhost:3000/api`
-elsewhere (iOS simulator). On a physical device either `adb reverse tcp:3000 tcp:3000` (Android) or
-pass your machine's address: `flutter run --dart-define=API_BASE_URL=http://<ip>:3000/api`
-(Android only allows clear-text http to `10.0.2.2`/`localhost`, see
-`android/app/src/main/res/xml/network_security_config.xml`).
-
-Deep links (from l04) open a spot directly:
-`adb shell am start -W -a android.intent.action.VIEW -d "unieats://spots/spot-3" com.unieats.flutter`
-(also `https://unieats.app/spots/spot-3`), or `xcrun simctl openurl booted "unieats://spots/spot-3"`.
 
 Android application id and iOS bundle id: `com.unieats.flutter`.
 
@@ -115,7 +21,5 @@ Android application id and iOS bundle id: `com.unieats.flutter`.
 
 ```bash
 flutter analyze
-flutter test
 flutter build apk --debug
-(cd packages/unieats_data && dart pub get && dart analyze)
 ```
