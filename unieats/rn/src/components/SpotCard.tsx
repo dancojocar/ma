@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Spot } from "../domain/models";
 import { priceLabel } from "./format";
 
@@ -9,6 +9,11 @@ export function SpotCard({ spot, onPress }: { spot: Spot; onPress: () => void })
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       onPress={onPress}
     >
+      {spot.photoUrl ? (
+        <Image source={{ uri: spot.photoUrl }} style={styles.thumb} />
+      ) : (
+        <View style={[styles.thumb, styles.thumbPlaceholder]} />
+      )}
       <View style={styles.main}>
         <Text style={styles.name} numberOfLines={1}>
           {spot.name}
@@ -31,9 +36,11 @@ export function SpotCard({ spot, onPress }: { spot: Spot; onPress: () => void })
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 14,
+    padding: 12,
     elevation: 2,
     shadowColor: "#000",
     shadowOpacity: 0.06,
@@ -41,6 +48,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
   },
   pressed: { opacity: 0.75 },
+  thumb: { width: 56, height: 56, borderRadius: 8 },
+  thumbPlaceholder: { backgroundColor: "#f0e8df" },
   main: { flex: 1 },
   name: { fontSize: 16, fontWeight: "600", color: "#222", marginBottom: 6 },
   badgeRow: { flexDirection: "row", gap: 6 },
