@@ -14,6 +14,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -27,7 +28,7 @@ fun SpotListScreen(
     onSpotClick: (String) -> Unit
 ) {
     var sortByRating by rememberSaveable { mutableStateOf(false) }
-    val sorted = if (sortByRating) spots.sortedByDescending { it.rating } else spots
+    val sorted = remember(spots, sortByRating) { if (sortByRating) spots.sortedByDescending { it.rating } else spots }
 
     Scaffold(
         topBar = {

@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,8 +15,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.unieats.app.R
 import com.unieats.app.data.model.Spot
 import com.unieats.app.ui.components.SpotPhoto
 import com.unieats.app.ui.components.priceText
@@ -59,12 +61,16 @@ fun SpotCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Default.Star,
+                        painterResource(R.drawable.ic_star),
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.tertiary
                     )
-                    Text(spot.ratingText(), style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        spot.ratingText(),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.semantics { contentDescription = "Rated ${spot.ratingText()}" }
+                    )
                     Text(
                         spot.priceText(),
                         style = MaterialTheme.typography.bodySmall,

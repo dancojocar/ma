@@ -4,6 +4,10 @@ Tag `l02-ui`: a static list of the 8 canonical campus spots (hard-coded in `src/
 with a detail view. Selection is local `useState` in `app/(tabs)/spots/index.tsx`; the list is a
 `FlatList` with `keyExtractor` and every style goes through `StyleSheet.create`. No network yet.
 
+Screen readers: each list card is one button whose label reads name, category, open/closed, rating and
+price (the thumbnail is decorative); on the detail screen the rating and review stars read as "out of 5"
+and the header photo is labelled; the tab-bar emoji is hidden because the tab already announces its title.
+
 ## Run
 
 ```bash
@@ -28,8 +32,8 @@ npx expo-doctor
 ```
 
 Without `.expo/types` (written by `expo start` or the `customize` line above) `tsc` still passes but does not
-check route hrefs. Both commands also rewrite `tsconfig.json`; the committed include already picks up the
-generated types, so restore it.
+check route hrefs. The committed `tsconfig.json` is already in the form both commands write, so the
+`git checkout` is only a safety net.
 
 `react-dom`, `react-native-reanimated` and `react-native-worklets` are not used by the app yet (no web target;
 animations arrive in l10), but they stay in `package.json` pinned to the SDK 57 versions: expo-router's

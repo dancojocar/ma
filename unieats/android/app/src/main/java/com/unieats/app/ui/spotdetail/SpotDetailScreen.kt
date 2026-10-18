@@ -9,21 +9,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.unieats.app.R
 import com.unieats.app.data.model.Review
 import com.unieats.app.data.model.Spot
 import com.unieats.app.ui.components.SpotPhoto
@@ -43,7 +46,7 @@ fun SpotDetailScreen(
                 title = { Text(spot.name) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
                     }
                 }
             )
@@ -79,15 +82,32 @@ private fun SpotHeader(spot: Spot) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AssistChip(onClick = {}, label = { Text(spot.category.label) })
-                AssistChip(onClick = {}, label = { Text(if (spot.openNow) "Open now" else "Closed") })
+                StatusLabel(spot.category.label)
+                StatusLabel(if (spot.openNow) "Open now" else "Closed")
             }
             Text(
                 "★ ${spot.ratingText()} / 5 · ${spot.priceText()}",
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.semantics {
+                    contentDescription = "Rated ${spot.ratingText()} out of 5, price level ${spot.priceLevel}"
+                }
             )
             Text(spot.description, style = MaterialTheme.typography.bodyMedium)
         }
+    }
+}
+
+@Composable
+private fun StatusLabel(text: String) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        )
     }
 }
 
@@ -112,11 +132,21 @@ private fun ReviewsHeader(count: Int) {
 
 @Composable
 private fun ReviewRow(review: Review) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(
-            "${"★".repeat(review.stars)} ${review.author}",
-            style = MaterialTheme.typography.labelLarge
-        )
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .semantics(mergeDescendants = true) {}
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                "★".repeat(review.stars),
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.clearAndSetSemantics {
+                    contentDescription = "${review.stars} out of 5 stars"
+                }
+            )
+            Text(review.author, style = MaterialTheme.typography.labelLarge)
+        }
         Text(review.text, style = MaterialTheme.typography.bodyMedium)
     }
 }

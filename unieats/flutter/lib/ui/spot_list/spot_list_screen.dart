@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../data/seed_data.dart';
 import '../../domain/models.dart';
 import '../common/spot_badges.dart';
+import '../common/spot_photo.dart';
 import '../spot_detail/spot_detail_screen.dart';
 
 class SpotListScreen extends StatelessWidget {
@@ -47,38 +48,46 @@ class SpotCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SpotPhoto(url: spot.photoUrl, height: 140),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      spot.name,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          spot.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      OpenBadge(openNow: spot.openNow),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  SpotMetaRow(spot: spot),
+                  const SizedBox(height: 6),
+                  Text(
+                    spot.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  OpenBadge(openNow: spot.openNow),
                 ],
               ),
-              const SizedBox(height: 6),
-              SpotMetaRow(spot: spot),
-              const SizedBox(height: 6),
-              Text(
-                spot.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

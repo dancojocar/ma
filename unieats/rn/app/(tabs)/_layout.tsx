@@ -2,7 +2,16 @@ import { Tabs } from "expo-router";
 import { StyleSheet, Text } from "react-native";
 
 function TabIcon({ symbol }: { symbol: string }) {
-  return <Text style={styles.icon}>{symbol}</Text>;
+  return (
+    <Text
+      style={styles.icon}
+      accessible={false}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
+      {symbol}
+    </Text>
+  );
 }
 
 export default function TabsLayout() {

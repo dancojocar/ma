@@ -3,14 +3,18 @@ import type { Spot } from "../domain/models";
 import { priceLabel } from "./format";
 
 export function SpotCard({ spot, onPress }: { spot: Spot; onPress: () => void }) {
+  const label = `${spot.name}, ${spot.category}, ${spot.openNow ? "open" : "closed"}, rated ${spot.rating.toFixed(1)} out of 5, ${priceLabel(spot.priceLevel)}`;
   return (
     <Pressable
       testID="spot-list-item"
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint="Opens details"
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
       onPress={onPress}
     >
       {spot.photoUrl ? (
-        <Image source={{ uri: spot.photoUrl }} style={styles.thumb} />
+        <Image source={{ uri: spot.photoUrl }} style={styles.thumb} accessible={false} />
       ) : (
         <View style={[styles.thumb, styles.thumbPlaceholder]} />
       )}

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../domain/models.dart';
 
@@ -47,14 +47,17 @@ class SpotMetaRow extends StatelessWidget {
           children: [
             Icon(Icons.star_rounded, size: 16, color: Colors.amber[700]),
             const SizedBox(width: 4),
-            Text(spot.rating.toStringAsFixed(1),
-                style: theme.textTheme.bodySmall),
+            Text(
+              spot.rating.toStringAsFixed(1),
+              style: theme.textTheme.bodySmall,
+            ),
           ],
         ),
         Text(
           r'$' * spot.priceLevel,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         Chip(
           label: Text(spot.category.label),

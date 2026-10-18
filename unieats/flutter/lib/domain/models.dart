@@ -38,4 +38,34 @@ class Spot {
 
   /// Epoch milliseconds, as in the shared contract.
   final int updatedAt;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Spot &&
+      other.id == id &&
+      other.name == name &&
+      other.category == category &&
+      other.rating == rating &&
+      other.priceLevel == priceLevel &&
+      other.lat == lat &&
+      other.lng == lng &&
+      other.openNow == openNow &&
+      other.photoUrl == photoUrl &&
+      other.description == description &&
+      other.updatedAt == updatedAt;
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    category,
+    rating,
+    priceLevel,
+    lat,
+    lng,
+    openNow,
+    photoUrl,
+    description,
+    updatedAt,
+  );
 }

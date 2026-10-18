@@ -5,7 +5,15 @@ import { priceLabel, starsLabel } from "./format";
 export function SpotDetail({ spot, reviews }: { spot: Spot; reviews: Review[] }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {spot.photoUrl ? <Image source={{ uri: spot.photoUrl }} style={styles.photo} /> : null}
+      {spot.photoUrl ? (
+        <Image
+          source={{ uri: spot.photoUrl }}
+          style={styles.photo}
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel={`Photo of ${spot.name}`}
+        />
+      ) : null}
       <View style={styles.section}>
         <Text style={styles.name}>{spot.name}</Text>
         <View style={styles.row}>
@@ -15,7 +23,12 @@ export function SpotDetail({ spot, reviews }: { spot: Spot; reviews: Review[] })
           </Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.rating}>★ {spot.rating.toFixed(1)}</Text>
+          <Text
+            style={styles.rating}
+            accessibilityLabel={`Rated ${spot.rating.toFixed(1)} out of 5`}
+          >
+            ★ {spot.rating.toFixed(1)}
+          </Text>
           <Text style={styles.price}>{priceLabel(spot.priceLevel)}</Text>
         </View>
         <Text style={styles.description}>{spot.description}</Text>
@@ -29,7 +42,9 @@ export function SpotDetail({ spot, reviews }: { spot: Spot; reviews: Review[] })
               <Text style={styles.author}>{r.author}</Text>
               <Text style={styles.date}>{new Date(r.createdAt).toLocaleDateString()}</Text>
             </View>
-            <Text style={styles.rating}>{starsLabel(r.stars)}</Text>
+            <Text style={styles.rating} accessibilityLabel={`${r.stars} out of 5 stars`}>
+              {starsLabel(r.stars)}
+            </Text>
             <Text style={styles.reviewText}>{r.text}</Text>
           </View>
         ))}

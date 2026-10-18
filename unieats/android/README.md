@@ -19,6 +19,10 @@ or open `unieats/android` in Android Studio and press Run.
   longer knows which row is which.
 - `ui/spotlist/SpotCard.kt` — one row, a stateless composable (`spot` + `onClick` in, UI out).
 - `ui/spotdetail/SpotDetailScreen.kt` — detail with photo, rating, description and "Reviews (n)".
+- Icons are Material Symbols vector drawables in `res/drawable` (`ic_arrow_back` is auto-mirrored
+  for right-to-left), drawn with `painterResource`, so no icon library is needed. The status labels
+  on the detail screen are plain `Surface`s rather than chips, so TalkBack does not call them
+  buttons; the rating line and each review carry a spoken description instead of reading "★".
 - `MainActivity.kt` — list → detail is a `rememberSaveable` selected id (real navigation arrives
   at `l04-nav`). The system Back button returns to the list.
 
