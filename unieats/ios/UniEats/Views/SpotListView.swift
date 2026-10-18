@@ -35,8 +35,12 @@ struct SpotListView: View {
             )
             .sheet(item: $selectedSpot) { spot in
                 NavigationStack {
-                    SpotDetailView(spot: spot)
-                        .toolbar {
+                    SpotDetailView(
+                        spot: spot,
+                        isFavourite: viewModel.favouriteIds.contains(spot.id),
+                        onToggleFavourite: { viewModel.toggleFavourite(spot.id) }
+                    )
+                    .toolbar {
                             Button("Done") { selectedSpot = nil }
                         }
                 }

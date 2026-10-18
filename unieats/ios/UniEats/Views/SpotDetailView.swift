@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SpotDetailView: View {
     let spot: Spot
+    let isFavourite: Bool
+    let onToggleFavourite: () -> Void
 
     var body: some View {
         ScrollView {
@@ -38,6 +40,15 @@ struct SpotDetailView: View {
         }
         .navigationTitle(spot.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onToggleFavourite) {
+                    Image(systemName: isFavourite ? "heart.fill" : "heart")
+                        .foregroundStyle(isFavourite ? .red : .secondary)
+                }
+                .accessibilityLabel(isFavourite ? "Remove from favourites" : "Add to favourites")
+            }
+        }
     }
 
     private var starRating: some View {

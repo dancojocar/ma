@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -35,6 +37,8 @@ import com.unieats.app.ui.components.ratingText
 fun SpotDetailScreen(
     spot: Spot,
     reviews: List<Review>,
+    isFavourite: Boolean,
+    onToggleFavourite: () -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -44,6 +48,15 @@ fun SpotDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onToggleFavourite) {
+                        Icon(
+                            imageVector = if (isFavourite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                            contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )
