@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models.dart';
 import '../common/spot_badges.dart';
+import '../common/spot_photo.dart';
 
 class SpotDetailScreen extends StatelessWidget {
   const SpotDetailScreen({super.key, required this.spot});
@@ -16,17 +17,9 @@ class SpotDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Container(
-            height: 180,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.restaurant,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SpotPhoto(url: spot.photoUrl, height: 220),
           ),
           const SizedBox(height: 16),
           Row(
@@ -34,8 +27,9 @@ class SpotDetailScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   spot.name,
-                  style: theme.textTheme.headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               OpenBadge(openNow: spot.openNow),
