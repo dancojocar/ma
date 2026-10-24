@@ -11,13 +11,33 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.unieats.rn"
+      "bundleIdentifier": "com.unieats.rn",
+      "associatedDomains": [
+        "applinks:unieats.app"
+      ]
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.unieats.rn"
+      "package": "com.unieats.rn",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "unieats.app",
+              "pathPrefix": "/spots"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "experiments": {
       "typedRoutes": true

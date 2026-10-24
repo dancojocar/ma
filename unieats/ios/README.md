@@ -1,20 +1,26 @@
-# UniEats iOS — l03-state
+# UniEats iOS — l04-nav
 
-Observable state: the list screen's state lives in one `@Observable` ViewModel.
+Navigation + deep links on top of the l03 list (search, category filter and favourites kept).
 
-- `UniEats/ViewModels/SpotListViewModel.swift` — `@MainActor @Observable` class owning
-  `spots`, `searchQuery`, `categoryFilter` and `favouriteIds`, all `private(set)` (read-only
-  from the outside, like a Kotlin `val`); views change them only through `onQueryChange`,
-  `onCategoryChange` and `toggleFavourite`. `filteredSpots` filters case-insensitively.
-- `SpotListView` holds the ViewModel in `@State` and wires `.searchable` to
-  `searchQuery` / `onQueryChange`; `CategoryFilterView` is stateless
-  (`selectedCategory` + `onCategoryChange`); `SpotRow` shows the favourite heart.
-
-Demo: search "pizza" → only Pizza Stop remains; pick a category; tap a heart.
+- `SpotListView` owns a `NavigationStack(path:)` whose path is `[String]` — the stack pushes the
+  spot **ID**, not the `Spot` object. `NavigationLink(value: spot.id)` +
+  `.navigationDestination(for: String.self) { SpotDetailView(spotId: $0) }`.
+- `SpotDetailView(spotId:)` resolves the spot itself (and shows "Spot not found" for a bad id).
+- Deep links: `.onOpenURL` → `DeepLink.spotId(from:)` → `path = [id]`.
+  - `unieats://spots/<id>` — registered in `UniEats/Info.plist` (`CFBundleURLTypes`).
+  - `https://unieats.app/spots/<id>` — `applinks:unieats.app` in `UniEats/UniEats.entitlements`.
+    A universal link only opens the app once `https://unieats.app/.well-known/apple-app-site-association`
+    lists the app's Team ID + bundle id; without that file use the custom scheme for the demo.
 
 ## Run
 
-`open UniEats.xcodeproj`, pick an iPhone simulator, Cmd+R. Or:
+`open UniEats.xcodeproj`, pick an iPhone simulator, Cmd+R. Then, with the app installed:
+
+```bash
+xcrun simctl openurl booted "unieats://spots/spot-3"    # opens Pizza Stop directly
+```
+
+Command-line build:
 
 ```bash
 xcodebuild -project UniEats.xcodeproj -scheme UniEats \

@@ -1,6 +1,20 @@
 import SwiftUI
 
 struct SpotDetailView: View {
+    let spotId: String
+    let isFavourite: Bool
+    let onToggleFavourite: () -> Void
+
+    var body: some View {
+        if let spot = sampleSpots.first(where: { $0.id == spotId }) {
+            SpotDetailContent(spot: spot, isFavourite: isFavourite, onToggleFavourite: onToggleFavourite)
+        } else {
+            ContentUnavailableView("Spot not found", systemImage: "fork.knife", description: Text(spotId))
+        }
+    }
+}
+
+private struct SpotDetailContent: View {
     let spot: Spot
     let isFavourite: Bool
     let onToggleFavourite: () -> Void
