@@ -1,13 +1,24 @@
 # UniEats — Flutter
 
-Discover campus food spots. This tag (`l03-state`) adds observable state with Riverpod 3
-(no code generation): `SpotListNotifier` (`lib/providers/providers.dart`) owns one
-`SpotListUiState` — the 8 canonical spots, `searchQuery`, `categoryFilter` and `favouriteIds`.
-The list filters case-insensitively by the search bar and the category chips, and the heart on a
-card or on the detail screen toggles a favourite. Try: search "pizza", favourite Pizza Stop, open it.
-`SpotListUiState` has value equality, so a state equal to the previous one does not rebuild listeners.
-`main()` builds the `ProviderScope` with `retry: (_, _) => null`: Riverpod 3 retries failing providers
-by default, and retries belong in the HTTP layer instead.
+Discover campus food spots. This tag (`l04-nav`) adds go_router (`lib/app_router.dart`):
+the list pushes `/spots/<id>` and the detail screen looks the spot up by ID. Search, category
+filter and favourites from l03 are kept (`lib/providers/providers.dart`, Riverpod 3 without code
+generation, `SpotListUiState` with value equality, `ProviderScope(retry: (_, _) => null)` so retries
+stay in the HTTP layer). Widgets come from the `material_ui` package; go_router 18 recognises its
+`MaterialApp.router`, so pushes use `MaterialPage` with the platform transition and iOS swipe-back.
+
+Deep links open the detail screen directly, with the list underneath on the back stack:
+
+```bash
+adb shell am start -W -a android.intent.action.VIEW -d "unieats://spots/spot-3" com.unieats.flutter
+adb shell am start -W -a android.intent.action.VIEW -d "https://unieats.app/spots/spot-3" com.unieats.flutter
+xcrun simctl openurl booted "unieats://spots/spot-3"
+```
+
+Android declares both intent filters in `android/app/src/main/AndroidManifest.xml`; iOS registers
+the `unieats` scheme in `ios/Runner/Info.plist` (`CFBundleURLTypes`). The https form is not a
+verified App Link / Universal Link (that needs files hosted on unieats.app), so pass the package
+name as above.
 
 ## Run
 

@@ -1,6 +1,10 @@
-# UniEats Android — tag `l03-state`
+# UniEats Android — tag `l04-nav`
 
-The list now has search, a category filter and favourites, all owned by a ViewModel.
+Real navigation with **Navigation 3**: the back stack is a list you own (`rememberNavBackStack`),
+`NavDisplay` renders it, the detail screen receives only the spot **id**, two deep links open a spot
+directly, and on a wide window (tablet, foldable, landscape) the list and the detail show side by side
+through the Material `ListDetailSceneStrategy`. Search, category filter and favourites from l03 are
+still there.
 
 ## Run
 
@@ -10,29 +14,55 @@ The list now has search, a category filter and favourites, all owned by a ViewMo
 
 ## What to look at
 
-- `ui/spotlist/SpotListViewModel.kt` — `SpotListUiState(spots, searchQuery, categoryFilter,
-  favouriteIds)` held in a **private** `MutableStateFlow` and exposed as one read-only
-  `StateFlow<SpotListUiState>`. The screen can only change it through `onSearchQueryChange`,
-  `onCategorySelected` and `toggleFavourite`.
-- `ui/spotlist/SpotSearchBar.kt` — stateless `SpotSearchBar(query, onQueryChange)` and
-  `CategoryFilterRow(selected, onSelect)`: state goes down, events go up.
-- `ui/spotlist/SpotListScreen.kt` — `SpotListScreen` collects the state with
-  `collectAsStateWithLifecycle()` and hands it to the stateless `SpotListContent`. The Sort toggle
-  stays a local `rememberSaveable`: it is ephemeral UI state nobody else needs.
-- `data/repository/SpotRepository.kt` — still the 8 hard-coded spots; Hilt injects it.
+- `ui/navigation/NavGraph.kt` — `@Serializable` keys `SpotList` and `SpotDetail(spotId)` implement
+  `NavKey`; `rememberNavBackStack(...)` is the back stack; `backStack.add(SpotDetail(id))` pushes and
+  `backStack.removeLastOrNull()` pops; `NavDisplay(entryProvider = entryProvider { entry<SpotList> {…}
+  entry<SpotDetail> { key -> … } })` maps keys to screens; `rememberListDetailSceneStrategy()` plus the
+  `listPane()` / `detailPane()` metadata give the two-pane layout on wide windows.
+- `ui/spotdetail/SpotDetailViewModel.kt` — a Hilt assisted ViewModel: the entry hands it the
+  `spotId` from the key (`hiltViewModel<SpotDetailViewModel, Factory> { it.create(key.spotId) }`),
+  and `rememberViewModelStoreNavEntryDecorator()` scopes one ViewModel per back-stack entry. It looks
+  the spot up in the repository (it never gets the object itself, so a deep link and a tap take the
+  same path). It reads and toggles favourites itself, so the detail screen only takes `onBack`.
+- `data/repository/FavouritesRepository.kt` — the favourite ids live in a `@Singleton` repository
+  (in memory) instead of the list ViewModel. `SpotListViewModel` and `SpotDetailViewModel` both
+  observe `favouriteIds` and call `toggle(id)`, so each destination gets its own ViewModel from its
+  entry (`SpotListScreen` keeps its default `hiltViewModel()`) and a heart tapped on the detail
+  screen shows on the list.
+- `ui/navigation/DeepLinks.kt` — two `UriDeepLinkMatcher`s (`unieats://spots/{spotId}`,
+  `https://unieats.app/spots/{spotId}`) with `withBackStack { listOf(SpotList, it.key) }`;
+  `backStackFor(intent)` turns the launch Intent into the initial keys, so Back after a deep link
+  lands on the list. `MainActivity` is `singleTop` and handles `onNewIntent` for links that arrive
+  while the app is running.
+- `AndroidManifest.xml` — two `VIEW` + `BROWSABLE` intent-filters: `unieats://spots/…` and
+  `https://unieats.app/spots/…`.
 - Icons are Material Symbols vector drawables in `res/drawable` (search, close, favourite
   filled/outlined, star, and an auto-mirrored back arrow), drawn with `painterResource`, so no icon
   library is needed. The status labels on the detail screen are plain `Surface`s rather than chips,
   so TalkBack does not call them buttons; the rating line and each review carry a spoken
   description instead of reading "★".
 
-**Rotation demo:** search for "pizza", then rotate the emulator. The query and the filtered list
-survive because they live in the ViewModel (the manifest has no `configChanges`, so the Activity
-really is recreated). Move the query into a `remember { mutableStateOf("") }` inside the composable
-and rotate again to see it reset.
-
 The window theme has a `values-night` variant and `UniEatsTheme` uses dynamic colour on Android 12+,
 so the app follows the system light/dark setting from the first frame.
 
 Photos are loaded from `photoUrl` (picsum.photos) with Coil, so the emulator needs internet for
 images; everything else works offline.
+
+## Try the deep links (emulator or phone with USB debugging)
+
+```bash
+adb shell am start -W -a android.intent.action.VIEW -d "unieats://spots/spot-3" com.unieats.app
+adb shell am start -W -a android.intent.action.VIEW -d "https://unieats.app/spots/spot-3" com.unieats.app
+```
+
+Both open "Pizza Stop"; Back goes to the list (`withBackStack` put `SpotList` underneath). An unknown
+id shows "Spot not found". The https link is marked `autoVerify`, but without a
+`/.well-known/assetlinks.json` on unieats.app Android will not verify it, so a browser tap opens the
+browser; passing the package name as above (or
+`adb shell pm set-app-links-user-selection --user 0 --package com.unieats.app true unieats.app`)
+routes it to the app.
+
+## Try the two-pane layout
+
+Rotate the emulator to landscape, or run on a tablet / the resizable emulator: the list stays on the
+left and the selected spot opens on the right (`ListDetailSceneStrategy`). Back closes the detail pane.
