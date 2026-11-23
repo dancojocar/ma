@@ -1,8 +1,13 @@
 # UniEats — Flutter
 
-Discover campus food spots. This tag (`l02-ui`) shows the 8 canonical campus spots
-(hard-coded in `lib/data/seed_data.dart`) in a `ListView.builder` of `SpotCard`s; tapping a
-card pushes `SpotDetailScreen` with that spot.
+Discover campus food spots. This tag (`l03-state`) adds observable state with Riverpod 3
+(no code generation): `SpotListNotifier` (`lib/providers/providers.dart`) owns one
+`SpotListUiState` — the 8 canonical spots, `searchQuery`, `categoryFilter` and `favouriteIds`.
+The list filters case-insensitively by the search bar and the category chips, and the heart on a
+card or on the detail screen toggles a favourite. Try: search "pizza", favourite Pizza Stop, open it.
+`SpotListUiState` has value equality, so a state equal to the previous one does not rebuild listeners.
+`main()` builds the `ProviderScope` with `retry: (_, _) => null`: Riverpod 3 retries failing providers
+by default, and retries belong in the HTTP layer instead.
 
 ## Run
 

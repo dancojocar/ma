@@ -1,39 +1,53 @@
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import type { Spot } from "../domain/models";
+import { FavouriteButton } from "./FavouriteButton";
 import { priceLabel } from "./format";
 
-export function SpotCard({ spot, onPress }: { spot: Spot; onPress: () => void }) {
+export function SpotCard({
+  spot,
+  isFavourite,
+  onPress,
+  onToggleFavourite,
+}: {
+  spot: Spot;
+  isFavourite: boolean;
+  onPress: () => void;
+  onToggleFavourite: () => void;
+}) {
   const label = `${spot.name}, ${spot.category}, ${spot.openNow ? "open" : "closed"}, rated ${spot.rating.toFixed(1)} out of 5, ${priceLabel(spot.priceLevel)}`;
   return (
-    <Pressable
-      testID="spot-list-item"
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityHint="Opens details"
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-      onPress={onPress}
-    >
-      {spot.photoUrl ? (
-        <Image source={{ uri: spot.photoUrl }} style={styles.thumb} accessible={false} />
-      ) : (
-        <View style={[styles.thumb, styles.thumbPlaceholder]} />
-      )}
-      <View style={styles.main}>
-        <Text style={styles.name} numberOfLines={1}>
-          {spot.name}
-        </Text>
-        <View style={styles.badgeRow}>
-          <Text style={styles.badge}>{spot.category}</Text>
-          <Text style={[styles.badge, spot.openNow ? styles.open : styles.closed]}>
-            {spot.openNow ? "Open" : "Closed"}
+    <View style={styles.card}>
+      <Pressable
+        testID="spot-list-item"
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityHint="Opens details"
+        style={({ pressed }) => [styles.body, pressed && styles.pressed]}
+        onPress={onPress}
+      >
+        {spot.photoUrl ? (
+          <Image source={{ uri: spot.photoUrl }} style={styles.thumb} accessible={false} />
+        ) : (
+          <View style={[styles.thumb, styles.thumbPlaceholder]} />
+        )}
+        <View style={styles.main}>
+          <Text style={styles.name} numberOfLines={1}>
+            {spot.name}
           </Text>
+          <View style={styles.badgeRow}>
+            <Text style={styles.badge}>{spot.category}</Text>
+            <Text style={[styles.badge, spot.openNow ? styles.open : styles.closed]}>
+              {spot.openNow ? "Open" : "Closed"}
+            </Text>
+          </View>
         </View>
-      </View>
-      <View style={styles.meta}>
-        <Text style={styles.rating}>★ {spot.rating.toFixed(1)}</Text>
-        <Text style={styles.price}>{priceLabel(spot.priceLevel)}</Text>
-      </View>
-    </Pressable>
+        <View style={styles.meta}>
+          <Text style={styles.rating}>★ {spot.rating.toFixed(1)}</Text>
+          <Text style={styles.price}>{priceLabel(spot.priceLevel)}</Text>
+        </View>
+      </Pressable>
+      <FavouriteButton isFavourite={isFavourite} onToggle={onToggleFavourite} />
+    </View>
   );
 }
 
@@ -51,6 +65,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
+  body: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
   pressed: { opacity: 0.75 },
   thumb: { width: 56, height: 56, borderRadius: 8 },
   thumbPlaceholder: { backgroundColor: "#f0e8df" },

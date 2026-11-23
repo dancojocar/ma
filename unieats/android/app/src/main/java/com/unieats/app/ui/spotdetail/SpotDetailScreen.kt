@@ -38,6 +38,8 @@ import com.unieats.app.ui.components.ratingText
 fun SpotDetailScreen(
     spot: Spot,
     reviews: List<Review>,
+    isFavourite: Boolean,
+    onToggleFavourite: () -> Unit,
     onBack: () -> Unit
 ) {
     Scaffold(
@@ -47,6 +49,15 @@ fun SpotDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onToggleFavourite) {
+                        Icon(
+                            painter = painterResource(if (isFavourite) R.drawable.ic_favorite else R.drawable.ic_favorite_border),
+                            contentDescription = if (isFavourite) "Remove from favourites" else "Add to favourites",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             )

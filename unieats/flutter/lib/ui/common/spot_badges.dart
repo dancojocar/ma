@@ -69,3 +69,24 @@ class SpotMetaRow extends StatelessWidget {
     );
   }
 }
+
+class FavouriteButton extends StatelessWidget {
+  const FavouriteButton({
+    super.key,
+    required this.isFavourite,
+    required this.onToggle,
+  });
+
+  final bool isFavourite;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      tooltip: isFavourite ? 'Remove from favourites' : 'Add to favourites',
+      icon: Icon(isFavourite ? Icons.favorite : Icons.favorite_border),
+      color: isFavourite ? Colors.red : null,
+      onPressed: onToggle,
+    );
+  }
+}

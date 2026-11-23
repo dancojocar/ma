@@ -1,11 +1,15 @@
 # UniEats – React Native (Expo SDK 57)
 
-Tag `l02-ui`: a static list of the 8 canonical campus spots (hard-coded in `src/data/seeds.ts`)
-with a detail view. Selection is local `useState` in `app/(tabs)/spots/index.tsx`; the list is a
-`FlatList` with `keyExtractor` and every style goes through `StyleSheet.create`. No network yet.
+Tag `l03-state`: the static 8-spot list now has search, a category filter and favourites. The state
+lives in a plain Zustand store (`src/store/spotsStore.ts`: `searchQuery`, `categoryFilter`,
+`favouriteIds`); `SearchBar` is stateless (`query` + `onQueryChange`) and the screen wires it to the
+store. Try searching "pizza". No network yet.
 
-Screen readers: each list card is one button whose label reads name, category, open/closed, rating and
-price (the thumbnail is decorative); on the detail screen the rating and review stars read as "out of 5"
+Screen readers: each list card's main area is one button whose label reads name, category, open/closed,
+rating and price (the thumbnail is decorative); the favourite heart is a separate sibling button (not
+nested inside the card's button, so both stay reachable) that reports its selected state; category chips
+read as "<name> category" buttons with a selected state and the search field is labelled "Search spots";
+on the detail screen the rating and review stars read as "out of 5"
 and the header photo is labelled; the tab-bar emoji is hidden because the tab already announces its title.
 
 ## Run

@@ -1,43 +1,75 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../data/seed_data.dart';
 import '../../domain/models.dart';
+import '../../providers/providers.dart';
 import '../common/spot_badges.dart';
 import '../common/spot_photo.dart';
 import '../spot_detail/spot_detail_screen.dart';
+import 'spot_list_widgets.dart';
 
-class SpotListScreen extends StatelessWidget {
+class SpotListScreen extends ConsumerWidget {
   const SpotListScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const spots = kSeedSpots;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(spotListProvider);
+    final notifier = ref.read(spotListProvider.notifier);
+    final spots = state.visibleSpots;
+
     return Scaffold(
       appBar: AppBar(title: const Text('UniEats')),
-      body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        itemCount: spots.length,
-        itemBuilder: (context, index) {
-          final spot = spots[index];
-          return SpotCard(
-            key: ValueKey(spot.id),
-            spot: spot,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => SpotDetailScreen(spot: spot),
-              ),
-            ),
-          );
-        },
+      body: Column(
+        children: [
+          SpotSearchBar(
+            query: state.searchQuery,
+            onQueryChange: notifier.setSearchQuery,
+          ),
+          CategoryFilterRow(
+            selected: state.categoryFilter,
+            onSelected: notifier.setCategoryFilter,
+          ),
+          Expanded(
+            child: spots.isEmpty
+                ? const EmptySpotsMessage()
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: spots.length,
+                    itemBuilder: (context, index) {
+                      final spot = spots[index];
+                      return SpotCard(
+                        key: ValueKey(spot.id),
+                        spot: spot,
+                        isFavourite: state.favouriteIds.contains(spot.id),
+                        onFavouriteToggle: () =>
+                            notifier.toggleFavourite(spot.id),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => SpotDetailScreen(spot: spot),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class SpotCard extends StatelessWidget {
-  const SpotCard({super.key, required this.spot, required this.onTap});
+  const SpotCard({
+    super.key,
+    required this.spot,
+    required this.isFavourite,
+    required this.onFavouriteToggle,
+    required this.onTap,
+  });
 
   final Spot spot;
+  final bool isFavourite;
+  final VoidCallback onFavouriteToggle;
   final VoidCallback onTap;
 
   @override
@@ -53,7 +85,7 @@ class SpotCard extends StatelessWidget {
           children: [
             SpotPhoto(url: spot.photoUrl, height: 140),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 4, 4, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -69,19 +101,24 @@ class SpotCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
                       OpenBadge(openNow: spot.openNow),
+                      FavouriteButton(
+                        isFavourite: isFavourite,
+                        onToggle: onFavouriteToggle,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 6),
                   SpotMetaRow(spot: spot),
                   const SizedBox(height: 6),
-                  Text(
-                    spot.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      spot.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],

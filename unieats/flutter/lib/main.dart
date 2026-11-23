@@ -1,9 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'ui/spot_list/spot_list_screen.dart';
 
 void main() {
-  runApp(const UniEatsApp());
+  runApp(ProviderScope(retry: (_, _) => null, child: const UniEatsApp()));
 }
 
 class UniEatsApp extends StatelessWidget {
